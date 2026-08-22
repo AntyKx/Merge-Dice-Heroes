@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { defaultProgress } from "./persistence";
 import { useGameStore } from "./store";
 
-const freshProgress = () => ({ ...defaultProgress, inventory: [...defaultProgress.inventory], equipped: {}, daily: { ...defaultProgress.daily, claimed: [] }, dungeonClears: {} });
+const freshProgress = () => ({ ...defaultProgress, inventory: [...defaultProgress.inventory], equipmentLevels: { ...defaultProgress.equipmentLevels }, equipped: {}, daily: { ...defaultProgress.daily, claimed: [] }, dungeonClears: {}, shop: { ...defaultProgress.shop, offers: [...defaultProgress.shop.offers], purchased: [] } });
 
 beforeEach(() => {
   useGameStore.setState({ screen: "title", selectedDungeonId: undefined, progress: freshProgress() });
@@ -31,5 +31,25 @@ describe("persistent lobby progression", () => {
     useGameStore.getState().selectDungeon("ruinCorridor");
     expect(useGameStore.getState().selectedDungeonId).toBe("ruinCorridor");
     expect(useGameStore.getState().screen).toBe("team");
+  });
+
+  it("buys a shop item once and uses the daily free refresh", () => {
+    const initialSigils = useGameStore.getState().progress.sigils;
+    useGameStore.getState().buyShopOffer("forgeBundle");
+    expect(useGameStore.getState().progress.sigils).toBe(initialSigils - 8);
+    expect(useGameStore.getState().progress.materials).toBe(defaultProgress.materials + 20);
+    useGameStore.getState().refreshShop();
+    expect(useGameStore.getState().progress.shop.freeRefreshAvailable).toBe(false);
+    expect(useGameStore.getState().progress.shop.purchased).toHaveLength(0);
+  });
+
+  it("upgrades and then dismantles an owned item for materials", () => {
+    const initialMaterials = useGameStore.getState().progress.materials;
+    useGameStore.getState().upgradeEquipment("morningBlade");
+    expect(useGameStore.getState().progress.equipmentLevels.morningBlade).toBe(2);
+    expect(useGameStore.getState().progress.materials).toBe(initialMaterials - 8);
+    useGameStore.getState().dismantleEquipment("morningBlade");
+    expect(useGameStore.getState().progress.inventory).not.toContain("morningBlade");
+    expect(useGameStore.getState().progress.materials).toBeGreaterThan(initialMaterials - 8);
   });
 });

@@ -13,6 +13,8 @@ import type {
   EquipmentDefinition,
   EquipmentId,
   EquipmentSlot,
+  ShopOfferDefinition,
+  ShopOfferId,
 } from "./types";
 
 export const HEROES: Record<HeroId, HeroDefinition> = {
@@ -101,9 +103,16 @@ export const HEROES: Record<HeroId, HeroDefinition> = {
 export const SELECTABLE_HERO_IDS: HeroId[] = ["knight", "fireMage", "priest", "assassin", "frostQueen", "ranger", "bard", "deathKnight", "engineer", "fighter"];
 
 export const EQUIPMENT: Record<EquipmentId, EquipmentDefinition> = {
-  morningBlade: { id: "morningBlade", name: "晨星長劍", slot: "weapon", rarity: "稀有", description: "全隊起始攻擊 +8%。", icon: "⚔", bonuses: { attackMultiplier: 0.08 } },
-  watcherCloak: { id: "watcherCloak", name: "守望者披風", slot: "armor", rarity: "普通", description: "城堡最大生命 +3。", icon: "◒", bonuses: { castleBonus: 3 } },
-  fateDiceBox: { id: "fateDiceBox", name: "命運骰匣", slot: "relic", rarity: "史詩", description: "每局額外獲得 1 次重骰。", icon: "⚄", bonuses: { extraRerolls: 1 } },
+  morningBlade: { id: "morningBlade", name: "晨星長劍", slot: "weapon", rarity: "稀有", description: "全隊起始攻擊 +8%。", icon: "⚔", bonuses: { attackMultiplier: 0.08 }, upgradeBonus: { attackMultiplier: 0.025 } },
+  watcherCloak: { id: "watcherCloak", name: "守望者披風", slot: "armor", rarity: "普通", description: "城堡最大生命 +3。", icon: "◒", bonuses: { castleBonus: 3 }, upgradeBonus: { castleBonus: 1 } },
+  fateDiceBox: { id: "fateDiceBox", name: "命運骰匣", slot: "relic", rarity: "史詩", description: "每局額外獲得 1 次重骰。", icon: "⚄", bonuses: { extraRerolls: 1 }, upgradeBonus: { attackMultiplier: 0.02 } },
+};
+
+export const SHOP_OFFERS: Record<ShopOfferId, ShopOfferDefinition> = {
+  forgeBundle: { id: "forgeBundle", title: "鍛造銅礦 ×20", description: "可用於升級裝備。", price: 8, icon: "⛏", reward: { materials: 20 } },
+  morningBladeOffer: { id: "morningBladeOffer", title: "晨星長劍", description: "稀有武器，初始攻擊加成。", price: 12, icon: "⚔", reward: { equipmentId: "morningBlade" } },
+  watcherCloakOffer: { id: "watcherCloakOffer", title: "守望者披風", description: "普通護甲，提升城堡生命。", price: 9, icon: "◒", reward: { equipmentId: "watcherCloak" } },
+  fateDiceBoxOffer: { id: "fateDiceBoxOffer", title: "命運骰匣", description: "史詩遺物，增加每局重骰。", price: 18, icon: "⚄", reward: { equipmentId: "fateDiceBox" } },
 };
 
 export const DAILY_QUESTS: DailyQuestDefinition[] = [
@@ -113,18 +122,18 @@ export const DAILY_QUESTS: DailyQuestDefinition[] = [
 ];
 
 export const DUNGEONS: DungeonDefinition[] = [
-  { id: "ruinCorridor", title: "廢墟迴廊", description: "敵軍攻速提高的遺跡戰場。", energyCost: 5, recommendedPower: 180, startWave: 3, reward: { crystals: 45, equipmentId: "watcherCloak", label: "守望者披風素材" }, unlocked: true },
-  { id: "frostAltar", title: "霜凍祭壇", description: "寒霜壓境的高難度試煉。", energyCost: 8, recommendedPower: 320, startWave: 6, reward: { crystals: 70, equipmentId: "fateDiceBox", label: "霜華紋章" }, unlocked: false },
-  { id: "shadowTrial", title: "暮影試煉", description: "精英敵人的連戰舞台。", energyCost: 10, recommendedPower: 480, startWave: 9, reward: { crystals: 100, label: "暗影系列素材" }, unlocked: false },
+  { id: "ruinCorridor", title: "廢墟迴廊", description: "敵軍攻速提高的遺跡戰場。", energyCost: 5, recommendedPower: 180, startWave: 3, reward: { crystals: 45, equipmentId: "watcherCloak", label: "守望者披風素材" }, enemyRule: { label: "急行軍：敵軍移速 +30%", hpMultiplier: 1, speedMultiplier: 1.3 }, unlocked: true },
+  { id: "frostAltar", title: "霜凍祭壇", description: "寒霜壓境的高難度試煉。", energyCost: 8, recommendedPower: 320, startWave: 6, reward: { crystals: 70, equipmentId: "fateDiceBox", label: "霜華紋章" }, enemyRule: { label: "霜甲：敵軍生命 +25%、移速 -10%", hpMultiplier: 1.25, speedMultiplier: 0.9 }, unlocked: false },
+  { id: "shadowTrial", title: "暮影試煉", description: "精英敵人的連戰舞台。", energyCost: 10, recommendedPower: 480, startWave: 9, reward: { crystals: 100, label: "暗影系列素材" }, enemyRule: { label: "影獵：敵軍生命 +45%、移速 +15%", hpMultiplier: 1.45, speedMultiplier: 1.15 }, unlocked: false },
 ];
 
 export const EMPTY_EQUIPMENT_BONUSES: EquipmentBonuses = { attackMultiplier: 0, castleBonus: 0, extraRerolls: 0 };
 
-export function getEquipmentBonuses(equipped: Partial<Record<EquipmentSlot, EquipmentId>>): EquipmentBonuses {
+export function getEquipmentBonuses(equipped: Partial<Record<EquipmentSlot, EquipmentId>>, equipmentLevels: Partial<Record<EquipmentId, number>> = {}): EquipmentBonuses {
   return Object.values(equipped).reduce<EquipmentBonuses>((total, id) => {
     if (!id) return total;
-    const bonuses = EQUIPMENT[id].bonuses;
-    return { attackMultiplier: total.attackMultiplier + (bonuses.attackMultiplier ?? 0), castleBonus: total.castleBonus + (bonuses.castleBonus ?? 0), extraRerolls: total.extraRerolls + (bonuses.extraRerolls ?? 0) };
+    const equipment = EQUIPMENT[id]; const level = Math.max(1, equipmentLevels[id] ?? 1); const bonuses = equipment.bonuses; const upgrade = equipment.upgradeBonus;
+    return { attackMultiplier: total.attackMultiplier + (bonuses.attackMultiplier ?? 0) + (upgrade.attackMultiplier ?? 0) * (level - 1), castleBonus: total.castleBonus + (bonuses.castleBonus ?? 0) + (upgrade.castleBonus ?? 0) * (level - 1), extraRerolls: total.extraRerolls + (bonuses.extraRerolls ?? 0) + (upgrade.extraRerolls ?? 0) * (level - 1) };
   }, { ...EMPTY_EQUIPMENT_BONUSES });
 }
 

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { emitAudio } from "./audio";
-import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES } from "./config";
+import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SHOP_OFFERS } from "./config";
 import { advanceCombat } from "./engine/combat";
 import {
   beginReroll,
@@ -22,7 +22,7 @@ import {
 } from "./engine/run";
 import { defaultProgress, loadProgress, saveProgress } from "./persistence";
 import { createHero } from "./rules/merge";
-import type { DailyQuestId, DiceCombinationKind, DungeonId, EquipmentId, EquipmentSlot, HeroId, PlayerProgress, RunState } from "./types";
+import type { DailyQuestId, DiceCombinationKind, DungeonId, EquipmentId, EquipmentSlot, HeroId, PlayerProgress, RunState, ShopOfferId } from "./types";
 
 export type GameScreen = "title" | "team" | "leader" | "game" | "guide" | "equipment" | "shop" | "daily" | "dungeon";
 
@@ -44,6 +44,10 @@ interface GameStore {
   equipItem: (equipmentId: EquipmentId) => void;
   unequipItem: (slot: EquipmentSlot) => void;
   claimDailyReward: (questId: DailyQuestId) => void;
+  buyShopOffer: (offerId: ShopOfferId) => void;
+  refreshShop: () => void;
+  upgradeEquipment: (equipmentId: EquipmentId) => void;
+  dismantleEquipment: (equipmentId: EquipmentId) => void;
   startDemo: (fireMageTier?: 2 | 3, showcaseHero?: HeroId, castMode?: "leader" | "ultimate") => void;
   restartRun: () => void;
   toggleLock: (index: number) => void;
@@ -94,6 +98,8 @@ function maybeRecord(previous: RunState | undefined, next: RunState, progress: P
 }
 
 const dailyValue = (progress: PlayerProgress, questId: DailyQuestId) => questId === "battle" ? progress.daily.battles : questId === "merge" ? progress.daily.merges : progress.daily.victories;
+const SHOP_ROTATIONS: ShopOfferId[][] = [["forgeBundle", "morningBladeOffer", "fateDiceBoxOffer"], ["forgeBundle", "watcherCloakOffer", "morningBladeOffer"], ["fateDiceBoxOffer", "watcherCloakOffer", "forgeBundle"]];
+const rarityMaterials = (equipmentId: EquipmentId) => EQUIPMENT[equipmentId].rarity === "史詩" ? 24 : EQUIPMENT[equipmentId].rarity === "稀有" ? 16 : 10;
 
 export const useGameStore = create<GameStore>((set, get) => ({
   screen: "title",
@@ -116,7 +122,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startRun: () => {
     const { selectedHeroes, leaderId, selectedDungeonId, progress } = get();
     if (selectedHeroes.length !== 3) return;
-    const equipmentBonuses = getEquipmentBonuses(progress.equipped);
+    const equipmentBonuses = getEquipmentBonuses(progress.equipped, progress.equipmentLevels);
     const dungeon = selectedDungeonId ? DUNGEONS.find((candidate) => candidate.id === selectedDungeonId) : undefined;
     if (dungeon && progress.stamina < dungeon.energyCost) return;
     const nextProgress = dungeon ? persist({ ...progress, stamina: progress.stamina - dungeon.energyCost }) : progress;
@@ -141,6 +147,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!quest || state.progress.daily.claimed.includes(questId) || dailyValue(state.progress, questId) < quest.target) return state;
     return { progress: persist({ ...state.progress, crystals: state.progress.crystals + quest.rewardCrystals, daily: { ...state.progress.daily, claimed: [...state.progress.daily.claimed, questId] } }) };
   }),
+  buyShopOffer: (offerId) => set((state) => {
+    const offer = SHOP_OFFERS[offerId];
+    if (!state.progress.shop.offers.includes(offerId) || state.progress.shop.purchased.includes(offerId) || state.progress.sigils < offer.price) return state;
+    const equipmentId = offer.reward.equipmentId;
+    const duplicateMaterials = equipmentId && state.progress.inventory.includes(equipmentId) ? rarityMaterials(equipmentId) : 0;
+    return { progress: persist({ ...state.progress, sigils: state.progress.sigils - offer.price, materials: state.progress.materials + (offer.reward.materials ?? 0) + duplicateMaterials, inventory: equipmentId && !state.progress.inventory.includes(equipmentId) ? [...state.progress.inventory, equipmentId] : state.progress.inventory, equipmentLevels: equipmentId && !state.progress.equipmentLevels[equipmentId] ? { ...state.progress.equipmentLevels, [equipmentId]: 1 } : state.progress.equipmentLevels, shop: { ...state.progress.shop, purchased: [...state.progress.shop.purchased, offerId] } }) };
+  }),
+  refreshShop: () => set((state) => {
+    if (!state.progress.shop.freeRefreshAvailable) return state;
+    const currentIndex = SHOP_ROTATIONS.findIndex((rotation) => rotation.join("|") === state.progress.shop.offers.join("|"));
+    const offers = SHOP_ROTATIONS[(currentIndex + 1) % SHOP_ROTATIONS.length];
+    return { progress: persist({ ...state.progress, shop: { ...state.progress.shop, offers, purchased: [], freeRefreshAvailable: false } }) };
+  }),
+  upgradeEquipment: (equipmentId) => set((state) => {
+    if (!state.progress.inventory.includes(equipmentId)) return state;
+    const level = state.progress.equipmentLevels[equipmentId] ?? 1; const cost = level * 8;
+    if (level >= 5 || state.progress.materials < cost) return state;
+    return { progress: persist({ ...state.progress, materials: state.progress.materials - cost, equipmentLevels: { ...state.progress.equipmentLevels, [equipmentId]: level + 1 } }) };
+  }),
+  dismantleEquipment: (equipmentId) => set((state) => {
+    if (!state.progress.inventory.includes(equipmentId)) return state;
+    const level = state.progress.equipmentLevels[equipmentId] ?? 1; const materials = state.progress.materials + rarityMaterials(equipmentId) + (level - 1) * 6;
+    const slot = EQUIPMENT[equipmentId].slot;
+    const equipmentLevels = { ...state.progress.equipmentLevels }; delete equipmentLevels[equipmentId];
+    return { progress: persist({ ...state.progress, materials, inventory: state.progress.inventory.filter((id) => id !== equipmentId), equipmentLevels, equipped: state.progress.equipped[slot] === equipmentId ? { ...state.progress.equipped, [slot]: undefined } : state.progress.equipped }) };
+  }),
   startDemo: (fireMageTier = 2, showcaseHero: HeroId = "ranger", castMode?: "leader" | "ultimate") => {
     const random = () => 0.42;
     let run = createRun(["knight", "fireMage", showcaseHero], castMode ? showcaseHero : "fireMage", random);
@@ -156,7 +188,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   restartRun: () => {
     const { selectedHeroes, leaderId, progress } = get();
-    set({ run: createRun(selectedHeroes, leaderId, Math.random, getEquipmentBonuses(progress.equipped)), screen: "game", selectedBoardIndexes: [] });
+    set({ run: createRun(selectedHeroes, leaderId, Math.random, getEquipmentBonuses(progress.equipped, progress.equipmentLevels)), screen: "game", selectedBoardIndexes: [] });
   },
   toggleLock: (index) => set((state) => state.run ? { run: toggleLock(state.run, index) } : state),
   reroll: () => {

@@ -1,4 +1,4 @@
-import { ENEMIES, HEROES, WAVES } from "../config";
+import { DUNGEONS, ENEMIES, HEROES, WAVES } from "../config";
 import type { CombatState, EnemyId, EnemyInstance, HeroInstance, RunModifiers, RunState } from "../types";
 
 let enemySequence = 0;
@@ -14,11 +14,12 @@ export function makeCombatState(wave: number, castleBonus = 0): CombatState {
   return { castleHp: castleMaxHp, castleMaxHp, enemies: [], pendingEnemies, spawnCooldown: 0.25, elapsed: 0, defeated: 0, damageEvents: [] };
 }
 
-function createEnemy(enemyId: EnemyId, wave: number): EnemyInstance {
+function createEnemy(enemyId: EnemyId, wave: number, dungeonId?: RunState["dungeonId"]): EnemyInstance {
   const definition = ENEMIES[enemyId];
-  const scale = 1 + Math.max(0, wave - 1) * 0.115;
+  const dungeonRule = dungeonId ? DUNGEONS.find((dungeon) => dungeon.id === dungeonId)?.enemyRule : undefined;
+  const scale = (1 + Math.max(0, wave - 1) * 0.115) * (dungeonRule?.hpMultiplier ?? 1);
   enemySequence += 1;
-  return { id: `${enemyId}-${enemySequence}`, enemyId, hp: Math.round(definition.hp * scale), maxHp: Math.round(definition.hp * scale), pathProgress: 0.02, cooldown: 0 };
+  return { id: `${enemyId}-${enemySequence}`, enemyId, hp: Math.round(definition.hp * scale), maxHp: Math.round(definition.hp * scale), pathProgress: 0.02, cooldown: 0, dungeonSpeedMultiplier: dungeonRule?.speedMultiplier ?? 1 };
 }
 
 export function getRunModifiers(run: RunState): RunModifiers {
@@ -90,7 +91,7 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
   combat.spawnCooldown -= delta;
   if (combat.pendingEnemies.length && combat.spawnCooldown <= 0) {
     const nextId = combat.pendingEnemies.shift();
-    if (nextId) combat.enemies.push(createEnemy(nextId, run.wave));
+    if (nextId) combat.enemies.push(createEnemy(nextId, run.wave, run.dungeonId));
     combat.spawnCooldown = 0.74;
   }
 
@@ -204,7 +205,7 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
       enemy.cooldown = definition.attackInterval;
     }
     if (!enemy.blockedBy) {
-      enemy.pathProgress += definition.speed * delta * (enemy.phaseTwo ? 1.7 : 1);
+      enemy.pathProgress += definition.speed * delta * (enemy.phaseTwo ? 1.7 : 1) * (enemy.dungeonSpeedMultiplier ?? 1);
     }
   });
 

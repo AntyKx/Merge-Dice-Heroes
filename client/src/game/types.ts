@@ -15,6 +15,7 @@ export type EquipmentSlot = "weapon" | "armor" | "relic";
 export type EquipmentId = "morningBlade" | "watcherCloak" | "fateDiceBox";
 export type DailyQuestId = "battle" | "merge" | "victory";
 export type DungeonId = "ruinCorridor" | "frostAltar" | "shadowTrial";
+export type ShopOfferId = "forgeBundle" | "morningBladeOffer" | "watcherCloakOffer" | "fateDiceBoxOffer";
 export type GamePhase =
   | "PREPARING"
   | "ROLLING"
@@ -88,6 +89,7 @@ export interface EnemyInstance {
   cooldown: number;
   blockedBy?: string;
   phaseTwo?: boolean;
+  dungeonSpeedMultiplier?: number;
 }
 
 export interface DiceState {
@@ -185,6 +187,23 @@ export interface EquipmentDefinition {
   description: string;
   icon: string;
   bonuses: Partial<EquipmentBonuses>;
+  upgradeBonus: Partial<EquipmentBonuses>;
+}
+
+export interface ShopOfferDefinition {
+  id: ShopOfferId;
+  title: string;
+  description: string;
+  price: number;
+  icon: string;
+  reward: { materials?: number; equipmentId?: EquipmentId };
+}
+
+export interface ShopState {
+  dayKey: string;
+  offers: ShopOfferId[];
+  purchased: ShopOfferId[];
+  freeRefreshAvailable: boolean;
 }
 
 export interface DailyQuestDefinition {
@@ -211,6 +230,7 @@ export interface DungeonDefinition {
   recommendedPower: number;
   startWave: number;
   reward: { crystals: number; equipmentId?: EquipmentId; label: string };
+  enemyRule: { label: string; hpMultiplier: number; speedMultiplier: number };
   unlocked: boolean;
 }
 
@@ -220,11 +240,14 @@ export interface PlayerProgress {
   bestWave: number;
   crystals: number;
   sigils: number;
+  materials: number;
   stamina: number;
   inventory: EquipmentId[];
+  equipmentLevels: Partial<Record<EquipmentId, number>>;
   equipped: Partial<Record<EquipmentSlot, EquipmentId>>;
   daily: DailyQuestState;
   dungeonClears: Partial<Record<DungeonId, number>>;
+  shop: ShopState;
   settings: {
     musicEnabled: boolean;
     sfxEnabled: boolean;
