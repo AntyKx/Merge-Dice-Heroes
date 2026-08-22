@@ -1,11 +1,12 @@
 /** 精靈骰塔劇場：垂直舞台卷軸介面，命運青綠標示可操作決策，戰鬥規則完全由 game/ 引擎掌管。 */
 import { useEffect, useRef, useState } from "react";
+import "./shopEnhancements.css";
 import { BatteryCharging, BookOpen, Check, ChevronLeft, Gift, Hammer, Heart, Info, Lock, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
 import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
 import { useGameStore } from "@/game/store";
-import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, TalentDefinition } from "@/game/types";
+import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, ShopOfferId, TalentDefinition } from "@/game/types";
 
 const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
@@ -142,12 +143,26 @@ function DungeonScreen() {
   return <section className="lobby-module-screen accent-violet"><ModuleHeader moduleId="dungeon" /><div className="dungeon-energy"><BatteryCharging size={17} /><b>體力 {progress.stamina} / 20</b><span>每次挑戰消耗對應體力</span></div><div className="dungeon-list">{DUNGEONS.map((dungeon, index) => { const unlocked = dungeon.unlocked || (index > 0 && (progress.dungeonClears[DUNGEONS[index - 1].id] ?? 0) > 0); const enoughEnergy = progress.stamina >= dungeon.energyCost; return <article key={dungeon.id} className={!unlocked ? "is-locked" : ""}><div className="dungeon-stage-number">{String(index + 1).padStart(2, "0")}</div><div><b>{dungeon.title}</b><p>{dungeon.description}</p><small>推薦戰力 {dungeon.recommendedPower} · 體力 {dungeon.energyCost}</small><strong className="dungeon-rule"><ShieldCheck size={11} />{dungeon.enemyRule.label}</strong></div><footer><span><Gift size={13} />{dungeon.reward.label} · ✦{dungeon.reward.crystals}</span><button disabled={!unlocked || !enoughEnergy} onClick={() => selectDungeon(dungeon.id)}>{!unlocked ? <><Lock size={13} />未解鎖</> : !enoughEnergy ? "體力不足" : "挑戰"}</button></footer></article>; })}</div><button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button></section>;
 }
 
-function LobbyModuleScreen({ moduleId }: { moduleId: LobbyModuleId }) {
+const HIGH_VALUE_PRICE = 12;
+
+function ShopScreen() {
   const { openScreen, progress, buyShopOffer, refreshShop } = useGameStore();
+  const [pendingOfferId, setPendingOfferId] = useState<ShopOfferId | null>(null);
+  const [remainingSeconds, setRemainingSeconds] = useState(() => {
+    const now = new Date(); const next = new Date(now); next.setHours(24, 0, 0, 0); return Math.max(0, Math.floor((next.getTime() - now.getTime()) / 1000));
+  });
+  useEffect(() => { const timer = window.setInterval(() => { const now = new Date(); const next = new Date(now); next.setHours(24, 0, 0, 0); setRemainingSeconds(Math.max(0, Math.floor((next.getTime() - now.getTime()) / 1000))); }, 1000); return () => window.clearInterval(timer); }, []);
+  const countdown = `${String(Math.floor(remainingSeconds / 3600)).padStart(2, "0")}:${String(Math.floor(remainingSeconds % 3600 / 60)).padStart(2, "0")}:${String(remainingSeconds % 60).padStart(2, "0")}`;
+  const purchase = (offerId: ShopOfferId) => { const offer = SHOP_OFFERS[offerId]; if (offer.price >= HIGH_VALUE_PRICE) setPendingOfferId(offerId); else buyShopOffer(offerId); };
+  const pendingOffer = pendingOfferId ? SHOP_OFFERS[pendingOfferId] : undefined;
+  return <section className="lobby-module-screen accent-teal"><ModuleHeader moduleId="shop" /><div className="shop-toolbar"><span>◈ {progress.sigils}</span><div className="shop-refresh-clock"><small>下次日更</small><b>{countdown}</b></div><button disabled={!progress.shop.freeRefreshAvailable} onClick={refreshShop}><RefreshCw size={14} />{progress.shop.freeRefreshAvailable ? "今日免費刷新" : "今日已刷新"}</button></div><div className="shop-list">{progress.shop.offers.map((offerId) => { const offer = SHOP_OFFERS[offerId]; const bought = progress.shop.purchased.includes(offerId); const canBuy = progress.sigils >= offer.price && !bought; return <article key={offerId} className={bought ? "is-bought" : ""}><i>{offer.icon}</i><div><b>{offer.title}</b><p>{offer.description}</p><small>{offer.reward.equipmentId ? "裝備獲得後可至工坊裝卸" : "立即獲得鍛造素材"}</small></div><button disabled={!canBuy} onClick={() => purchase(offerId)}>{bought ? <><Check size={13} />已購買</> : `◈ ${offer.price}`}</button></article>; })}</div><button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button>{pendingOffer && <div className="dialog-backdrop shop-confirm-backdrop"><div className="shop-confirm-modal"><i>{pendingOffer.icon}</i><p className="screen-kicker">確認購買</p><h3>{pendingOffer.title}</h3><span>{pendingOffer.description}</span><div className="shop-confirm-cost"><span>需要支付</span><b>◈ {pendingOffer.price}</b><small>目前持有 ◈ {progress.sigils}</small></div><div className="shop-confirm-actions"><button className="secondary-cta" onClick={() => setPendingOfferId(null)}>取消</button><button className="primary-cta" onClick={() => { buyShopOffer(pendingOffer.id); setPendingOfferId(null); }}>確認購買</button></div></div></div>}</section>;
+}
+
+function LobbyModuleScreen({ moduleId }: { moduleId: LobbyModuleId }) {
   if (moduleId === "equipment") return <EquipmentScreen />;
   if (moduleId === "daily") return <DailyScreen />;
   if (moduleId === "dungeon") return <DungeonScreen />;
-  return <section className="lobby-module-screen accent-teal"><ModuleHeader moduleId="shop" /><div className="shop-toolbar"><span>◈ {progress.sigils}</span><button disabled={!progress.shop.freeRefreshAvailable} onClick={refreshShop}><RefreshCw size={14} />{progress.shop.freeRefreshAvailable ? "今日免費刷新" : "今日已刷新"}</button></div><div className="shop-list">{progress.shop.offers.map((offerId) => { const offer = SHOP_OFFERS[offerId]; const bought = progress.shop.purchased.includes(offerId); const canBuy = progress.sigils >= offer.price && !bought; return <article key={offerId} className={bought ? "is-bought" : ""}><i>{offer.icon}</i><div><b>{offer.title}</b><p>{offer.description}</p><small>{offer.reward.equipmentId ? "裝備獲得後可至工坊裝卸" : "立即獲得鍛造素材"}</small></div><button disabled={!canBuy} onClick={() => buyShopOffer(offerId)}>{bought ? <><Check size={13} />已購買</> : `◈ ${offer.price}`}</button></article>; })}</div><button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button></section>;
+  return <ShopScreen />;
 }
 
 function TeamScreen() {

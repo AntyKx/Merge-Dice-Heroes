@@ -1,0 +1,16 @@
+/* 精靈骰塔劇場：商店強化維持暖象牙底、命運青綠控制色與清楚的舞台式確認層級。 */
+.shop-refresh-clock { display:grid; gap:1px; text-align:center; }
+.shop-refresh-clock small { color:#6b9b90; font-size:7px; }
+.shop-refresh-clock b { color:#176c63; font-family:"Mochiy Pop One","Noto Sans TC",sans-serif; font-size:11px; letter-spacing:.04em; }
+.shop-confirm-backdrop { z-index:30; }
+.shop-confirm-modal { width:min(310px,calc(100vw - 46px)); display:grid; justify-items:center; gap:9px; padding:22px 18px 17px; border:1px solid rgba(44,126,115,.22); border-radius:22px; color:#31515a; background:#fffdf4; box-shadow:0 20px 50px rgba(37,64,60,.26); text-align:center; }
+.shop-confirm-modal>i { width:52px; height:52px; display:grid; place-items:center; border-radius:16px; color:#eaffec; background:linear-gradient(135deg,#3ab6a1,#277974); font-size:25px; font-style:normal; }
+.shop-confirm-modal .screen-kicker { margin:0; }
+.shop-confirm-modal h3 { margin:0; font-family:"Mochiy Pop One","Noto Sans TC",sans-serif; font-size:19px; letter-spacing:-.06em; }
+.shop-confirm-modal>span { color:#73837e; font-size:10px; }
+.shop-confirm-cost { width:100%; display:flex; align-items:center; justify-content:space-between; padding:9px 10px; border-radius:12px; background:#e7f5ed; }
+.shop-confirm-cost span,.shop-confirm-cost small { color:#6c9087; font-size:8px; }
+.shop-confirm-cost b { color:#17756b; font-size:15px; }
+.shop-confirm-actions { width:100%; display:grid; grid-template-columns:1fr 1.3fr; gap:8px; }
+.shop-confirm-actions button { justify-content:center; min-height:39px; border:0; border-radius:11px; font-size:10px; font-weight:900; }
+.shop-confirm-actions .secondary-cta { color:#6b817e; background:#edf1e9; }
