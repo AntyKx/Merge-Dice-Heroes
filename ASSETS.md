@@ -44,6 +44,7 @@
 | `dice_tower_cute_kingdom_ambient` | 原創8秒無聲可愛王都環境影片；雲朵、草地與圓潤樹木的低動態循環 | `/manus-storage/dice-tower-cute-kingdom-ambient_ead8aa56.mp4` |
 | `dice_tower_cute_facilities_kingdom_map` | 原創可愛王都地圖；工坊、市集、副本門、日誌庭園與圖鑑廣場直接繪入場景 | `/manus-storage/dice-tower-cute-facilities-kingdom-map_34e8ffb9.png` |
 | `dice_tower_cute_facilities_ambient` | 原創可愛王都環境影片；所有功能設施直接繪入地圖並以低動態演出 | `/manus-storage/dice-tower-cute-facilities-ambient_b92496c9.mp4` |
+| `kingdom_weather_rain_overlay` | 原創 8 秒黑底雨絲覆蓋影片；僅於本機時間 12:00–15:59 以 screen blend 疊在固定王都地圖上，不更動鏡頭或地圖構圖 | `/manus-storage/kingdom-weather-rain-overlay_f9438f57.mp4` |
 
 | Name | Description | Runtime Asset |
 | --- | --- | --- |
