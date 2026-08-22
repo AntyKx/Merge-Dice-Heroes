@@ -1,4 +1,4 @@
-/** 英雄舞台：由原始透明輪廓量測產生，以腳底與輪廓中心對齊角色區。 */
+/** 英雄舞台：idle 主體決定待機與普攻的固定尺度；skill 另採特效安全變換，避免魔法被裁切。 */
 import type { HeroId } from './types';
 
 export type HeroBoardLayout = { scale: number; shiftX: number; shiftY: number };
@@ -12,9 +12,9 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 58.9
     },
     "attack": {
-      "scale": 2.33,
-      "shiftX": 12.1,
-      "shiftY": 52.4
+      "scale": 2.61,
+      "shiftX": 22.8,
+      "shiftY": 58.9
     },
     "skill": {
       "scale": 1.6,
@@ -29,9 +29,9 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 70.9
     },
     "attack": {
-      "scale": 2.09,
-      "shiftX": -20.5,
-      "shiftY": 43.3
+      "scale": 3.24,
+      "shiftX": -3.4,
+      "shiftY": 70.9
     },
     "skill": {
       "scale": 1.77,
@@ -46,9 +46,9 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 41.8
     },
     "attack": {
-      "scale": 1.79,
-      "shiftX": 7.1,
-      "shiftY": 15.9
+      "scale": 2.19,
+      "shiftX": -4.1,
+      "shiftY": 41.8
     },
     "skill": {
       "scale": 1.68,
@@ -63,9 +63,9 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 81.7
     },
     "attack": {
-      "scale": 1.98,
-      "shiftX": 1.2,
-      "shiftY": 41.7
+      "scale": 3.24,
+      "shiftX": 6.7,
+      "shiftY": 81.7
     },
     "skill": {
       "scale": 1.62,
@@ -80,9 +80,9 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 90.1
     },
     "attack": {
-      "scale": 2.17,
-      "shiftX": 4.5,
-      "shiftY": 55.9
+      "scale": 3.51,
+      "shiftX": 59.2,
+      "shiftY": 90.1
     },
     "skill": {
       "scale": 1.6,
@@ -97,9 +97,9 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 72.0
     },
     "attack": {
-      "scale": 2.63,
-      "shiftX": 1.1,
-      "shiftY": 59.4
+      "scale": 3.35,
+      "shiftX": 0.0,
+      "shiftY": 72.0
     },
     "skill": {
       "scale": 1.72,
@@ -114,9 +114,9 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 51.3
     },
     "attack": {
-      "scale": 1.64,
-      "shiftX": -1.4,
-      "shiftY": 32.9
+      "scale": 2.61,
+      "shiftX": 2.2,
+      "shiftY": 51.3
     },
     "skill": {
       "scale": 1.7,
@@ -131,9 +131,9 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 94.5
     },
     "attack": {
-      "scale": 2.44,
+      "scale": 3.51,
       "shiftX": -1.5,
-      "shiftY": 64.1
+      "shiftY": 94.5
     },
     "skill": {
       "scale": 1.6,
@@ -148,9 +148,9 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 34.1
     },
     "attack": {
-      "scale": 1.73,
-      "shiftX": -5.4,
-      "shiftY": 19.6
+      "scale": 2.28,
+      "shiftX": -0.5,
+      "shiftY": 34.1
     },
     "skill": {
       "scale": 1.6,
@@ -165,9 +165,9 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 43.6
     },
     "attack": {
-      "scale": 1.65,
-      "shiftX": -1.7,
-      "shiftY": 16.6
+      "scale": 2.28,
+      "shiftX": 6.2,
+      "shiftY": 43.6
     },
     "skill": {
       "scale": 1.69,
