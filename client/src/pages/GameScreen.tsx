@@ -34,15 +34,35 @@ const FIRE_MAGE_FRAMES = {
 } as const;
 
 type FireMageAction = keyof typeof FIRE_MAGE_FRAMES;
+type HeroAnimationAction = "idle" | "attack" | "skill";
+
+const MODULE_HERO_ASSETS: Partial<Record<HeroId, { idle: string; attack: string }>> = {
+  knight: { idle: "/manus-storage/knight_idle_cea764bb.webp", attack: "/manus-storage/knight_attack_f691c2ef.webp" },
+  priest: { idle: "/manus-storage/priest_idle_e4e1739a.webp", attack: "/manus-storage/priest_attack_606c0b85.webp" },
+  ranger: { idle: "/manus-storage/ranger_idle_69cb4ae3.webp", attack: "/manus-storage/ranger_attack_7c5d6d0e.webp" },
+  engineer: { idle: "/manus-storage/engineer_idle_b65c12de.webp", attack: "/manus-storage/engineer_attack_ed6c113b.webp" },
+  deathKnight: { idle: "/manus-storage/deathKnight_idle_5b21f9c4.webp", attack: "/manus-storage/deathKnight_attack_975d6920.webp" },
+  bard: { idle: "/manus-storage/bard_idle_0d9f3cfe.webp", attack: "/manus-storage/bard_attack_993ced97.webp" },
+  fighter: { idle: "/manus-storage/fighter_idle_662fa570.webp", attack: "/manus-storage/fighter_attack_2be794f0.webp" },
+  frostQueen: { idle: "/manus-storage/frostQueen_idle_c9e01bcf.webp", attack: "/manus-storage/frostQueen_attack_82aef509.webp" },
+  assassin: { idle: "/manus-storage/assassin_idle_c1304b96.webp", attack: "/manus-storage/assassin_attack_7c9fb49a.webp" },
+};
 
 const leaderSkill: Record<HeroId, string> = {
   knight: "全體英雄獲得護盾",
   fireMage: "火焰隕石轟炸敵軍",
   archer: "集中齊射最危險目標",
   priest: "全隊治療並提高攻速",
+  ranger: "林影獵殺最危險目標",
+  engineer: "齒輪超載轟炸敵軍",
+  deathKnight: "冥衛誓約護盾前線",
+  bard: "潮音合鳴治療並加速",
+  fighter: "裂地重拳震撼前排",
+  frostQueen: "霜華領域凍傷敵軍",
+  assassin: "夜幕處決最危險目標",
 };
 
-const classOffset: Record<HeroId, string> = { knight: "0% 0%", fireMage: "100% 0%", archer: "0% 100%", priest: "100% 100%" };
+const classOffset: Partial<Record<HeroId, string>> = { knight: "0% 0%", fireMage: "100% 0%", archer: "0% 100%", priest: "100% 100%" };
 
 function FireMageSprite({ action }: { action: FireMageAction }) {
   const [frame, setFrame] = useState(0);
@@ -54,10 +74,12 @@ function FireMageSprite({ action }: { action: FireMageAction }) {
   return <img className={`fire-mage-sprite is-${action}`} src={frames[frame]} alt="" />;
 }
 
-function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal = 0 }: { heroId: HeroId; size?: "small" | "large"; action?: FireMageAction; animationSignal?: number }) {
+function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal = 0 }: { heroId: HeroId; size?: "small" | "large"; action?: HeroAnimationAction; animationSignal?: number }) {
   const definition = HEROES[heroId];
   const HeroMark = heroId === "knight" ? Shield : heroId === "fireMage" ? Zap : heroId === "archer" ? Swords : Sparkles;
   if (heroId === "fireMage") return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId} has-user-sprite`} style={{ borderColor: definition.color }} aria-hidden="true"><FireMageSprite key={`${action}-${animationSignal}`} action={action} /></span>;
+  const moduleAsset = MODULE_HERO_ASSETS[heroId];
+  if (moduleAsset) return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId} has-module-sprite`} style={{ borderColor: definition.color }} aria-hidden="true"><img className="module-hero-sprite" src={moduleAsset[action === "idle" ? "idle" : "attack"]} alt="" /></span>;
   return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId}`} style={{ backgroundImage: `url(${HEROES_URL})`, backgroundPosition: classOffset[heroId], borderColor: definition.color }} aria-hidden="true"><span className="hero-sigil"><HeroMark size={size === "large" ? 24 : 16} strokeWidth={2.7} /></span></span>;
 }
 
@@ -131,12 +153,12 @@ function HeroTile({ hero, index, selected, previewing, onPointerDown, onPointerU
   if (!hero) return <button className={`hero-tile is-empty ${locked ? "is-locked" : ""}`} disabled={locked} aria-label={locked ? "被 Boss 封鎖的格子" : "空的英雄格"}><span>{locked ? <Lock size={16} /> : ""}</span></button>;
   const definition = HEROES[hero.heroId];
   const hp = Math.max(0, hero.hp / hero.maxHp) * 100;
-  const fireMageAction: FireMageAction = hero.heroId === "fireMage" && run?.phase === "MERGING" && run.lastCombination?.kind === "FOUR_KIND" && run.leaderId === "fireMage"
+  const fireMageAction: HeroAnimationAction = hero.heroId === "fireMage" && run?.phase === "MERGING" && run.lastCombination?.kind === "FOUR_KIND" && run.leaderId === "fireMage"
     ? "skill"
     : hero.heroId === "fireMage" && run?.phase === "COMBAT" && hero.cooldown > 0.8
       ? "attack"
       : "idle";
-  const displayAction: FireMageAction = previewing && hero.heroId === "fireMage" ? "attack" : fireMageAction;
+  const displayAction: HeroAnimationAction = previewing || (Boolean(MODULE_HERO_ASSETS[hero.heroId]) && run?.phase === "COMBAT" && hero.cooldown > 0.8) ? "attack" : fireMageAction;
   const characterVisual = hero.heroId === "fireMage"
     ? <span className={`fire-mage-board-sprite tier-${hero.tier} is-${displayAction}`}><FireMageSprite key={`${displayAction}-${hero.attackCount}`} action={displayAction} /></span>
     : <HeroPortrait heroId={hero.heroId} action={fireMageAction} animationSignal={hero.attackCount} />;
@@ -267,12 +289,19 @@ function GuideScreen() {
 export default function GameScreen() {
   const screen = useGameStore((state) => state.screen);
   const startDemo = useGameStore((state) => state.startDemo);
+  const openScreen = useGameStore((state) => state.openScreen);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    if (params.has("roster")) {
+      const timer = window.setTimeout(() => openScreen("team"), 0);
+      return () => window.clearTimeout(timer);
+    }
     if (!params.has("demo")) return;
     const fireMageTier = params.get("preview") === "3" ? 3 : 2;
-    const timer = window.setTimeout(() => startDemo(fireMageTier), 0);
+    const requestedHero = params.get("hero");
+    const showcaseHero = requestedHero && Object.prototype.hasOwnProperty.call(HEROES, requestedHero) ? requestedHero as HeroId : "archer";
+    const timer = window.setTimeout(() => startDemo(fireMageTier, showcaseHero), 0);
     return () => window.clearTimeout(timer);
-  }, [startDemo]);
+  }, [startDemo, openScreen]);
   return <main className="game-frame">{screen === "title" && <TitleScreen />}{screen === "team" && <TeamScreen />}{screen === "leader" && <LeaderScreen />}{screen === "game" && <BattleScreen />}{screen === "guide" && <GuideScreen />}</main>;
 }

@@ -1,4 +1,4 @@
-export type HeroId = "knight" | "fireMage" | "archer" | "priest";
+export type HeroId = "knight" | "fireMage" | "archer" | "priest" | "ranger" | "engineer" | "deathKnight" | "bard" | "fighter" | "frostQueen" | "assassin";
 export type EnemyId =
   | "slime"
   | "wolf"

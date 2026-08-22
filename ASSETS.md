@@ -26,6 +26,18 @@
 
 **素材檢查記錄：** 使用者提供 20 格 PNG、711×493 px 的透明格畫布與 `anchor=(295,351)`。待機和移動各 6 格、攻擊 5 格、技能 3 格；角色造型為原創的紅黑服飾、銀髮與火焰法球的 Q 版火焰法師，輪廓和技能特效已足夠支援遊戲內呈現。
 
+| Name | Description | Runtime Asset |
+| --- | --- | --- |
+| `knight` | 神聖騎士：守護／阻擋（更新既有職業視覺） | `/manus-storage/knight_idle_cea764bb.webp`、`knight_attack_f691c2ef.webp` |
+| `priest` | 神聖祭司：治療／加速（更新既有職業視覺） | `/manus-storage/priest_idle_e4e1739a.webp`、`priest_attack_606c0b85.webp` |
+| `ranger` | 森林遊俠：狙擊／穿透 | `/manus-storage/ranger_idle_69cb4ae3.webp`、`ranger_attack_7c5d6d0e.webp` |
+| `engineer` | 機關技師：範圍／連鎖 | `/manus-storage/engineer_idle_b65c12de.webp`、`engineer_attack_ed6c113b.webp` |
+| `deathKnight` | 死亡騎士：冥衛／阻擋 | `/manus-storage/deathKnight_idle_5b21f9c4.webp`、`deathKnight_attack_975d6920.webp` |
+| `bard` | 水樂吟遊詩人：治療／加速 | `/manus-storage/bard_idle_0d9f3cfe.webp`、`bard_attack_993ced97.webp` |
+| `fighter` | 武鬥家：近戰／連擊 | `/manus-storage/fighter_idle_662fa570.webp`、`fighter_attack_2be794f0.webp` |
+| `frostQueen` | 冰霜女王：範圍／寒霜 | `/manus-storage/frostQueen_idle_c9e01bcf.webp`、`frostQueen_attack_82aef509.webp` |
+| `assassin` | 暗影刺客：瞬擊／處決 | `/manus-storage/assassin_idle_c1304b96.webp`、`assassin_attack_7c9fb49a.webp` |
+
 ## Code-drawn Assets
 
 | Name | Description | Size |

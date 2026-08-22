@@ -62,6 +62,34 @@ export const HEROES: Record<HeroId, HeroDefinition> = {
     role: "support",
     tierNotes: { 1: "治療最虛弱者", 2: "治療 2 名", 3: "治療並加速" },
   },
+  ranger: {
+    id: "ranger", name: "森林遊俠", classLabel: "狙擊", color: "#4f9a64", icon: "R", range: 0.88, attack: 14, maxHp: 58, attackInterval: 0.72, role: "single",
+    tierNotes: { 1: "遠距狙擊", 2: "箭矢穿透", 3: "連環獵射" },
+  },
+  engineer: {
+    id: "engineer", name: "機關技師", classLabel: "工坊", color: "#c7803f", icon: "E", range: 0.66, attack: 10, maxHp: 74, attackInterval: 1.08, role: "area",
+    tierNotes: { 1: "部署齒輪彈", 2: "小範圍連鎖", 3: "過載砲塔" },
+  },
+  deathKnight: {
+    id: "deathKnight", name: "死亡騎士", classLabel: "冥衛", color: "#6d5da3", icon: "D", range: 0.28, attack: 12, maxHp: 128, attackInterval: 1.15, role: "tank",
+    tierNotes: { 1: "阻擋 1 名敵人", 2: "吸收傷害", 3: "冥火護幕" },
+  },
+  bard: {
+    id: "bard", name: "水樂吟遊詩人", classLabel: "和鳴", color: "#48aab8", icon: "B", range: 0.58, attack: 6, maxHp: 68, attackInterval: 1.02, role: "support",
+    tierNotes: { 1: "治療最虛弱者", 2: "治療並加速", 3: "全隊和鳴" },
+  },
+  fighter: {
+    id: "fighter", name: "武鬥家", classLabel: "格鬥", color: "#c85a43", icon: "F", range: 0.34, attack: 17, maxHp: 92, attackInterval: 0.84, role: "single",
+    tierNotes: { 1: "近戰連擊", 2: "重拳追擊", 3: "暴烈旋風" },
+  },
+  frostQueen: {
+    id: "frostQueen", name: "冰霜女王", classLabel: "霜術", color: "#5d91d5", icon: "Q", range: 0.76, attack: 14, maxHp: 61, attackInterval: 1.3, role: "area",
+    tierNotes: { 1: "冰晶單體", 2: "寒霜擴散", 3: "凍結風暴" },
+  },
+  assassin: {
+    id: "assassin", name: "暗影刺客", classLabel: "瞬擊", color: "#85529d", icon: "S", range: 0.67, attack: 21, maxHp: 50, attackInterval: 0.9, role: "single",
+    tierNotes: { 1: "伏擊最前敵人", 2: "影步追斬", 3: "雙刃處決" },
+  },
 };
 
 export const ENEMIES: Record<EnemyId, EnemyDefinition> = {
@@ -120,4 +148,3 @@ export const WAVES: WaveDefinition[] = [
   { wave: 9, title: "精英：巨人再臨", enemies: [{ enemyId: "eliteGiant", count: 1 }, { enemyId: "goblinArcher", count: 4 }, { enemyId: "shieldSoldier", count: 4 }], rewardTalent: true },
   { wave: 10, title: "終幕：碎骰巨靈", enemies: [{ enemyId: "boss", count: 1 }, { enemyId: "wolf", count: 4 }, { enemyId: "bomber", count: 3 }], rewardTalent: false },
 ];
-

@@ -96,7 +96,7 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
   board.forEach((hero) => { if (hero) hero.cooldown -= delta; });
   combat.enemies.forEach((enemy) => { enemy.cooldown -= delta; });
 
-  const knightSlots = board.flatMap((hero, index) => hero?.heroId === "knight" ? [index] : []);
+  const knightSlots = board.flatMap((hero, index) => hero?.heroId === "knight" || hero?.heroId === "deathKnight" ? [index] : []);
   const blockCapacity = knightSlots.reduce((total, index) => total + (board[index]?.tier ?? 0) + modifiers.knightBlockBonus, 0);
   const nearbyEnemies = combat.enemies.filter((enemy) => enemy.pathProgress >= 0.81 && enemy.hp > 0);
   nearbyEnemies.slice(0, blockCapacity).forEach((enemy, index) => { enemy.blockedBy = board[knightSlots[index % Math.max(1, knightSlots.length)]]?.id; });
@@ -107,16 +107,16 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
     hero.cooldown = getHeroInterval(hero, modifiers);
     const position = boardPosition(index);
 
-    if (hero.heroId === "priest") {
+    if (hero.heroId === "priest" || hero.heroId === "bard") {
       const targets = board
         .map((candidate, candidateIndex) => ({ candidate, candidateIndex }))
         .filter(({ candidate }) => candidate && candidate.hp > 0 && candidate.hp < candidate.maxHp)
         .sort((a, b) => (a.candidate!.hp / a.candidate!.maxHp) - (b.candidate!.hp / b.candidate!.maxHp))
         .slice(0, hero.tier >= 2 ? 2 : 1);
       targets.forEach(({ candidate, candidateIndex }) => {
-        const heal = (14 + hero.tier * 8) * modifiers.priestHealMultiplier;
+        const heal = (hero.heroId === "bard" ? 10 + hero.tier * 7 : 14 + hero.tier * 8) * modifiers.priestHealMultiplier;
         candidate!.hp = Math.min(candidate!.maxHp, candidate!.hp + heal);
-        if (hero.tier === 3) candidate!.speedBuff = Math.max(candidate!.speedBuff, 0.18);
+        if ((hero.heroId === "priest" && hero.tier === 3) || (hero.heroId === "bard" && hero.tier >= 2)) candidate!.speedBuff = Math.max(candidate!.speedBuff, hero.heroId === "bard" ? 0.16 : 0.18);
         const targetPosition = boardPosition(candidateIndex);
         pushEvent(combat, heal, targetPosition.x, targetPosition.y, "heal");
       });
@@ -137,6 +137,17 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
     }
     if (hero.heroId === "archer" && hero.tier >= 2 && hero.attackCount % 4 === 0) {
       combat.enemies.filter((enemy) => enemy.id !== target.id && enemy.pathProgress < target.pathProgress).slice(0, 2).forEach((enemy) => damageEnemy(enemy, damage * 0.55));
+    }
+    if (hero.heroId === "ranger" && hero.tier >= 2 && hero.attackCount % 3 === 0) {
+      combat.enemies.filter((enemy) => enemy.id !== target.id && enemy.pathProgress < target.pathProgress).slice(0, hero.tier === 3 ? 3 : 1).forEach((enemy) => damageEnemy(enemy, damage * 0.62));
+    }
+    if ((hero.heroId === "engineer" || hero.heroId === "frostQueen") && hero.tier >= 2) {
+      combat.enemies.filter((enemy) => enemy.id !== target.id && Math.abs(enemy.pathProgress - target.pathProgress) < 0.14).slice(0, hero.tier === 3 ? 2 : 1).forEach((enemy) => damageEnemy(enemy, damage * (hero.tier === 3 ? 0.68 : 0.44)));
+    }
+    if (hero.heroId === "assassin" && hero.tier >= 2 && hero.attackCount % (hero.tier === 3 ? 2 : 3) === 0) damageEnemy(target, damage * 0.75);
+    if (hero.heroId === "deathKnight" && hero.tier === 3 && hero.attackCount % 4 === 0) {
+      hero.shield += 14;
+      pushEvent(combat, 14, position.x, position.y, "shield");
     }
     if (hero.heroId === "knight" && hero.tier === 3 && hero.attackCount % 4 === 0) {
       hero.shield += 18;

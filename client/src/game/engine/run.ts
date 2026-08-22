@@ -59,6 +59,36 @@ function applyLeaderSkill(run: RunState): RunState {
     targets.forEach((enemy) => { enemy.hp -= 78; });
     return { ...run, combat, message: "隊長技：翠羽齊射！" };
   }
+  if (run.leaderId === "ranger") {
+    [...combat.enemies].sort((a, b) => b.pathProgress - a.pathProgress).slice(0, 2).forEach((enemy) => { enemy.hp -= 118; });
+    return { ...run, combat, message: "隊長技：林影獵殺！" };
+  }
+  if (run.leaderId === "engineer") {
+    combat.enemies.forEach((enemy) => { enemy.hp -= 58; });
+    return { ...run, combat, message: "隊長技：齒輪超載！" };
+  }
+  if (run.leaderId === "deathKnight") {
+    board.forEach((hero) => { if (hero) hero.shield += 24; });
+    [...combat.enemies].sort((a, b) => b.pathProgress - a.pathProgress).slice(0, 2).forEach((enemy) => { enemy.hp -= 66; });
+    return { ...run, board, combat, message: "隊長技：冥衛誓約！前線受創並獲得護盾。" };
+  }
+  if (run.leaderId === "bard") {
+    board.forEach((hero) => { if (hero) { hero.hp = Math.min(hero.maxHp, hero.hp + 25); hero.speedBuff = Math.max(hero.speedBuff, 0.26); } });
+    return { ...run, board, combat, message: "隊長技：潮音合鳴！全隊治療並加速。" };
+  }
+  if (run.leaderId === "fighter") {
+    [...combat.enemies].sort((a, b) => b.pathProgress - a.pathProgress).slice(0, 3).forEach((enemy) => { enemy.hp -= 92; });
+    return { ...run, combat, message: "隊長技：裂地重拳！" };
+  }
+  if (run.leaderId === "frostQueen") {
+    combat.enemies.forEach((enemy) => { enemy.hp -= 76; });
+    return { ...run, combat, message: "隊長技：霜華領域！" };
+  }
+  if (run.leaderId === "assassin") {
+    const target = [...combat.enemies].sort((a, b) => b.pathProgress - a.pathProgress)[0];
+    if (target) target.hp -= 185;
+    return { ...run, combat, message: "隊長技：夜幕處決！" };
+  }
   board.forEach((hero) => { if (hero) { hero.hp = Math.min(hero.maxHp, hero.hp + 42); hero.speedBuff = Math.max(hero.speedBuff, 0.28); } });
   return { ...run, board, combat, message: "隊長技：晨曦祝禱！全隊治療並加速。" };
 }
