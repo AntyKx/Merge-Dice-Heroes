@@ -58,6 +58,20 @@ const leaderSkill: Record<HeroId, string> = {
 
 const classOffset: Partial<Record<HeroId, string>> = { knight: "0% 0%", fireMage: "100% 0%", archer: "0% 100%", priest: "100% 100%" };
 
+const PROJECTILE_STYLES: Record<HeroId, { kind: string; color: string; glow: string }> = {
+  knight: { kind: "holy-lance", color: "#f6d56d", glow: "#fff4b8" },
+  fireMage: { kind: "fire-orb", color: "#ff7044", glow: "#ffd66d" },
+  archer: { kind: "wind-arrow", color: "#83ca69", glow: "#e6ffbf" },
+  priest: { kind: "blessing", color: "#d9a7f5", glow: "#fff2ff" },
+  ranger: { kind: "forest-arrow", color: "#78bc56", glow: "#dcff93" },
+  engineer: { kind: "gear-shot", color: "#dd9938", glow: "#fff0a3" },
+  deathKnight: { kind: "soul-lance", color: "#7d6bc5", glow: "#d2c5ff" },
+  bard: { kind: "sound-note", color: "#4bb9bf", glow: "#d2fbff" },
+  fighter: { kind: "impact-fist", color: "#e18a47", glow: "#ffe0a1" },
+  frostQueen: { kind: "ice-shard", color: "#72c9f1", glow: "#ddf8ff" },
+  assassin: { kind: "shadow-dart", color: "#b16bc2", glow: "#ffd5ff" },
+};
+
 function HeroFrameSprite({ heroId, action, animationSignal = 0, boardLayout }: { heroId: HeroId; action: HeroAnimationAction; animationSignal?: number; boardLayout?: HeroBoardLayout }) {
   const frameSheet = HERO_FRAME_SHEETS[heroId];
   const [frame, setFrame] = useState(0);
@@ -86,6 +100,11 @@ function LeaderHeroShowcase({ heroId }: { heroId: HeroId }) {
   const definition = HEROES[heroId];
   if (HERO_FRAME_SHEETS[heroId]) return <span className={`leader-hero-showcase hero-${heroId}`} style={{ borderColor: definition.color }} aria-hidden="true"><HeroFrameSprite key={`leader-${heroId}`} heroId={heroId} action="idle" boardLayout={HERO_BOARD_LAYOUT[heroId]?.idle} /></span>;
   return <HeroPortrait heroId={heroId} size="large" />;
+}
+
+function ProjectileLayer({ heroId, tier, signal }: { heroId: HeroId; tier: number; signal: number }) {
+  const effect = PROJECTILE_STYLES[heroId];
+  return <span key={`${heroId}-${tier}-${signal}`} className={`projectile-layer projectile-${effect.kind} tier-${tier}`} style={{ "--projectile-color": effect.color, "--projectile-glow": effect.glow } as React.CSSProperties} aria-hidden="true"><i className="projectile-trail" /><i className="projectile-core" /><i className="projectile-impact" /></span>;
 }
 
 function Header() {
@@ -168,7 +187,8 @@ function HeroTile({ hero, index, selected, previewing, onPointerDown, onPointerU
   const characterVisual = HERO_FRAME_SHEETS[hero.heroId]
     ? <span className={`hero-board-sprite hero-${hero.heroId} tier-${hero.tier} is-${displayAction}`}><HeroFrameSprite key={`${displayAction}-${hero.attackCount}`} heroId={hero.heroId} action={displayAction} animationSignal={hero.attackCount} boardLayout={HERO_BOARD_LAYOUT[hero.heroId]?.[displayAction]} /></span>
     : <HeroPortrait heroId={hero.heroId} action={displayAction} animationSignal={hero.attackCount} />;
-  return <button className={`hero-tile tier-${hero.tier} ${selected ? "is-selected" : ""} ${previewing ? "is-previewing" : ""} ${displayAction === "skill" ? "is-casting" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); onPointerDown(index); }} onPointerUp={(event) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); onPointerUp(index); }} onPointerCancel={onPointerCancel} onContextMenu={(event) => event.preventDefault()} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}。長按可預覽攻擊動畫。`}><span className="hero-visual-zone">{characterVisual}{previewing && hero.heroId !== "fireMage" && <span className="preview-slash" />}</span><b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}{displayAction === "skill" && <span className="preview-badge"><Sparkles size={9} />{isUltimateCast ? "必殺" : "技能"}</span>}{previewing && <span className="preview-badge"><Swords size={9} />預覽</span>}<em className="attack-orb" style={{ animationDuration: `${previewing ? .42 : Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
+  const isAttacking = displayAction === "attack";
+  return <button className={`hero-tile tier-${hero.tier} ${selected ? "is-selected" : ""} ${previewing ? "is-previewing" : ""} ${isAttacking ? "is-attacking" : ""} ${displayAction === "skill" ? "is-casting" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); onPointerDown(index); }} onPointerUp={(event) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); onPointerUp(index); }} onPointerCancel={onPointerCancel} onContextMenu={(event) => event.preventDefault()} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}。長按可預覽攻擊動畫。`}><span className="hero-visual-zone">{characterVisual}{previewing && hero.heroId !== "fireMage" && <span className="preview-slash" />}</span>{isAttacking && <ProjectileLayer heroId={hero.heroId} tier={hero.tier} signal={hero.attackCount} />}<b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}{displayAction === "skill" && <span className="preview-badge"><Sparkles size={9} />{isUltimateCast ? "必殺" : "技能"}</span>}{previewing && <span className="preview-badge"><Swords size={9} />預覽</span>}<em className="attack-orb" style={{ animationDuration: `${previewing ? .42 : Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
 }
 
 function Board() {
