@@ -5,6 +5,7 @@ import "./shopEnhancements.css";
 import "./lobbyCompact.css";
 import "./dailyCelebration.css";
 import "./islandLobby.css";
+import "./simpleCuteLobby.css";
 import { BatteryCharging, Check, ChevronLeft, Coins, Gem, Gift, Hammer, Heart, Info, Lock, MapPinned, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
@@ -15,13 +16,12 @@ import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, ShopOfferId, Ta
 const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
-const ISLAND_MAP_URL = "/manus-storage/dice-tower-cute-facilities-kingdom-map_34e8ffb9.png";
 const KINGDOM_NIGHT_MAP_URL = "/manus-storage/kingdom-night-map_d4bb0984.png";
+const SIMPLE_CUTE_LOBBY_URL = "/manus-storage/simple-cute-kingdom-standby-day_e6e10e37.png";
 
 type LobbyWeather = "day" | "night";
 type ScenePreviewMode = "auto" | LobbyWeather;
 type LobbyTab = "kingdom" | "journal" | "settings";
-type SceneTapTarget = LobbyModuleId | "guide";
 type ExpeditionBannerStyle = "verdant" | "crimson" | "moon";
 
 const getLobbyWeather = (date: Date): LobbyWeather => {
@@ -136,7 +136,6 @@ function TitleScreen() {
   const { openScreen, progress, setSetting, selectedHeroes } = useGameStore();
   const [departing, setDeparting] = useState(false);
   const [lobbyTab, setLobbyTab] = useState<LobbyTab>("kingdom");
-  const [tappedSceneTarget, setTappedSceneTarget] = useState<SceneTapTarget | null>(null);
   const [bannerStyle, setBannerStyle] = useState<ExpeditionBannerStyle>("verdant");
   const [autoWeather, setAutoWeather] = useState<LobbyWeather>(() => getLobbyWeather(new Date()));
   const [scenePreviewMode, setScenePreviewMode] = useState<ScenePreviewMode>("auto");
@@ -146,41 +145,42 @@ function TitleScreen() {
     const timer = window.setInterval(syncWeather, 60_000);
     return () => window.clearInterval(timer);
   }, []);
-  const claimedCount = progress.daily.claimed.length;
-  const completedQuests = DAILY_QUESTS.filter((quest) => (quest.id === "battle" ? progress.daily.battles : quest.id === "merge" ? progress.daily.merges : progress.daily.victories) >= quest.target).length;
   const claimableQuests = DAILY_QUESTS.filter((quest) => (quest.id === "battle" ? progress.daily.battles : quest.id === "merge" ? progress.daily.merges : progress.daily.victories) >= quest.target && !progress.daily.claimed.includes(quest.id)).length;
-  const equippedCount = Object.values(progress.equipped).filter(Boolean).length;
   const hasUpgradeableEquipment = progress.inventory.some((equipmentId) => { const level = progress.equipmentLevels[equipmentId] ?? 1; return level < 5 && progress.materials >= level * 8; });
   const hasDungeonAttempt = DUNGEONS.some((dungeon, index) => (dungeon.unlocked || (index > 0 && (progress.dungeonClears[DUNGEONS[index - 1].id] ?? 0) > 0)) && progress.stamina >= dungeon.energyCost);
-  const islandStage = Math.min(3, DUNGEONS.filter((dungeon) => (progress.dungeonClears[dungeon.id] ?? 0) > 0).length);
   const playerLevel = 1 + Math.floor(progress.wins / 3);
   const levelProgress = (progress.wins % 3) + 1;
   const weather = scenePreviewMode === "auto" ? autoWeather : scenePreviewMode;
   const weatherMeta = LOBBY_WEATHER_META[weather];
-  const sceneMapUrl = weather === "night" ? KINGDOM_NIGHT_MAP_URL : ISLAND_MAP_URL;
-  const moduleStatus: Record<LobbyModuleId, string> = { equipment: `${equippedCount} / 3 已裝備`, shop: `${progress.sigils} ◈`, daily: `${completedQuests} / 3 完成 · ${claimedCount} 已領`, dungeon: `${progress.stamina} / 20 體力` };
-  const notices: Partial<Record<LobbyModuleId, { label: string; reward?: boolean }>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment ? { label: "可強化" } : undefined, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop ? { label: "免費刷新" } : undefined, daily: claimableQuests && !progress.lobbyRead.daily ? { label: `可領取 ${claimableQuests}`, reward: true } : undefined, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon ? { label: "可挑戰" } : undefined };
-  const triggerSceneTap = (target: SceneTapTarget, action: () => void, delay = 160) => { setTappedSceneTarget(target); window.setTimeout(() => { setTappedSceneTarget(null); action(); }, delay); };
-  const landmark = (moduleId: LobbyModuleId, className: string) => { const module = LOBBY_MODULES[moduleId]; const notice = notices[moduleId]; const delay = moduleId === "dungeon" ? 380 : moduleId === "shop" ? 300 : 160; return <button className={`island-landmark landmark-${className} island-stage-${islandStage} ${notice ? "has-notice" : ""} ${tappedSceneTarget === moduleId ? "is-tapped" : ""}`} onClick={() => triggerSceneTap(moduleId, () => openScreen(moduleId), delay)} aria-label={`${module.label}，${moduleStatus[moduleId]}；進入${module.label}`}>{notice && <em className={notice.reward ? "is-reward" : ""} aria-label={notice.label} />}</button>; };
+  const sceneMapUrl = weather === "night" ? KINGDOM_NIGHT_MAP_URL : SIMPLE_CUTE_LOBBY_URL;
+  const actionNotice: Partial<Record<LobbyModuleId, boolean>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop, daily: claimableQuests > 0 && !progress.lobbyRead.daily, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon };
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
-  return <section className={`lobby-screen island-lobby lobby-progress-${completedQuests} map-stage-${islandStage} weather-${weather} banner-${bannerStyle} ${tappedSceneTarget === "shop" ? "market-awakened" : ""} ${tappedSceneTarget === "dungeon" ? "dungeon-awakened" : ""} ${departing ? "is-departing" : ""}`}>
-    <div className="island-map-art" style={{ backgroundImage: `url(${sceneMapUrl})` }} aria-hidden="true" />
-    <div className="kingdom-environment" aria-hidden="true"><i className="scene-flag flag-castle" /><i className="scene-flag flag-market" /><i className="scene-expedition-banner" /><i className="scene-waterwheel" /><i className="scene-smoke" /><i className="scene-market-lantern" /><i className="scene-night-light night-forge" /><i className="scene-night-light night-market" /></div>
-    <header className="island-game-hud" aria-label="玩家資源">
-      <button className="hud-level" onClick={() => openScreen("team")} aria-label={`玩家等級 ${playerLevel}，查看隊伍`}><span>LV.</span><b>{String(playerLevel).padStart(2, "0")}</b><i><em style={{ width: `${levelProgress / 3 * 100}%` }} /></i></button>
-      <button className="hud-resource hud-gold" onClick={() => openScreen("shop")} aria-label={`金幣 ${progress.sigils}，前往命運商店`}><Coins size={15} /><span><small>金幣</small><b>{progress.sigils}</b></span></button>
-      <button className="hud-resource hud-gems" onClick={() => openScreen("daily")} aria-label={`鑽石 ${progress.crystals}，前往每日任務`}><Gem size={15} /><span><small>鑽石</small><b>{progress.crystals}</b></span></button>
-      <button className="hud-resource hud-stamina" onClick={() => openScreen("dungeon")} aria-label={`體力 ${progress.stamina} / 20，前往副本`}><BatteryCharging size={16} /><span><small>體力</small><b>{progress.stamina}<em>/20</em></b></span></button>
-      <button className="hud-menu" onClick={() => setLobbyTab("settings")} aria-label="開啟設定"><Menu size={18} /></button>
+  return <section className={`lobby-screen cute-hub-lobby weather-${weather} banner-${bannerStyle} ${departing ? "is-departing" : ""}`}>
+    <div className="cute-hub-art" style={{ backgroundImage: `url(${sceneMapUrl})` }} aria-hidden="true" />
+    <header className="cute-hub-hud" aria-label="玩家資源">
+      <button className="cute-level" onClick={() => openScreen("team")} aria-label={`玩家等級 ${playerLevel}，查看隊伍`}><span>LV.</span><b>{String(playerLevel).padStart(2, "0")}</b><i><em style={{ width: `${levelProgress / 3 * 100}%` }} /></i></button>
+      <button className="cute-resource" onClick={() => openScreen("shop")} aria-label={`金幣 ${progress.sigils}，前往商店`}><Coins size={14} /><b>{progress.sigils}</b></button>
+      <button className="cute-resource" onClick={() => openScreen("daily")} aria-label={`鑽石 ${progress.crystals}，前往每日任務`}><Gem size={14} /><b>{progress.crystals}</b></button>
+      <button className="cute-resource" onClick={() => openScreen("dungeon")} aria-label={`體力 ${progress.stamina} / 20，前往副本`}><BatteryCharging size={15} /><b>{progress.stamina}/20</b></button>
+      <button className="cute-menu" onClick={() => setLobbyTab("settings")} aria-label="開啟設定"><Menu size={19} /></button>
     </header>
-    <p className="island-location"><Sparkles size={11} /><b>{weatherMeta.label}</b></p>
-    <section className="island-landmarks" aria-label="冒險大廳入口">
-      {landmark("equipment", "forge")}{landmark("shop", "market")}{landmark("daily", "journal")}{landmark("dungeon", "dungeon")}
-      <button className={`island-landmark landmark-guide ${tappedSceneTarget === "guide" ? "is-tapped" : ""}`} onClick={() => triggerSceneTap("guide", () => openScreen("guide"))} aria-label="策略圖鑑，骰型與職業；進入策略圖鑑" />
-    </section>
-    {lobbyTab === "journal" && <aside className="island-guide-sheet" aria-label="王都導覽：今日任務"><header><span><Gift size={15} />今日導覽</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><p>今日有 <b>{claimableQuests}</b> 項獎勵可領取，完成行動即可累積鑽石與素材。</p><div><button onClick={() => openScreen("daily")}>查看每日任務 <ChevronLeft size={15} /></button><button onClick={() => openScreen("shop")}>前往命運商店 <ChevronLeft size={15} /></button></div></aside>}
-    {lobbyTab === "settings" && <aside className="island-guide-sheet" aria-label="王都導覽：設定與音效"><header><span><Settings2 size={15} />設定與音效</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><p>依裝置偏好減少動態時，王都的雲、風、水面與燈火效果會自動停用。</p><div className="scene-preview-controls"><small>場景預覽</small><span><button className={scenePreviewMode === "auto" ? "is-selected" : ""} onClick={() => setScenePreviewMode("auto")}>自動</button><button className={scenePreviewMode === "day" ? "is-selected" : ""} onClick={() => setScenePreviewMode("day")}>白天</button><button className={scenePreviewMode === "night" ? "is-selected" : ""} onClick={() => setScenePreviewMode("night")}>夜晚</button></span></div><div className="banner-picker"><small>遠征隊旗</small><span><button className={bannerStyle === "verdant" ? "is-selected banner-verdant" : "banner-verdant"} onClick={() => setBannerStyle("verdant")} aria-label="選擇青綠遠征旗" /><button className={bannerStyle === "crimson" ? "is-selected banner-crimson" : "banner-crimson"} onClick={() => setBannerStyle("crimson")} aria-label="選擇赤紅遠征旗" /><button className={bannerStyle === "moon" ? "is-selected banner-moon" : "banner-moon"} onClick={() => setBannerStyle("moon")} aria-label="選擇月藍遠征旗" /></span></div><div><button className={progress.settings.sfxEnabled ? "is-selected" : ""} onClick={() => setSetting("sfxEnabled", !progress.settings.sfxEnabled)}><Volume2 size={15} />音效 {progress.settings.sfxEnabled ? "開啟" : "關閉"}</button><button className={progress.settings.musicEnabled ? "setting-on" : ""} onClick={() => setSetting("musicEnabled", !progress.settings.musicEnabled)}><Music2 size={15} />音樂 {progress.settings.musicEnabled ? "開啟" : "關閉"}</button></div></aside>}
-    <nav className="island-tabbar" aria-label="王都導覽分頁"><button className={lobbyTab === "kingdom" ? "is-active" : ""} onClick={() => setLobbyTab("kingdom")}><MapPinned size={17} /><span>王都</span></button><button className="tab-expedition" disabled={departing} onClick={launchExpedition}><Swords size={17} /><span>{departing ? "啟程" : "遠征"}</span></button><button className={lobbyTab === "journal" ? "is-active" : ""} onClick={() => setLobbyTab("journal")}><Gift size={17} /><span>導覽</span>{claimableQuests > 0 && <i />}</button></nav>
+    <div className="cute-hub-title"><span>命運骰塔王都</span><small>{weatherMeta.label}</small></div>
+    <main className="cute-hub-standby" aria-label="英雄待命區">
+      <button className="cute-hub-party" onClick={() => openScreen("team")} aria-label="查看並調整遠征隊伍">
+        <div>{selectedHeroes.slice(0, 3).map((heroId, index) => <span key={heroId} className={`cute-party-hero hero-${index + 1}`}><HeroPortrait heroId={heroId} /><i>{HEROES[heroId].name.slice(0, 1)}</i></span>)}</div><small>遠征小隊</small>
+      </button>
+      <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><Swords size={22} /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
+      <section className="cute-facility-row" aria-label="王都設施">
+        <button className="facility-button facility-forge" onClick={() => openScreen("equipment")}><Hammer size={17} /><span>裝備</span>{actionNotice.equipment && <i />}</button>
+        <button className="facility-button facility-shop" onClick={() => openScreen("shop")}><Coins size={17} /><span>商店</span>{actionNotice.shop && <i />}</button>
+        <button className="facility-button facility-daily" onClick={() => openScreen("daily")}><Gift size={17} /><span>任務</span>{actionNotice.daily && <i />}</button>
+        <button className="facility-button facility-dungeon" onClick={() => openScreen("dungeon")}><Swords size={17} /><span>副本</span>{actionNotice.dungeon && <i />}</button>
+        <button className="facility-button facility-guide" onClick={() => openScreen("guide")}><Sparkles size={17} /><span>圖鑑</span></button>
+      </section>
+    </main>
+    {lobbyTab === "journal" && <aside className="cute-hub-sheet" aria-label="今日導覽"><header><span><Gift size={15} />今日導覽</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><p>目前有 <b>{claimableQuests}</b> 項獎勵可領取。完成遠征與合成後，別忘了回來收下每日獎勵。</p><div><button onClick={() => openScreen("daily")}>查看每日任務</button><button onClick={() => openScreen("shop")}>前往命運商店</button></div></aside>}
+    {lobbyTab === "settings" && <aside className="cute-hub-sheet" aria-label="設定與音效"><header><span><Settings2 size={15} />設定與音效</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><div className="cute-scene-selector"><small>場景預覽</small><span><button className={scenePreviewMode === "auto" ? "is-selected" : ""} onClick={() => setScenePreviewMode("auto")}>自動</button><button className={scenePreviewMode === "day" ? "is-selected" : ""} onClick={() => setScenePreviewMode("day")}>白天</button><button className={scenePreviewMode === "night" ? "is-selected" : ""} onClick={() => setScenePreviewMode("night")}>夜晚</button></span></div><div className="cute-banner-selector"><small>遠征隊旗</small><span><button className={bannerStyle === "verdant" ? "is-selected verdant" : "verdant"} onClick={() => setBannerStyle("verdant")} /><button className={bannerStyle === "crimson" ? "is-selected crimson" : "crimson"} onClick={() => setBannerStyle("crimson")} /><button className={bannerStyle === "moon" ? "is-selected moon" : "moon"} onClick={() => setBannerStyle("moon")} /></span></div><div className="cute-audio-toggle"><button className={progress.settings.sfxEnabled ? "is-selected" : ""} onClick={() => setSetting("sfxEnabled", !progress.settings.sfxEnabled)}><Volume2 size={15} />音效 {progress.settings.sfxEnabled ? "開啟" : "關閉"}</button><button className={progress.settings.musicEnabled ? "is-selected" : ""} onClick={() => setSetting("musicEnabled", !progress.settings.musicEnabled)}><Music2 size={15} />音樂 {progress.settings.musicEnabled ? "開啟" : "關閉"}</button></div></aside>}
+    <nav className="cute-hub-nav" aria-label="王都導覽"><button className={lobbyTab === "kingdom" ? "is-active" : ""} onClick={() => setLobbyTab("kingdom")}><MapPinned size={18} /><span>王都</span></button><button className="cute-nav-expedition" disabled={departing} onClick={launchExpedition}><Swords size={18} /><span>{departing ? "啟程" : "遠征"}</span></button><button className={lobbyTab === "journal" ? "is-active" : ""} onClick={() => setLobbyTab("journal")}><Gift size={18} /><span>導覽</span>{claimableQuests > 0 && <i />}</button></nav>
     {departing && <div className="expedition-departure" role="status" aria-live="polite"><div className="departure-party">{selectedHeroes.map((heroId) => <span key={heroId} style={{ "--party-color": HEROES[heroId].color } as React.CSSProperties}>{HEROES[heroId].name.slice(0, 1)}</span>)}</div><div><small>命運骰塔</small><b>遠征隊伍，出發！</b><span>正踏上下一段命運……</span></div><i><Swords size={23} /></i></div>}
   </section>;
 }
