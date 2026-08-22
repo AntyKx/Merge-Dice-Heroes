@@ -42,6 +42,8 @@
 | `dice_tower_grounded_kingdom_ambient` | 原創8秒無聲循環王都環境影片；遠景雲霧、森林微風與河面光點 | `/manus-storage/dice-tower-grounded-kingdom-ambient_16c89713.mp4` |
 | `dice_tower_cute_kingdom_map` | 原創可愛Q版王都靜態後備地圖；圓潤城堡、童話樹木與明亮草原 | `/manus-storage/dice-tower-cute-kingdom-map_0943dda0.png` |
 | `dice_tower_cute_kingdom_ambient` | 原創8秒無聲可愛王都環境影片；雲朵、草地與圓潤樹木的低動態循環 | `/manus-storage/dice-tower-cute-kingdom-ambient_ead8aa56.mp4` |
+| `dice_tower_cute_facilities_kingdom_map` | 原創可愛王都地圖；工坊、市集、副本門、日誌庭園與圖鑑廣場直接繪入場景 | `/manus-storage/dice-tower-cute-facilities-kingdom-map_34e8ffb9.png` |
+| `dice_tower_cute_facilities_ambient` | 原創可愛王都環境影片；所有功能設施直接繪入地圖並以低動態演出 | `/manus-storage/dice-tower-cute-facilities-ambient_b92496c9.mp4` |
 
 | Name | Description | Runtime Asset |
 | --- | --- | --- |
