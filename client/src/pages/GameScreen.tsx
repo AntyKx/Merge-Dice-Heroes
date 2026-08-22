@@ -99,21 +99,29 @@ function Header() {
   </header>;
 }
 
+type LobbyModuleId = "equipment" | "shop" | "daily" | "dungeon";
+
+const LOBBY_MODULES: Record<LobbyModuleId, { label: string; title: string; eyebrow: string; summary: string; icon: string; accent: string; status: string; items: Array<{ title: string; detail: string; tag: string }> }> = {
+  equipment: { label: "裝備", title: "裝備工坊", eyebrow: "鍛造與配置", summary: "替隊長配置遺物與徽記；裝備效果會在每局開始前生效。", icon: "✦", accent: "gold", status: "3 件可查看", items: [{ title: "晨星長劍", detail: "全隊起始攻速 +4%", tag: "稀有" }, { title: "守望者披風", detail: "城堡最大生命 +2", tag: "普通" }, { title: "命運骰匣", detail: "第一回合額外獲得 1 次重骰", tag: "史詩" }] },
+  shop: { label: "商店", title: "命運商店", eyebrow: "本日輪替", summary: "使用命運碎晶交換招募券、裝備藍圖與限定素材。", icon: "◈", accent: "teal", status: "刷新：06:42:18", items: [{ title: "英雄招募券", detail: "下次冒險可指定一次召喚選項", tag: "120 ✦" }, { title: "鍛造銅礦", detail: "裝備升級材料 ×20", tag: "80 ✦" }, { title: "霜華紋章", detail: "冰霜女王專屬飾品藍圖", tag: "240 ✦" }] },
+  daily: { label: "每日任務", title: "冒險者日誌", eyebrow: "每日進度", summary: "完成日常行動以累積命運印記；每日 00:00 刷新。", icon: "✓", accent: "coral", status: "2 / 3 已完成", items: [{ title: "完成 1 局遠征", detail: "獎勵：命運碎晶 ×30", tag: "已完成" }, { title: "合成 3 次英雄", detail: "獎勵：鍛造銅礦 ×10", tag: "已完成" }, { title: "擊敗 1 名精英敵人", detail: "獎勵：英雄招募券 ×1", tag: "進行中" }] },
+  dungeon: { label: "副本", title: "命運副本", eyebrow: "常駐挑戰", summary: "選擇特殊規則的舞台，為裝備與英雄突破收集素材。", icon: "⚔", accent: "violet", status: "第 1 區已開放", items: [{ title: "廢墟迴廊", detail: "敵軍攻速提高；掉落守望者披風素材", tag: "推薦戰力 180" }, { title: "霜凍祭壇", detail: "持續冰緩；掉落霜華紋章素材", tag: "第 2 區解鎖" }, { title: "暮影試煉", detail: "精英連戰；掉落暗影系列素材", tag: "第 3 區解鎖" }] },
+};
+
 function TitleScreen() {
   const { openScreen, progress, setSetting } = useGameStore();
-  return <section className="title-screen">
-    <div className="title-orbit orbit-one" /><div className="title-orbit orbit-two" />
-    <div className="title-mark"><img src={LOGO_URL} alt="Merge Dice Heroes 命運骰標誌" /></div>
-    <p className="eyebrow">骰子策略 · 英雄合成 · 自動塔防</p>
-    <h1><span>MERGE</span><b>DICE</b><span>HEROES</span></h1>
-    <p className="title-tagline">鎖住好運，合成勝機。</p>
-    <div className="title-actions">
-      <button className="primary-cta" onClick={() => openScreen("team")}><Play size={18} fill="currentColor" />展開新一局</button>
-      <button className="secondary-cta" onClick={() => openScreen("guide")}><BookOpen size={18} />策略圖鑑</button>
-    </div>
-    <div className="record-panel"><span>冒險紀錄</span><div><b>{progress.wins}</b><small>勝利</small></div><div><b>{progress.bestWave}</b><small>最高波次</small></div><div><b>{progress.losses}</b><small>失利</small></div></div>
-    <div className="settings-strip"><span><Settings2 size={15} />設定</span><button className={progress.settings.sfxEnabled ? "setting-on" : ""} onClick={() => setSetting("sfxEnabled", !progress.settings.sfxEnabled)}><Volume2 size={15} />音效</button><button className={progress.settings.musicEnabled ? "setting-on" : ""} onClick={() => setSetting("musicEnabled", !progress.settings.musicEnabled)}><Music2 size={15} />音樂</button></div>
+  return <section className="lobby-screen">
+    <header className="lobby-topbar"><div className="lobby-profile"><div className="lobby-mark"><img src={LOGO_URL} alt="" /></div><div><small>冒險者</small><strong>骰塔見習者</strong><span>Lv. 01 · 命運階梯 I</span></div></div><div className="lobby-currency"><b>✦ 560</b><b>◈ 120</b></div></header>
+    <section className="lobby-hero"><div className="lobby-hero-copy"><p className="screen-kicker">命運骰塔 · 大廳</p><h1>下一段冒險，<br /><em>由你決定。</em></h1><p>整備隊伍、收取任務獎賞，或踏入新的命運副本。</p><button className="lobby-expedition" onClick={() => openScreen("team")}><Swords size={18} />組隊遠征<span>›</span></button></div><div className="lobby-hero-dice"><span>⚄</span><i>命運之門</i></div></section>
+    <section className="lobby-section"><div className="lobby-section-heading"><span>冒險入口</span><small>今日進度</small></div><div className="lobby-grid">{(Object.keys(LOBBY_MODULES) as LobbyModuleId[]).map((moduleId) => { const module = LOBBY_MODULES[moduleId]; return <button key={moduleId} className={`lobby-card accent-${module.accent}`} onClick={() => openScreen(moduleId)}><i>{module.icon}</i><div><b>{module.label}</b><small>{module.status}</small></div><span>›</span></button>; })}<button className="lobby-card accent-blue lobby-card--wide" onClick={() => openScreen("guide")}><i><BookOpen size={22} /></i><div><b>策略圖鑑</b><small>骰型、職業、天賦與規則一覽</small></div><span>›</span></button></div></section>
+    <section className="lobby-record"><div><small>最高遠征</small><b>WAVE {String(progress.bestWave).padStart(2, "0")}</b></div><div><small>完成遠征</small><b>{progress.wins} <em>次</em></b></div><div><small>本週印記</small><b>420 <em>/ 600</em></b></div></section>
+    <div className="settings-strip lobby-settings"><span><Settings2 size={15} />設定</span><button className={progress.settings.sfxEnabled ? "setting-on" : ""} onClick={() => setSetting("sfxEnabled", !progress.settings.sfxEnabled)}><Volume2 size={15} />音效</button><button className={progress.settings.musicEnabled ? "setting-on" : ""} onClick={() => setSetting("musicEnabled", !progress.settings.musicEnabled)}><Music2 size={15} />音樂</button></div>
   </section>;
+}
+
+function LobbyModuleScreen({ moduleId }: { moduleId: LobbyModuleId }) {
+  const { openScreen } = useGameStore(); const module = LOBBY_MODULES[moduleId];
+  return <section className={`lobby-module-screen accent-${module.accent}`}><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />返回大廳</button><div className="module-heading"><i>{module.icon}</i><div><p className="screen-kicker">{module.eyebrow}</p><h2>{module.title}</h2><p>{module.summary}</p></div></div><div className="module-status"><span>{module.status}</span><b>今日可領取</b></div><div className="module-list">{module.items.map((item) => <article key={item.title}><div><b>{item.title}</b><p>{item.detail}</p></div><em>{item.tag}</em></article>)}</div>{moduleId === "dungeon" ? <button className="primary-cta wide-cta" onClick={() => openScreen("team")}><Swords size={17} />前往組隊</button> : <button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button>}</section>;
 }
 
 function TeamScreen() {
@@ -298,6 +306,11 @@ export default function GameScreen() {
   const openScreen = useGameStore((state) => state.openScreen);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const requestedModule = params.get("module");
+    if (requestedModule && ["equipment", "shop", "daily", "dungeon"].includes(requestedModule)) {
+      const timer = window.setTimeout(() => openScreen(requestedModule as LobbyModuleId), 0);
+      return () => window.clearTimeout(timer);
+    }
     if (params.has("leader")) {
       const timer = window.setTimeout(() => openScreen("leader"), 0);
       return () => window.clearTimeout(timer);
@@ -315,5 +328,5 @@ export default function GameScreen() {
     const timer = window.setTimeout(() => startDemo(fireMageTier, showcaseHero, cast), 0);
     return () => window.clearTimeout(timer);
   }, [startDemo, openScreen]);
-  return <main className="game-frame">{screen === "title" && <TitleScreen />}{screen === "team" && <TeamScreen />}{screen === "leader" && <LeaderScreen />}{screen === "game" && <BattleScreen />}{screen === "guide" && <GuideScreen />}</main>;
+  return <main className="game-frame">{screen === "title" && <TitleScreen />}{screen === "team" && <TeamScreen />}{screen === "leader" && <LeaderScreen />}{screen === "game" && <BattleScreen />}{screen === "guide" && <GuideScreen />}{(["equipment", "shop", "daily", "dungeon"] as LobbyModuleId[]).includes(screen as LobbyModuleId) && <LobbyModuleScreen moduleId={screen as LobbyModuleId} />}</main>;
 }

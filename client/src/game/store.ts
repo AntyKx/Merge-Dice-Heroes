@@ -23,7 +23,7 @@ import { defaultProgress, loadProgress, saveProgress } from "./persistence";
 import { createHero } from "./rules/merge";
 import type { DiceCombinationKind, HeroId, PlayerProgress, RunState } from "./types";
 
-export type GameScreen = "title" | "team" | "leader" | "game" | "guide";
+export type GameScreen = "title" | "team" | "leader" | "game" | "guide" | "equipment" | "shop" | "daily" | "dungeon";
 
 interface GameStore {
   screen: GameScreen;
