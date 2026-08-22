@@ -36,16 +36,16 @@ const FIRE_MAGE_FRAMES = {
 type FireMageAction = keyof typeof FIRE_MAGE_FRAMES;
 type HeroAnimationAction = "idle" | "attack" | "skill";
 
-const MODULE_HERO_ASSETS: Partial<Record<HeroId, { idle: string; attack: string }>> = {
-  knight: { idle: "/manus-storage/knight_idle_cea764bb.webp", attack: "/manus-storage/knight_attack_f691c2ef.webp" },
-  priest: { idle: "/manus-storage/priest_idle_e4e1739a.webp", attack: "/manus-storage/priest_attack_606c0b85.webp" },
-  ranger: { idle: "/manus-storage/ranger_idle_69cb4ae3.webp", attack: "/manus-storage/ranger_attack_7c5d6d0e.webp" },
-  engineer: { idle: "/manus-storage/engineer_idle_b65c12de.webp", attack: "/manus-storage/engineer_attack_ed6c113b.webp" },
-  deathKnight: { idle: "/manus-storage/deathKnight_idle_5b21f9c4.webp", attack: "/manus-storage/deathKnight_attack_975d6920.webp" },
-  bard: { idle: "/manus-storage/bard_idle_0d9f3cfe.webp", attack: "/manus-storage/bard_attack_993ced97.webp" },
-  fighter: { idle: "/manus-storage/fighter_idle_662fa570.webp", attack: "/manus-storage/fighter_attack_2be794f0.webp" },
-  frostQueen: { idle: "/manus-storage/frostQueen_idle_c9e01bcf.webp", attack: "/manus-storage/frostQueen_attack_82aef509.webp" },
-  assassin: { idle: "/manus-storage/assassin_idle_c1304b96.webp", attack: "/manus-storage/assassin_attack_7c9fb49a.webp" },
+const MODULE_HERO_ASSETS: Partial<Record<HeroId, { idle: string; attack: string; skill: string }>> = {
+  knight: { idle: "/manus-storage/knight_idle_cea764bb.webp", attack: "/manus-storage/knight_attack_f691c2ef.webp", skill: "/manus-storage/knight_skill_94ec2e6c.webp" },
+  priest: { idle: "/manus-storage/priest_idle_e4e1739a.webp", attack: "/manus-storage/priest_attack_606c0b85.webp", skill: "/manus-storage/priest_skill_f4c26695.webp" },
+  ranger: { idle: "/manus-storage/ranger_idle_69cb4ae3.webp", attack: "/manus-storage/ranger_attack_7c5d6d0e.webp", skill: "/manus-storage/ranger_skill_09f45d09.webp" },
+  engineer: { idle: "/manus-storage/engineer_idle_b65c12de.webp", attack: "/manus-storage/engineer_attack_ed6c113b.webp", skill: "/manus-storage/engineer_skill_329d1bb1.webp" },
+  deathKnight: { idle: "/manus-storage/deathKnight_idle_5b21f9c4.webp", attack: "/manus-storage/deathKnight_attack_975d6920.webp", skill: "/manus-storage/deathKnight_skill_1a823946.webp" },
+  bard: { idle: "/manus-storage/bard_idle_0d9f3cfe.webp", attack: "/manus-storage/bard_attack_993ced97.webp", skill: "/manus-storage/bard_skill_d629e30d.webp" },
+  fighter: { idle: "/manus-storage/fighter_idle_662fa570.webp", attack: "/manus-storage/fighter_attack_2be794f0.webp", skill: "/manus-storage/fighter_skill_e2e370f1.webp" },
+  frostQueen: { idle: "/manus-storage/frostQueen_idle_c9e01bcf.webp", attack: "/manus-storage/frostQueen_attack_82aef509.webp", skill: "/manus-storage/frostQueen_skill_acd6e1d5.webp" },
+  assassin: { idle: "/manus-storage/assassin_idle_c1304b96.webp", attack: "/manus-storage/assassin_attack_7c9fb49a.webp", skill: "/manus-storage/assassin_skill_8f67f386.webp" },
 };
 
 const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
@@ -92,7 +92,7 @@ function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal
   const HeroMark = heroId === "knight" ? Shield : heroId === "fireMage" ? Zap : heroId === "archer" ? Swords : Sparkles;
   if (heroId === "fireMage") return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId} has-user-sprite`} style={{ borderColor: definition.color }} aria-hidden="true"><FireMageSprite key={`${action}-${animationSignal}`} action={action} /></span>;
   const moduleAsset = MODULE_HERO_ASSETS[heroId];
-  if (moduleAsset) return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId} has-module-sprite`} style={{ borderColor: definition.color }} aria-hidden="true"><img className="module-hero-sprite" src={moduleAsset[action === "idle" ? "idle" : "attack"]} alt="" /></span>;
+  if (moduleAsset) return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId} has-module-sprite is-${action}`} style={{ borderColor: definition.color }} aria-hidden="true"><img className="module-hero-sprite" src={moduleAsset[action]} alt="" /></span>;
   return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId}`} style={{ backgroundImage: `url(${HEROES_URL})`, backgroundPosition: classOffset[heroId], borderColor: definition.color }} aria-hidden="true"><span className="hero-sigil"><HeroMark size={size === "large" ? 24 : 16} strokeWidth={2.7} /></span></span>;
 }
 
@@ -166,16 +166,17 @@ function HeroTile({ hero, index, selected, previewing, onPointerDown, onPointerU
   if (!hero) return <button className={`hero-tile is-empty ${locked ? "is-locked" : ""}`} disabled={locked} aria-label={locked ? "被 Boss 封鎖的格子" : "空的英雄格"}><span>{locked ? <Lock size={16} /> : ""}</span></button>;
   const definition = HEROES[hero.heroId];
   const hp = Math.max(0, hero.hp / hero.maxHp) * 100;
-  const fireMageAction: HeroAnimationAction = hero.heroId === "fireMage" && run?.phase === "MERGING" && run.lastCombination?.kind === "FOUR_KIND" && run.leaderId === "fireMage"
+  const isUltimateCast = run?.phase === "MERGING" && run.lastCombination?.kind === "FIVE_KIND";
+  const isLeaderCast = run?.phase === "MERGING" && run.lastCombination?.kind === "FOUR_KIND" && run.leaderId === hero.heroId;
+  const displayAction: HeroAnimationAction = isUltimateCast || isLeaderCast
     ? "skill"
-    : hero.heroId === "fireMage" && run?.phase === "COMBAT" && hero.cooldown > 0.8
+    : previewing || (run?.phase === "COMBAT" && hero.cooldown > 0.8)
       ? "attack"
       : "idle";
-  const displayAction: HeroAnimationAction = previewing || (Boolean(MODULE_HERO_ASSETS[hero.heroId]) && run?.phase === "COMBAT" && hero.cooldown > 0.8) ? "attack" : fireMageAction;
   const characterVisual = hero.heroId === "fireMage"
     ? <span className={`fire-mage-board-sprite tier-${hero.tier} is-${displayAction}`}><FireMageSprite key={`${displayAction}-${hero.attackCount}`} action={displayAction} /></span>
-    : <HeroPortrait heroId={hero.heroId} action={fireMageAction} animationSignal={hero.attackCount} />;
-  return <button className={`hero-tile tier-${hero.tier} ${selected ? "is-selected" : ""} ${previewing ? "is-previewing" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); onPointerDown(index); }} onPointerUp={(event) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); onPointerUp(index); }} onPointerCancel={onPointerCancel} onContextMenu={(event) => event.preventDefault()} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}。長按可預覽攻擊動畫。`}><span className="hero-visual-zone">{characterVisual}{previewing && hero.heroId !== "fireMage" && <span className="preview-slash" />}</span><b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}{previewing && <span className="preview-badge"><Swords size={9} />預覽</span>}<em className="attack-orb" style={{ animationDuration: `${previewing ? .42 : Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
+    : <HeroPortrait heroId={hero.heroId} action={displayAction} animationSignal={hero.attackCount} />;
+  return <button className={`hero-tile tier-${hero.tier} ${selected ? "is-selected" : ""} ${previewing ? "is-previewing" : ""} ${displayAction === "skill" ? "is-casting" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); onPointerDown(index); }} onPointerUp={(event) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); onPointerUp(index); }} onPointerCancel={onPointerCancel} onContextMenu={(event) => event.preventDefault()} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}。長按可預覽攻擊動畫。`}><span className="hero-visual-zone">{characterVisual}{previewing && hero.heroId !== "fireMage" && <span className="preview-slash" />}</span><b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}{displayAction === "skill" && <span className="preview-badge"><Sparkles size={9} />{isUltimateCast ? "必殺" : "技能"}</span>}{previewing && <span className="preview-badge"><Swords size={9} />預覽</span>}<em className="attack-orb" style={{ animationDuration: `${previewing ? .42 : Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
 }
 
 function Board() {
@@ -312,8 +313,10 @@ export default function GameScreen() {
     if (!params.has("demo")) return;
     const fireMageTier = params.get("preview") === "3" ? 3 : 2;
     const requestedHero = params.get("hero");
-    const showcaseHero = requestedHero && Object.prototype.hasOwnProperty.call(HEROES, requestedHero) ? requestedHero as HeroId : "archer";
-    const timer = window.setTimeout(() => startDemo(fireMageTier, showcaseHero), 0);
+    const showcaseHero = requestedHero && Object.prototype.hasOwnProperty.call(HEROES, requestedHero) ? requestedHero as HeroId : "ranger";
+    const castParam = params.get("cast");
+    const cast: "leader" | "ultimate" | undefined = castParam === "leader" || castParam === "ultimate" ? castParam : undefined;
+    const timer = window.setTimeout(() => startDemo(fireMageTier, showcaseHero, cast), 0);
     return () => window.clearTimeout(timer);
   }, [startDemo, openScreen]);
   return <main className="game-frame">{screen === "title" && <TitleScreen />}{screen === "team" && <TeamScreen />}{screen === "leader" && <LeaderScreen />}{screen === "game" && <BattleScreen />}{screen === "guide" && <GuideScreen />}</main>;

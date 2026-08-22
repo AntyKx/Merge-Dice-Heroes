@@ -38,6 +38,12 @@
 | `frostQueen` | 冰霜女王：範圍／寒霜 | `/manus-storage/frostQueen_idle_c9e01bcf.webp`、`frostQueen_attack_82aef509.webp` |
 | `assassin` | 暗影刺客：瞬擊／處決 | `/manus-storage/assassin_idle_c1304b96.webp`、`assassin_attack_7c9fb49a.webp` |
 
+| Name | Skill asset |
+| --- | --- |
+| 火焰法師、聖騎士、神聖祭司 | `/manus-storage/fireMage_skill_54e072aa.webp`、`knight_skill_94ec2e6c.webp`、`priest_skill_f4c26695.webp` |
+| 森林遊俠、機關技師、死亡騎士 | `/manus-storage/ranger_skill_09f45d09.webp`、`engineer_skill_329d1bb1.webp`、`deathKnight_skill_1a823946.webp` |
+| 吟遊詩人、武鬥家、冰霜女王、暗影刺客 | `/manus-storage/bard_skill_d629e30d.webp`、`fighter_skill_e2e370f1.webp`、`frostQueen_skill_acd6e1d5.webp`、`assassin_skill_8f67f386.webp` |
+
 ## User-Supplied Selection Portraits
 
 使用者提供十張方形職業肖像，已以 440×440 px WebP 最佳化並專用於「選擇登場英雄」卡片；這些肖像不會取代棋盤上的逐幀動畫。

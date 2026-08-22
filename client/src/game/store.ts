@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { emitAudio } from "./audio";
-import { HEROES } from "./config";
+import { DICE_COMBINATIONS, HEROES } from "./config";
 import { advanceCombat } from "./engine/combat";
 import {
   beginReroll,
@@ -38,7 +38,7 @@ interface GameStore {
   toggleTeamHero: (heroId: HeroId) => void;
   chooseLeader: (heroId: HeroId) => void;
   startRun: () => void;
-  startDemo: (fireMageTier?: 2 | 3, showcaseHero?: HeroId) => void;
+  startDemo: (fireMageTier?: 2 | 3, showcaseHero?: HeroId, castMode?: "leader" | "ultimate") => void;
   restartRun: () => void;
   toggleLock: (index: number) => void;
   reroll: () => void;
@@ -104,15 +104,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (selectedHeroes.length !== 3) return;
     set({ run: createRun(selectedHeroes, leaderId), screen: "game", selectedBoardIndexes: [] });
   },
-  startDemo: (fireMageTier = 2, showcaseHero: HeroId = "ranger") => {
+  startDemo: (fireMageTier = 2, showcaseHero: HeroId = "ranger", castMode?: "leader" | "ultimate") => {
     const random = () => 0.42;
-    let run = createRun(["knight", "fireMage", showcaseHero], "fireMage", random);
+    let run = createRun(["knight", "fireMage", showcaseHero], castMode ? showcaseHero : "fireMage", random);
     const board = [...run.board];
     board[0] = createHero("knight", 2);
     board[5] = createHero("fireMage", fireMageTier);
     board[10] = createHero(showcaseHero, 1);
     board[14] = createHero("knight", 1);
-    run = { ...run, board, phase: "COMBAT", message: "展示模式：第 1 波自動戰鬥中。" };
+    run = castMode
+      ? { ...run, board, phase: "MERGING", lastCombination: DICE_COMBINATIONS[castMode === "leader" ? "FOUR_KIND" : "FIVE_KIND"], message: castMode === "leader" ? "展示模式：隊長技能施放中。" : "展示模式：命運必殺施放中。" }
+      : { ...run, board, phase: "COMBAT", message: "展示模式：第 1 波自動戰鬥中。" };
     set({ run, screen: "game", selectedBoardIndexes: [] });
   },
   restartRun: () => {
