@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { BookOpen, ChevronLeft, Heart, Info, Lock, Music2, Pause, Play, RotateCcw, Settings2, Shield, Sparkles, Swords, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DICE_COMBINATIONS, HEROES, SELECTABLE_HERO_IDS, TALENTS, WAVES } from "@/game/config";
+import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
 import { useGameStore } from "@/game/store";
 import type { HeroId, HeroInstance, TalentDefinition } from "@/game/types";
 
@@ -57,7 +58,7 @@ const leaderSkill: Record<HeroId, string> = {
 
 const classOffset: Partial<Record<HeroId, string>> = { knight: "0% 0%", fireMage: "100% 0%", archer: "0% 100%", priest: "100% 100%" };
 
-function HeroFrameSprite({ heroId, action, animationSignal = 0 }: { heroId: HeroId; action: HeroAnimationAction; animationSignal?: number }) {
+function HeroFrameSprite({ heroId, action, animationSignal = 0, boardLayout }: { heroId: HeroId; action: HeroAnimationAction; animationSignal?: number; boardLayout?: HeroBoardLayout }) {
   const frameSheet = HERO_FRAME_SHEETS[heroId];
   const [frame, setFrame] = useState(0);
   const range = frameSheet?.actions[action];
@@ -71,7 +72,7 @@ function HeroFrameSprite({ heroId, action, animationSignal = 0 }: { heroId: Hero
   if (!frameSheet || !range) return null;
   const frameIndex = range.start + frame;
   const position = frameSheet.totalFrames > 1 ? (frameIndex / (frameSheet.totalFrames - 1)) * 100 : 0;
-  return <span className={`frame-hero-sprite is-${action}`} style={{ backgroundImage: `url(${frameSheet.source})`, backgroundSize: `100% ${frameSheet.totalFrames * 100}%`, backgroundPosition: `center ${position}%` }} aria-hidden="true" />;
+  return <span className={`frame-hero-sprite is-${action}`} style={{ backgroundImage: `url(${frameSheet.source})`, backgroundSize: `auto ${frameSheet.totalFrames * 100}%`, backgroundPosition: `center ${position}%`, transform: boardLayout ? `translateY(${boardLayout.shiftY}%) scale(${boardLayout.scale})` : undefined }} aria-hidden="true" />;
 }
 
 function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal = 0 }: { heroId: HeroId; size?: "small" | "large"; action?: HeroAnimationAction; animationSignal?: number }) {
@@ -159,7 +160,7 @@ function HeroTile({ hero, index, selected, previewing, onPointerDown, onPointerU
       ? "attack"
       : "idle";
   const characterVisual = HERO_FRAME_SHEETS[hero.heroId]
-    ? <span className={`hero-board-sprite hero-${hero.heroId} tier-${hero.tier} is-${displayAction}`}><HeroFrameSprite key={`${displayAction}-${hero.attackCount}`} heroId={hero.heroId} action={displayAction} animationSignal={hero.attackCount} /></span>
+    ? <span className={`hero-board-sprite hero-${hero.heroId} tier-${hero.tier} is-${displayAction}`}><HeroFrameSprite key={`${displayAction}-${hero.attackCount}`} heroId={hero.heroId} action={displayAction} animationSignal={hero.attackCount} boardLayout={HERO_BOARD_LAYOUT[hero.heroId]?.[displayAction]} /></span>
     : <HeroPortrait heroId={hero.heroId} action={displayAction} animationSignal={hero.attackCount} />;
   return <button className={`hero-tile tier-${hero.tier} ${selected ? "is-selected" : ""} ${previewing ? "is-previewing" : ""} ${displayAction === "skill" ? "is-casting" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); onPointerDown(index); }} onPointerUp={(event) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); onPointerUp(index); }} onPointerCancel={onPointerCancel} onContextMenu={(event) => event.preventDefault()} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}。長按可預覽攻擊動畫。`}><span className="hero-visual-zone">{characterVisual}{previewing && hero.heroId !== "fireMage" && <span className="preview-slash" />}</span><b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}{displayAction === "skill" && <span className="preview-badge"><Sparkles size={9} />{isUltimateCast ? "必殺" : "技能"}</span>}{previewing && <span className="preview-badge"><Swords size={9} />預覽</span>}<em className="attack-orb" style={{ animationDuration: `${previewing ? .42 : Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
 }
