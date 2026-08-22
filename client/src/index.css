@@ -220,20 +220,3 @@ button { font-family: inherit; }
 .leader-hero-showcase:after { content:""; position:absolute; inset:3px; border:1px solid rgba(255,255,255,.7); border-radius:12px 8px 8px 12px; pointer-events:none; }
 .leader-hero-showcase .frame-hero-sprite { position:absolute; inset:0; transform-origin:center 90%; }
 .leader-option.is-selected .leader-hero-showcase { box-shadow:inset 0 0 0 2px rgba(255,255,255,.78),0 0 14px color-mix(in srgb,var(--hero-color) 42%,transparent); }
-
-/* 攻擊投射物：人物圖層維持原尺寸，特效在格外獨立飛行並避開下方生命條。 */
-.hero-board { position:relative; overflow:visible; }
-.hero-tile.is-attacking { overflow:visible; z-index:7; }
-.projectile-layer { --impact-size:14px; position:absolute; z-index:5; width:42px; height:34px; left:48%; bottom:calc(var(--hero-safe-bottom) + 10px); pointer-events:none; transform-origin:8% 56%; animation:projectileTravel .52s cubic-bezier(.18,.78,.3,1) infinite; }
-.projectile-trail { position:absolute; left:0; top:50%; width:31px; height:6px; transform:translateY(-50%); border-radius:999px; opacity:.8; background:linear-gradient(90deg,transparent,var(--projectile-color)); filter:blur(2px); }
-.projectile-core { position:absolute; right:3px; top:50%; width:12px; height:12px; transform:translateY(-50%) rotate(45deg); border-radius:4px; background:var(--projectile-color); box-shadow:0 0 6px var(--projectile-glow),0 0 12px color-mix(in srgb,var(--projectile-color) 72%,transparent); }
-.projectile-impact { position:absolute; right:-9px; top:50%; width:var(--impact-size); height:var(--impact-size); transform:translateY(-50%); border:2px solid var(--projectile-glow); border-radius:50%; opacity:.85; box-shadow:0 0 8px var(--projectile-glow); animation:projectileImpact .52s ease-out infinite; }
-.projectile-layer.tier-2 { --impact-size:22px; filter:brightness(1.14); }.projectile-layer.tier-3 { --impact-size:30px; filter:brightness(1.25) saturate(1.2); }
-.projectile-layer.tier-2:before,.projectile-layer.tier-3:before { content:""; position:absolute; right:-3px; top:50%; width:23px; height:23px; transform:translate(50%,-50%); border-radius:50%; pointer-events:none; background:radial-gradient(circle,rgba(255,249,198,.86) 0 18%,color-mix(in srgb,var(--projectile-color) 64%,transparent) 32%,transparent 70%); }.projectile-layer.tier-3:before { width:34px; height:34px; box-shadow:0 0 16px var(--projectile-glow); }
-.projectile-holy-lance .projectile-core,.projectile-forest-arrow .projectile-core,.projectile-wind-arrow .projectile-core,.projectile-shadow-dart .projectile-core { width:20px; height:5px; border-radius:2px 70% 70% 2px; transform:translateY(-50%) rotate(-10deg); }
-.projectile-fire-orb .projectile-core,.projectile-soul-lance .projectile-core,.projectile-blessing .projectile-core { border-radius:50%; transform:translateY(-50%); }
-.projectile-gear-shot .projectile-core { border-radius:50%; box-shadow:0 0 0 3px color-mix(in srgb,var(--projectile-color) 52%,transparent),0 0 9px var(--projectile-glow); }
-.projectile-sound-note .projectile-core { border-radius:50% 50% 50% 4px; }.projectile-sound-note .projectile-core:after { content:"♪"; position:absolute; left:1px; top:-13px; color:var(--projectile-color); font-size:17px; font-style:normal; text-shadow:0 0 5px var(--projectile-glow); }
-.projectile-impact-fist .projectile-core { width:17px; height:17px; border-radius:50% 42% 42% 50%; }.projectile-impact-fist .projectile-trail { width:37px; height:14px; background:radial-gradient(ellipse,var(--projectile-color),transparent 68%); }.projectile-ice-shard .projectile-core { border-radius:1px; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); }
-@keyframes projectileTravel { from { transform:translate(-9px,5px) scale(.72); opacity:0; } 22% { opacity:1; } 76% { opacity:1; } to { transform:translate(24px,-8px) scale(1); opacity:0; } }
-@keyframes projectileImpact { from { transform:translateY(-50%) scale(.2); opacity:0; } 28% { opacity:1; } to { transform:translateY(-50%) scale(1.55); opacity:0; } }
