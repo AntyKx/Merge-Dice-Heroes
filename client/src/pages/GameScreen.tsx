@@ -82,6 +82,12 @@ function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal
   return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId}`} style={{ backgroundImage: `url(${HEROES_URL})`, backgroundPosition: classOffset[heroId], borderColor: definition.color }} aria-hidden="true"><span className="hero-sigil"><HeroMark size={size === "large" ? 24 : 16} strokeWidth={2.7} /></span></span>;
 }
 
+function LeaderHeroShowcase({ heroId }: { heroId: HeroId }) {
+  const definition = HEROES[heroId];
+  if (HERO_FRAME_SHEETS[heroId]) return <span className={`leader-hero-showcase hero-${heroId}`} style={{ borderColor: definition.color }} aria-hidden="true"><HeroFrameSprite key={`leader-${heroId}`} heroId={heroId} action="idle" boardLayout={HERO_BOARD_LAYOUT[heroId]?.idle} /></span>;
+  return <HeroPortrait heroId={heroId} size="large" />;
+}
+
 function Header() {
   const { run, pause } = useGameStore();
   if (!run) return null;
@@ -129,7 +135,7 @@ function LeaderScreen() {
   return <section className="selection-screen leader-screen">
     <button className="back-link" onClick={() => openScreen("team")}><ChevronLeft size={19} />重選隊伍</button>
     <p className="screen-kicker">第二步 · 指定隊長</p><h2>選一位帶領本局</h2><p className="screen-subtitle">骰出四條時，隊長會立刻介入戰局；五條則由全隊合力展開必殺。</p>
-    <div className="leader-list">{selectedHeroes.map((heroId) => <button key={heroId} className={`leader-option ${leaderId === heroId ? "is-selected" : ""}`} style={{ "--hero-color": HEROES[heroId].color } as React.CSSProperties} onClick={() => chooseLeader(heroId)}><HeroPortrait heroId={heroId} size="large" /><div><b>{HEROES[heroId].name}</b><strong><Zap size={15} fill="currentColor" />{leaderSkill[heroId]}</strong></div><span>{leaderId === heroId ? "隊長" : "指定"}</span></button>)}</div>
+    <div className="leader-list">{selectedHeroes.map((heroId) => <button key={heroId} className={`leader-option ${leaderId === heroId ? "is-selected" : ""}`} style={{ "--hero-color": HEROES[heroId].color } as React.CSSProperties} onClick={() => chooseLeader(heroId)}><LeaderHeroShowcase heroId={heroId} /><div><b>{HEROES[heroId].name}</b><strong><Zap size={15} fill="currentColor" />{leaderSkill[heroId]}</strong></div><span>{leaderId === heroId ? "隊長" : "指定"}</span></button>)}</div>
     <button className="primary-cta wide-cta" onClick={startRun}><Sparkles size={18} />進入命運舞台</button>
   </section>;
 }
@@ -292,6 +298,10 @@ export default function GameScreen() {
   const openScreen = useGameStore((state) => state.openScreen);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    if (params.has("leader")) {
+      const timer = window.setTimeout(() => openScreen("leader"), 0);
+      return () => window.clearTimeout(timer);
+    }
     if (params.has("roster")) {
       const timer = window.setTimeout(() => openScreen("team"), 0);
       return () => window.clearTimeout(timer);

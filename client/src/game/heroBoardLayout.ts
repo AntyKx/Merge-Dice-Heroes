@@ -21,8 +21,8 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
   },
   "knight": {
     "idle": {
-      "scale": 3.15,
-      "shiftY": -15.1
+      "scale": 3.24,
+      "shiftY": -16.7
     },
     "attack": {
       "scale": 2.09,
@@ -49,8 +49,8 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
   },
   "ranger": {
     "idle": {
-      "scale": 3.15,
-      "shiftY": -4.6
+      "scale": 3.24,
+      "shiftY": -5.9
     },
     "attack": {
       "scale": 1.98,
@@ -63,8 +63,8 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
   },
   "engineer": {
     "idle": {
-      "scale": 3.15,
-      "shiftY": -3.3
+      "scale": 3.51,
+      "shiftY": -8.3
     },
     "attack": {
       "scale": 2.17,
@@ -77,8 +77,8 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
   },
   "deathKnight": {
     "idle": {
-      "scale": 3.15,
-      "shiftY": -16.4
+      "scale": 3.35,
+      "shiftY": -20.0
     },
     "attack": {
       "scale": 2.63,
@@ -105,8 +105,8 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
   },
   "fighter": {
     "idle": {
-      "scale": 3.15,
-      "shiftY": 0.6
+      "scale": 3.51,
+      "shiftY": -3.9
     },
     "attack": {
       "scale": 2.44,
