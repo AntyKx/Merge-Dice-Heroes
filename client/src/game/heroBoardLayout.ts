@@ -1,148 +1,178 @@
-/** 英雄舞台：由原始透明輪廓量測產生，讓每個動作填滿角色區但保留血條與施法安全區。 */
+/** 英雄舞台：由原始透明輪廓量測產生，以腳底與輪廓中心對齊角色區。 */
 import type { HeroId } from './types';
 
-export type HeroBoardLayout = { scale: number; shiftY: number };
+export type HeroBoardLayout = { scale: number; shiftX: number; shiftY: number };
 
 export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' | 'skill', HeroBoardLayout>>> = 
 {
   "fireMage": {
     "idle": {
       "scale": 2.61,
-      "shiftY": -3.5
+      "shiftX": 22.8,
+      "shiftY": 58.9
     },
     "attack": {
       "scale": 2.33,
-      "shiftY": 1.2
+      "shiftX": 12.1,
+      "shiftY": 52.4
     },
     "skill": {
       "scale": 1.6,
-      "shiftY": 3.3
+      "shiftX": 0.7,
+      "shiftY": 27.3
     }
   },
   "knight": {
     "idle": {
       "scale": 3.24,
-      "shiftY": -16.7
+      "shiftX": -3.4,
+      "shiftY": 70.9
     },
     "attack": {
       "scale": 2.09,
-      "shiftY": 1.7
+      "shiftX": -20.5,
+      "shiftY": 43.3
     },
     "skill": {
       "scale": 1.77,
-      "shiftY": -6.2
+      "shiftX": 8.5,
+      "shiftY": 24.6
     }
   },
   "priest": {
     "idle": {
       "scale": 2.19,
-      "shiftY": -3.8
+      "shiftX": -4.1,
+      "shiftY": 41.8
     },
     "attack": {
       "scale": 1.79,
-      "shiftY": -13.7
+      "shiftX": 7.1,
+      "shiftY": 15.9
     },
     "skill": {
       "scale": 1.68,
-      "shiftY": 0.9
+      "shiftX": -1.4,
+      "shiftY": 28.1
     }
   },
   "ranger": {
     "idle": {
       "scale": 3.24,
-      "shiftY": -5.9
+      "shiftX": 6.7,
+      "shiftY": 81.7
     },
     "attack": {
       "scale": 1.98,
-      "shiftY": 4.5
+      "shiftX": 1.2,
+      "shiftY": 41.7
     },
     "skill": {
       "scale": 1.62,
-      "shiftY": 11.0
+      "shiftX": 0.7,
+      "shiftY": 35.8
     }
   },
   "engineer": {
     "idle": {
       "scale": 3.51,
-      "shiftY": -8.3
+      "shiftX": 59.2,
+      "shiftY": 90.1
     },
     "attack": {
       "scale": 2.17,
-      "shiftY": 11.1
+      "shiftX": 4.5,
+      "shiftY": 55.9
     },
     "skill": {
       "scale": 1.6,
-      "shiftY": 14.0
+      "shiftX": 0.0,
+      "shiftY": 38.0
     }
   },
   "deathKnight": {
     "idle": {
       "scale": 3.35,
-      "shiftY": -20.0
+      "shiftX": 0.0,
+      "shiftY": 72.0
     },
     "attack": {
       "scale": 2.63,
-      "shiftY": -3.8
+      "shiftX": 1.1,
+      "shiftY": 59.4
     },
     "skill": {
       "scale": 1.72,
-      "shiftY": 1.4
+      "shiftX": 2.2,
+      "shiftY": 30.2
     }
   },
   "bard": {
     "idle": {
       "scale": 2.61,
-      "shiftY": -11.1
+      "shiftX": 2.2,
+      "shiftY": 51.3
     },
     "attack": {
       "scale": 1.64,
-      "shiftY": 9.3
+      "shiftX": -1.4,
+      "shiftY": 32.9
     },
     "skill": {
       "scale": 1.7,
-      "shiftY": -3.1
+      "shiftX": 3.5,
+      "shiftY": 24.9
     }
   },
   "fighter": {
     "idle": {
       "scale": 3.51,
-      "shiftY": -3.9
+      "shiftX": -1.5,
+      "shiftY": 94.5
     },
     "attack": {
       "scale": 2.44,
-      "shiftY": 8.5
+      "shiftX": -1.5,
+      "shiftY": 64.1
     },
     "skill": {
       "scale": 1.6,
-      "shiftY": 14.0
+      "shiftX": 0.0,
+      "shiftY": 38.0
     }
   },
   "frostQueen": {
     "idle": {
       "scale": 2.28,
-      "shiftY": -15.1
+      "shiftX": -0.5,
+      "shiftY": 34.1
     },
     "attack": {
       "scale": 1.73,
-      "shiftY": -7.6
+      "shiftX": -5.4,
+      "shiftY": 19.6
     },
     "skill": {
       "scale": 1.6,
-      "shiftY": -6.7
+      "shiftX": 1.7,
+      "shiftY": 17.3
     }
   },
   "assassin": {
     "idle": {
       "scale": 2.28,
-      "shiftY": -5.6
+      "shiftX": 6.2,
+      "shiftY": 43.6
     },
     "attack": {
       "scale": 1.65,
-      "shiftY": -7.4
+      "shiftX": -1.7,
+      "shiftY": 16.6
     },
     "skill": {
       "scale": 1.69,
-      "shiftY": -0.0
+      "shiftX": 3.2,
+      "shiftY": 27.6
     }
   }
 } as const;
