@@ -1,0 +1,206 @@
+/** 精靈骰塔劇場：垂直舞台卷軸介面，命運青綠標示可操作決策，戰鬥規則完全由 game/ 引擎掌管。 */
+import { useEffect, useRef } from "react";
+import { BookOpen, ChevronLeft, Heart, Info, Lock, Music2, Pause, Play, RotateCcw, Settings2, Shield, Sparkles, Swords, Volume2, X, Zap } from "lucide-react";
+import { PixiBattle } from "@/components/GameCanvas";
+import { DICE_COMBINATIONS, HEROES, TALENTS, WAVES } from "@/game/config";
+import { useGameStore } from "@/game/store";
+import type { HeroId, HeroInstance, TalentDefinition } from "@/game/types";
+
+const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
+const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
+const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
+
+const leaderSkill: Record<HeroId, string> = {
+  knight: "全體英雄獲得護盾",
+  fireMage: "火焰隕石轟炸敵軍",
+  archer: "集中齊射最危險目標",
+  priest: "全隊治療並提高攻速",
+};
+
+const classOffset: Record<HeroId, string> = { knight: "0% 0%", fireMage: "100% 0%", archer: "0% 100%", priest: "100% 100%" };
+
+function HeroPortrait({ heroId, size = "small" }: { heroId: HeroId; size?: "small" | "large" }) {
+  const definition = HEROES[heroId];
+  const HeroMark = heroId === "knight" ? Shield : heroId === "fireMage" ? Zap : heroId === "archer" ? Swords : Sparkles;
+  return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId}`} style={{ backgroundImage: `url(${HEROES_URL})`, backgroundPosition: classOffset[heroId], borderColor: definition.color }} aria-hidden="true"><span className="hero-sigil"><HeroMark size={size === "large" ? 24 : 16} strokeWidth={2.7} /></span></span>;
+}
+
+function Header() {
+  const { run, pause } = useGameStore();
+  if (!run) return null;
+  const ratio = run.combat.castleHp / run.combat.castleMaxHp;
+  return <header className="battle-header">
+    <div className="castle-readout"><Heart size={15} fill="currentColor" /><div><span>城堡</span><strong>{run.combat.castleHp}/{run.combat.castleMaxHp}</strong></div><i><b style={{ width: `${ratio * 100}%` }} /></i></div>
+    <div className="wave-plate"><small>WAVE</small><strong>{String(run.wave).padStart(2, "0")}</strong><span>/ 10</span></div>
+    <button className="icon-button" onClick={pause} aria-label="暫停"><Pause size={19} fill="currentColor" /></button>
+  </header>;
+}
+
+function TitleScreen() {
+  const { openScreen, progress, setSetting } = useGameStore();
+  return <section className="title-screen">
+    <div className="title-orbit orbit-one" /><div className="title-orbit orbit-two" />
+    <div className="title-mark"><img src={LOGO_URL} alt="Merge Dice Heroes 命運骰標誌" /></div>
+    <p className="eyebrow">骰子策略 · 英雄合成 · 自動塔防</p>
+    <h1><span>MERGE</span><b>DICE</b><span>HEROES</span></h1>
+    <p className="title-tagline">鎖住好運，合成勝機。</p>
+    <div className="title-actions">
+      <button className="primary-cta" onClick={() => openScreen("team")}><Play size={18} fill="currentColor" />展開新一局</button>
+      <button className="secondary-cta" onClick={() => openScreen("guide")}><BookOpen size={18} />策略圖鑑</button>
+    </div>
+    <div className="record-panel"><span>冒險紀錄</span><div><b>{progress.wins}</b><small>勝利</small></div><div><b>{progress.bestWave}</b><small>最高波次</small></div><div><b>{progress.losses}</b><small>失利</small></div></div>
+    <div className="settings-strip"><span><Settings2 size={15} />設定</span><button className={progress.settings.sfxEnabled ? "setting-on" : ""} onClick={() => setSetting("sfxEnabled", !progress.settings.sfxEnabled)}><Volume2 size={15} />音效</button><button className={progress.settings.musicEnabled ? "setting-on" : ""} onClick={() => setSetting("musicEnabled", !progress.settings.musicEnabled)}><Music2 size={15} />音樂</button></div>
+  </section>;
+}
+
+function TeamScreen() {
+  const { openScreen, selectedHeroes, toggleTeamHero } = useGameStore();
+  return <section className="selection-screen">
+    <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到舞台</button>
+    <p className="screen-kicker">第一步 · 編排隊伍</p><h2>選擇三位登場英雄</h2><p className="screen-subtitle">每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。</p>
+    <div className="selection-count"><span>{selectedHeroes.length}</span>/3 已選</div>
+    <div className="hero-choice-grid">{(Object.keys(HEROES) as HeroId[]).map((heroId) => {
+      const definition = HEROES[heroId]; const selected = selectedHeroes.includes(heroId);
+      return <button key={heroId} className={`hero-choice ${selected ? "is-selected" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} onClick={() => toggleTeamHero(heroId)}><HeroPortrait heroId={heroId} size="large" /><div><b>{definition.name}</b><small>{definition.classLabel} · {definition.tierNotes[1]}</small></div><i>{selected ? "已選" : "選擇"}</i></button>;
+    })}</div>
+    <button className="primary-cta wide-cta" disabled={selectedHeroes.length !== 3} onClick={() => openScreen("leader")}><Swords size={18} />決定隊長</button>
+  </section>;
+}
+
+function LeaderScreen() {
+  const { openScreen, selectedHeroes, leaderId, chooseLeader, startRun } = useGameStore();
+  return <section className="selection-screen leader-screen">
+    <button className="back-link" onClick={() => openScreen("team")}><ChevronLeft size={19} />重選隊伍</button>
+    <p className="screen-kicker">第二步 · 指定隊長</p><h2>選一位帶領本局</h2><p className="screen-subtitle">骰出四條時，隊長會立刻介入戰局；五條則由全隊合力展開必殺。</p>
+    <div className="leader-list">{selectedHeroes.map((heroId) => <button key={heroId} className={`leader-option ${leaderId === heroId ? "is-selected" : ""}`} style={{ "--hero-color": HEROES[heroId].color } as React.CSSProperties} onClick={() => chooseLeader(heroId)}><HeroPortrait heroId={heroId} size="large" /><div><b>{HEROES[heroId].name}</b><strong><Zap size={15} fill="currentColor" />{leaderSkill[heroId]}</strong></div><span>{leaderId === heroId ? "隊長" : "指定"}</span></button>)}</div>
+    <button className="primary-cta wide-cta" onClick={startRun}><Sparkles size={18} />進入命運舞台</button>
+  </section>;
+}
+
+function EnemyStrip() {
+  const { run } = useGameStore();
+  if (!run) return null;
+  const remaining = run.combat.enemies.length + run.combat.pendingEnemies.length;
+  return <div className="battle-stage" style={{ backgroundImage: `linear-gradient(180deg, rgba(237,246,242,.14), rgba(251,242,219,.1)), url(${BACKDROP_URL})` }}>
+    <div className="stage-copy"><span>{WAVES[run.wave - 1].title}</span><small>{remaining} 名敵人</small></div>
+    {run.combat.bossWarning && <div className="boss-warning"><Shield size={15} />{run.combat.bossWarning}</div>}
+    <PixiBattle run={run} />
+    <div className="castle-gate"><Shield size={18} fill="currentColor" /><span>守望堡</span></div>
+  </div>;
+}
+
+function HeroTile({ hero, index, selected, onPointerDown, onPointerUp }: { hero: HeroInstance | null; index: number; selected: boolean; onPointerDown: (index: number) => void; onPointerUp: (index: number) => void; }) {
+  const { run } = useGameStore();
+  const locked = run?.combat.lockedTile === index;
+  if (!hero) return <button className={`hero-tile is-empty ${locked ? "is-locked" : ""}`} disabled={locked} aria-label={locked ? "被 Boss 封鎖的格子" : "空的英雄格"}><span>{locked ? <Lock size={16} /> : ""}</span></button>;
+  const definition = HEROES[hero.heroId];
+  const hp = Math.max(0, hero.hp / hero.maxHp) * 100;
+  return <button className={`hero-tile tier-${hero.tier} ${selected ? "is-selected" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={() => onPointerDown(index)} onPointerUp={() => onPointerUp(index)} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}`}><HeroPortrait heroId={hero.heroId} /><b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}<em className="attack-orb" style={{ animationDuration: `${Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
+}
+
+function Board() {
+  const { run, selectedBoardIndexes, selectBoardHero, swapBoardHeroes } = useGameStore();
+  const dragIndex = useRef<number | null>(null);
+  if (!run) return null;
+  const pointerDown = (index: number) => { dragIndex.current = index; };
+  const pointerUp = (index: number) => {
+    if (dragIndex.current === null) return;
+    if (dragIndex.current === index) selectBoardHero(index); else swapBoardHeroes(dragIndex.current, index);
+    dragIndex.current = null;
+  };
+  return <section className="board-section"><div className="section-heading"><span><Swords size={15} />英雄舞台</span><small>點選 3 名同職同階後合成；拖曳可交換位置。</small></div><div className="hero-board">{run.board.map((hero, index) => <HeroTile key={hero?.id ?? `empty-${index}`} hero={hero} index={index} selected={selectedBoardIndexes.includes(index)} onPointerDown={pointerDown} onPointerUp={pointerUp} />)}</div></section>;
+}
+
+function DiceTray() {
+  const { run, toggleLock, reroll, resolve, useSummonEnergy, mergeSelected, selectedBoardIndexes, recycleTierOne, beginCombat } = useGameStore();
+  if (!run) return null;
+  const combination = run.lastCombination;
+  const phase = run.phase;
+  const canAct = phase === "SELECTING_DICE";
+  const canMerge = phase === "MERGING" && !run.pendingHeroChoice && !run.pendingFreeMerge && selectedBoardIndexes.length === 3;
+  return <section className="dice-deck">
+    <div className="dice-topline"><span>命運骰盅</span><strong>{phase === "SELECTING_DICE" ? `尚可重骰 ${run.dice.rerollsLeft} 次` : combination ? `${combination.label} · ${combination.description}` : "等待你的指令"}</strong></div>
+    <div className={`dice-row ${run.dice.isRolling ? "is-rolling" : ""}`}>{run.dice.values.map((value, index) => <button key={`${value}-${index}`} className={`die die-${value} ${run.dice.locked[index] ? "is-locked" : ""}`} disabled={!canAct} onClick={() => toggleLock(index)} aria-label={`骰子 ${index + 1}：${value}${run.dice.locked[index] ? "，已鎖定" : ""}`}><b>{value}</b>{run.dice.locked[index] && <i><Lock size={11} /></i>}</button>)}</div>
+    <div className="action-row">
+      {canAct && <><button className="game-button pale" disabled={run.dice.rerollsLeft <= 0 || run.dice.isRolling} onClick={reroll}><RotateCcw size={16} />重骰</button><button className="game-button teal" disabled={run.dice.isRolling} onClick={resolve}><Sparkles size={16} />提前結算</button></>}
+      {phase === "MERGING" && <><button className="game-button pale" disabled={run.summonEnergy < 1} onClick={useSummonEnergy}><Zap size={16} fill="currentColor" />召喚 {run.summonEnergy}</button><button className="game-button amber" disabled={!canMerge} onClick={mergeSelected}><Sparkles size={16} />合成 {selectedBoardIndexes.length}/3</button><button className="game-button pale recycle" disabled={run.recycleEnergy < 3} onClick={recycleTierOne}><X size={16} />重整 {run.recycleEnergy}/3</button><button className="game-button teal battle-button" disabled={run.pendingHeroChoice || run.pendingFreeMerge} onClick={beginCombat}><Swords size={16} />開戰</button></>}
+    </div>
+  </section>;
+}
+
+function ActiveTalents() {
+  const { run } = useGameStore();
+  if (!run) return null;
+  return <div className="talent-strip"><span><Sparkles size={14} />本局增益</span>{run.activeTalents.length ? run.activeTalents.map((active) => { const talent = TALENTS.find((item) => item.id === active.id)!; return <i key={active.id} className={`rarity-${talent.rarity}`}>{talent.name}{active.stacks > 1 ? ` ×${active.stacks}` : ""}</i>; }) : <em>尚未選擇天賦；第 3 波後將出現三選一。</em>}<b>隊長：{HEROES[run.leaderId].name}</b></div>;
+}
+
+function HeroChoiceOverlay() {
+  const { run, chooseSummonHero } = useGameStore();
+  if (!run?.pendingHeroChoice) return null;
+  return <div className="dialog-backdrop"><div className="choice-modal small-modal"><p className="screen-kicker">三條的獎賞</p><h3>指定一位英雄</h3><p>從本局隊伍中選擇要立即召喚的英雄。</p><div className="summon-choice-list">{run.selectedHeroes.map((heroId) => <button key={heroId} onClick={() => chooseSummonHero(heroId)}><HeroPortrait heroId={heroId} /><span>{HEROES[heroId].name}</span><Sparkles size={17} /></button>)}</div></div></div>;
+}
+
+function TalentOverlay() {
+  const { run, prepareTalents, takeTalent } = useGameStore();
+  useEffect(() => {
+    if (run?.phase !== "REWARD" || run.talentChoices.length) return;
+    const timer = window.setTimeout(prepareTalents, 0);
+    return () => window.clearTimeout(timer);
+  }, [run?.phase, run?.talentChoices.length, prepareTalents]);
+  if (run?.phase !== "REWARD" || !run.talentChoices.length) return null;
+  return <div className="dialog-backdrop"><div className="choice-modal"><p className="screen-kicker">幕間獎賞</p><h3>選擇下一段戰術</h3><p>每次僅能帶走一項強化；本局決策會一路影響到 Boss。</p><div className="talent-choices">{run.talentChoices.map((talent) => <TalentCard key={talent.id} talent={talent} onChoose={() => takeTalent(talent.id)} />)}</div></div></div>;
+}
+
+function TalentCard({ talent, onChoose }: { talent: TalentDefinition; onChoose: () => void }) { return <button className={`talent-card rarity-${talent.rarity}`} onClick={onChoose}><i>{talent.rarity === "epic" ? "EPIC" : talent.rarity === "rare" ? "RARE" : "COMMON"}</i><b>{talent.name}</b><span>{talent.description}</span><small>最多 {talent.maxStacks} 層</small></button>; }
+
+function PauseOverlay() {
+  const { run, pause, setAutoSpeed, autoSpeed, openScreen } = useGameStore();
+  if (run?.phase !== "PAUSED") return null;
+  return <div className="dialog-backdrop"><div className="pause-modal"><Pause size={30} fill="currentColor" /><h3>暫停演出</h3><p>敵軍和英雄都已凍結，放心調整節奏。</p><div className="speed-choice"><span>戰鬥速度</span>{([1, 2, 4] as const).map((speed) => <button key={speed} className={autoSpeed === speed ? "is-selected" : ""} onClick={() => setAutoSpeed(speed)}>{speed}×</button>)}</div><button className="primary-cta wide-cta" onClick={pause}><Play size={17} fill="currentColor" />繼續戰鬥</button><button className="text-button" onClick={() => openScreen("title")}>離開本局</button></div></div>;
+}
+
+function ResultOverlay() {
+  const { run, restartRun, openScreen, continueWave } = useGameStore();
+  if (!run || !["VICTORY", "DEFEAT", "WAVE_CLEAR"].includes(run.phase)) return null;
+  if (run.phase === "WAVE_CLEAR") return <div className="wave-clear-banner"><Sparkles size={20} /><div><b>第 {run.wave} 波完成</b><span>{run.message}</span></div><button className="game-button teal" onClick={continueWave}>{run.wave >= 10 ? "揭開結局" : "下一波"}<ChevronLeft size={16} className="flip" /></button></div>;
+  const won = run.phase === "VICTORY";
+  return <div className="dialog-backdrop"><div className={`result-modal ${won ? "is-victory" : "is-defeat"}`}><div className="result-seal">{won ? <Sparkles size={35} /> : <Shield size={35} />}</div><p>{won ? "THE CURTAIN RISES" : "THE CASTLE FELL"}</p><h3>{won ? "勝利！" : "本局失利"}</h3><span>{run.message}</span><div className="result-stats"><div><b>{run.wave}</b><small>抵達波次</small></div><div><b>{run.activeTalents.length}</b><small>取得天賦</small></div><div><b>{run.combat.castleHp}</b><small>城堡生命</small></div></div><button className="primary-cta wide-cta" onClick={restartRun}><RotateCcw size={17} />再玩一局</button><button className="text-button" onClick={() => openScreen("title")}>回到首頁</button></div></div>;
+}
+
+function DebugPanel() {
+  const { run, showDebug, toggleDebug, debugTriggerCombination, debugSummon, debugJumpWave, debugCastleHp } = useGameStore();
+  if (!import.meta.env.DEV || !run) return null;
+  return <div className={`debug-panel ${showDebug ? "is-open" : ""}`}><button className="debug-toggle" onClick={toggleDebug}>DEBUG</button>{showDebug && <div><strong>開發控制</strong><section><span>指定骰型</span>{Object.keys(DICE_COMBINATIONS).slice(1).map((kind) => <button key={kind} onClick={() => debugTriggerCombination(kind as keyof typeof DICE_COMBINATIONS)}>{DICE_COMBINATIONS[kind as keyof typeof DICE_COMBINATIONS].label}</button>)}</section><section><span>生成英雄</span>{(["knight", "fireMage", "archer", "priest"] as HeroId[]).map((heroId) => <button key={heroId} onClick={() => debugSummon(heroId, 1)}>{HEROES[heroId].name}</button>)}</section><section><button onClick={() => debugJumpWave(Math.min(10, run.wave + 1))}>跳至下一波</button><button onClick={() => debugCastleHp(5)}>城堡 +5</button><button onClick={() => debugCastleHp(-5)}>城堡 -5</button></section></div>}</div>;
+}
+
+function BattleScreen() {
+  const { run } = useGameStore();
+  const combatTick = useGameStore((state) => state.combatTick);
+  const autoSpeed = useGameStore((state) => state.autoSpeed);
+  const timerRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (run?.phase !== "COMBAT") return;
+    let previous = performance.now();
+    const step = (now: number) => { const delta = Math.min(0.08, (now - previous) / 1000) * autoSpeed; previous = now; combatTick(delta); timerRef.current = requestAnimationFrame(step); };
+    timerRef.current = requestAnimationFrame(step);
+    return () => { if (timerRef.current) cancelAnimationFrame(timerRef.current); };
+  }, [run?.phase, combatTick, autoSpeed]);
+  if (!run) return null;
+  return <section className="game-screen"><Header /><EnemyStrip /><Board /><DiceTray /><ActiveTalents /><p className="event-message"><Info size={14} />{run.message}</p><HeroChoiceOverlay /><TalentOverlay /><PauseOverlay /><ResultOverlay /><DebugPanel /></section>;
+}
+
+function GuideScreen() {
+  const { openScreen } = useGameStore();
+  return <section className="guide-screen"><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />首頁</button><img className="guide-mark" src={LOGO_URL} alt="" /><p className="screen-kicker">策略圖鑑</p><h2>一局的勝機，從留下一顆骰子開始。</h2><div className="guide-cards"><article><span className="guide-icon dice-icon">⚄</span><h3>1. 留骰與重骰</h3><p>每波有五顆骰與兩次重骰。先點選鎖定值得保留的點數，再重骰其餘骰子。兩回合無組合後，下一回合會保證至少一對。</p></article><article><span className="guide-icon"><Sparkles size={24} /></span><h3>2. 召喚與合成</h3><p>骰型帶來召喚、隊長技或強化。三名同職、同階英雄點選後合成，T1 變 T2，T2 變 T3。棋盤滿時會轉成重整能量。</p></article><article><span className="guide-icon"><Swords size={24} /></span><h3>3. 守住十波</h3><p>英雄會自動迎敵。第 3、6、9 波後從三項天賦中選擇一項；第 10 波以雙階段 Boss 作為終幕。城堡生命歸零即失敗。</p></article></div><h3 className="dice-guide-heading">骰型一覽</h3><div className="combo-table">{Object.values(DICE_COMBINATIONS).slice().reverse().map((combo) => <div key={combo.kind}><b>{combo.label}</b><span>{combo.description}</span></div>)}</div><button className="primary-cta wide-cta" onClick={() => openScreen("team")}><Play size={17} fill="currentColor" />現在開演</button></section>;
+}
+
+export default function GameScreen() {
+  const screen = useGameStore((state) => state.screen);
+  const startDemo = useGameStore((state) => state.startDemo);
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has("demo")) return;
+    const timer = window.setTimeout(startDemo, 0);
+    return () => window.clearTimeout(timer);
+  }, [startDemo]);
+  return <main className="game-frame">{screen === "title" && <TitleScreen />}{screen === "team" && <TeamScreen />}{screen === "leader" && <LeaderScreen />}{screen === "game" && <BattleScreen />}{screen === "guide" && <GuideScreen />}</main>;
+}
