@@ -84,7 +84,7 @@ function maybeRecord(previous: RunState | undefined, next: RunState, progress: P
 
 export const useGameStore = create<GameStore>((set, get) => ({
   screen: "title",
-  selectedHeroes: ["knight", "fireMage", "archer"],
+  selectedHeroes: ["knight", "fireMage", "ranger"],
   leaderId: "knight",
   progress: loadedProgress,
   selectedBoardIndexes: [],
@@ -104,7 +104,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (selectedHeroes.length !== 3) return;
     set({ run: createRun(selectedHeroes, leaderId), screen: "game", selectedBoardIndexes: [] });
   },
-  startDemo: (fireMageTier = 2, showcaseHero: HeroId = "archer") => {
+  startDemo: (fireMageTier = 2, showcaseHero: HeroId = "ranger") => {
     const random = () => 0.42;
     let run = createRun(["knight", "fireMage", showcaseHero], "fireMage", random);
     const board = [...run.board];

@@ -92,6 +92,8 @@ export const HEROES: Record<HeroId, HeroDefinition> = {
   },
 };
 
+export const SELECTABLE_HERO_IDS: HeroId[] = ["knight", "fireMage", "priest", "assassin", "frostQueen", "ranger", "bard", "deathKnight", "engineer", "fighter"];
+
 export const ENEMIES: Record<EnemyId, EnemyDefinition> = {
   slime: { id: "slime", name: "藍史萊姆", color: "#55a5dd", hp: 34, speed: 0.04, attack: 7, attackInterval: 1.2, castleDamage: 1, tags: [] },
   wolf: { id: "wolf", name: "疾風狼", color: "#c49255", hp: 25, speed: 0.077, attack: 6, attackInterval: 0.85, castleDamage: 1, tags: [] },

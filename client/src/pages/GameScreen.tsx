@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BookOpen, ChevronLeft, Heart, Info, Lock, Music2, Pause, Play, RotateCcw, Settings2, Shield, Sparkles, Swords, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
-import { DICE_COMBINATIONS, HEROES, TALENTS, WAVES } from "@/game/config";
+import { DICE_COMBINATIONS, HEROES, SELECTABLE_HERO_IDS, TALENTS, WAVES } from "@/game/config";
 import { useGameStore } from "@/game/store";
 import type { HeroId, HeroInstance, TalentDefinition } from "@/game/types";
 
@@ -46,6 +46,19 @@ const MODULE_HERO_ASSETS: Partial<Record<HeroId, { idle: string; attack: string 
   fighter: { idle: "/manus-storage/fighter_idle_662fa570.webp", attack: "/manus-storage/fighter_attack_2be794f0.webp" },
   frostQueen: { idle: "/manus-storage/frostQueen_idle_c9e01bcf.webp", attack: "/manus-storage/frostQueen_attack_82aef509.webp" },
   assassin: { idle: "/manus-storage/assassin_idle_c1304b96.webp", attack: "/manus-storage/assassin_attack_7c9fb49a.webp" },
+};
+
+const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
+  knight: "/manus-storage/knight_e04e7edb.webp",
+  fireMage: "/manus-storage/fire-mage_69098bcc.webp",
+  priest: "/manus-storage/priest_cdb9439c.webp",
+  assassin: "/manus-storage/assassin_6dc251bd.webp",
+  frostQueen: "/manus-storage/frost-queen_9e2ac060.webp",
+  ranger: "/manus-storage/ranger_c3a1fc95.webp",
+  bard: "/manus-storage/bard_2a50639e.webp",
+  deathKnight: "/manus-storage/death-knight_8d85600c.webp",
+  engineer: "/manus-storage/engineer_6fba977b.webp",
+  fighter: "/manus-storage/fighter_9eaee4ec.webp",
 };
 
 const leaderSkill: Record<HeroId, string> = {
@@ -117,9 +130,9 @@ function TeamScreen() {
     <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到舞台</button>
     <p className="screen-kicker">第一步 · 編排隊伍</p><h2>選擇三位登場英雄</h2><p className="screen-subtitle">每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。</p>
     <div className="selection-count"><span>{selectedHeroes.length}</span>/3 已選</div>
-    <div className="hero-choice-grid">{(Object.keys(HEROES) as HeroId[]).map((heroId) => {
+    <div className="hero-choice-grid">{SELECTABLE_HERO_IDS.map((heroId) => {
       const definition = HEROES[heroId]; const selected = selectedHeroes.includes(heroId);
-      return <button key={heroId} className={`hero-choice ${selected ? "is-selected" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} onClick={() => toggleTeamHero(heroId)}><HeroPortrait heroId={heroId} size="large" /><div><b>{definition.name}</b><small>{definition.classLabel} · {definition.tierNotes[1]}</small></div><i>{selected ? "已選" : "選擇"}</i></button>;
+      return <button key={heroId} className={`hero-choice ${selected ? "is-selected" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} onClick={() => toggleTeamHero(heroId)}><span className="hero-choice-art"><img src={HERO_PORTRAITS[heroId]} alt="" /><em>{definition.classLabel}</em></span><div><b>{definition.name}</b><small>{definition.tierNotes[1]}</small></div><i>{selected ? "已選" : "選擇"}</i></button>;
     })}</div>
     <button className="primary-cta wide-cta" disabled={selectedHeroes.length !== 3} onClick={() => openScreen("leader")}><Swords size={18} />決定隊長</button>
   </section>;

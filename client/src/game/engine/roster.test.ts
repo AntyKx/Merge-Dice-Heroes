@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HEROES } from "../config";
+import { HEROES, SELECTABLE_HERO_IDS } from "../config";
 import { createRun, resolveDice } from "./run";
 
 describe("expanded hero roster", () => {
@@ -7,6 +7,8 @@ describe("expanded hero roster", () => {
     expect(Object.keys(HEROES)).toHaveLength(11);
     expect(HEROES.assassin.name).toBe("暗影刺客");
     expect(HEROES.frostQueen.role).toBe("area");
+    expect(SELECTABLE_HERO_IDS).toContain("ranger");
+    expect(SELECTABLE_HERO_IDS).not.toContain("archer");
   });
 
   it("resolves a new profession leader skill through a four-of-a-kind", () => {
