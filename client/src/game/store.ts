@@ -22,7 +22,7 @@ import {
 } from "./engine/run";
 import { defaultProgress, loadProgress, saveProgress } from "./persistence";
 import { createHero } from "./rules/merge";
-import type { DailyQuestId, DiceCombinationKind, DungeonId, EquipmentId, EquipmentSlot, HeroId, PlayerProgress, RunState, ShopOfferId } from "./types";
+import type { DailyQuestId, DiceCombinationKind, DungeonId, EquipmentId, EquipmentSlot, HeroId, LobbyNoticeId, PlayerProgress, RunState, ShopOfferId } from "./types";
 
 export type GameScreen = "title" | "team" | "leader" | "game" | "guide" | "equipment" | "shop" | "daily" | "dungeon";
 
@@ -110,7 +110,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedBoardIndexes: [],
   autoSpeed: 1,
   showDebug: false,
-  openScreen: (screen) => set((state) => ({ screen, selectedBoardIndexes: [], selectedDungeonId: screen === "title" ? undefined : state.selectedDungeonId })),
+  openScreen: (screen) => set((state) => {
+    const noticeId = (["equipment", "shop", "daily", "dungeon"] as string[]).includes(screen) ? screen as LobbyNoticeId : undefined;
+    const progress = noticeId && !state.progress.lobbyRead[noticeId] ? persist({ ...state.progress, lobbyRead: { ...state.progress.lobbyRead, [noticeId]: true } }) : state.progress;
+    return { screen, progress, selectedBoardIndexes: [], selectedDungeonId: screen === "title" ? undefined : state.selectedDungeonId };
+  }),
   toggleTeamHero: (heroId) => set((state) => {
     const selectedHeroes = state.selectedHeroes.includes(heroId)
       ? state.selectedHeroes.filter((id) => id !== heroId)
@@ -145,7 +149,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   claimDailyReward: (questId) => set((state) => {
     const quest = DAILY_QUESTS.find((candidate) => candidate.id === questId);
     if (!quest || state.progress.daily.claimed.includes(questId) || dailyValue(state.progress, questId) < quest.target) return state;
-    return { progress: persist({ ...state.progress, crystals: state.progress.crystals + quest.rewardCrystals, daily: { ...state.progress.daily, claimed: [...state.progress.daily.claimed, questId] } }) };
+    return { progress: persist({ ...state.progress, crystals: state.progress.crystals + quest.rewardCrystals, daily: { ...state.progress.daily, claimed: [...state.progress.daily.claimed, questId] }, lobbyRead: { ...state.progress.lobbyRead, daily: true } }) };
   }),
   buyShopOffer: (offerId) => set((state) => {
     const offer = SHOP_OFFERS[offerId];

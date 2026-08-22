@@ -222,6 +222,8 @@ export interface DailyQuestState {
   claimed: DailyQuestId[];
 }
 
+export type LobbyNoticeId = "equipment" | "shop" | "daily" | "dungeon";
+
 export interface DungeonDefinition {
   id: DungeonId;
   title: string;
@@ -248,6 +250,7 @@ export interface PlayerProgress {
   daily: DailyQuestState;
   dungeonClears: Partial<Record<DungeonId, number>>;
   shop: ShopState;
+  lobbyRead: Partial<Record<LobbyNoticeId, boolean>>;
   settings: {
     musicEnabled: boolean;
     sfxEnabled: boolean;
