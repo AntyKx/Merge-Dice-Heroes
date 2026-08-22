@@ -14,7 +14,7 @@ import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, ShopOfferId, Ta
 const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
-const ISLAND_MAP_URL = "/manus-storage/dice-tower-grand-kingdom-map_bbb421d8.png";
+const ISLAND_MAP_URL = "/manus-storage/dice-tower-grounded-kingdom-map_9c9209df.png";
 const ISLAND_DUNGEON_URL = "/manus-storage/dice-tower-dungeon-vignette_d285c369.png";
 
 type HeroAnimationAction = "idle" | "attack" | "skill";
@@ -131,7 +131,7 @@ function TitleScreen() {
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
   return <section className={`lobby-screen island-lobby lobby-progress-${completedQuests} map-stage-${islandStage} ${departing ? "is-departing" : ""}`}>
     <div className="island-map-art" style={{ backgroundImage: `url(${ISLAND_MAP_URL})` }} aria-hidden="true" />
-    <div className="island-environment" aria-hidden="true"><span className="map-cloud cloud-one" /><span className="map-cloud cloud-two" /><span className="map-cloud cloud-three" /><span className="water-ripple ripple-one" /><span className="water-ripple ripple-two" /><span className="map-ship ship-one">⛵</span><span className="map-ship ship-two">⛵</span><span className="island-expansion expansion-one" /><span className="island-expansion expansion-two" /><span className="island-expansion expansion-three" /></div>
+    <div className="island-environment" aria-hidden="true"><span className="map-cloud cloud-one" /><span className="map-cloud cloud-two" /><span className="map-cloud cloud-three" /><span className="road-glimmer glimmer-one" /><span className="road-glimmer glimmer-two" /><span className="island-expansion expansion-one" /><span className="island-expansion expansion-two" /><span className="island-expansion expansion-three" /></div>
     <header className="lobby-topbar island-topbar"><div className="lobby-profile"><div className="lobby-mark"><img src={LOGO_URL} alt="" /></div><div><small>浮島王國</small><strong>骰塔見習者</strong><span>Lv. 01 · 命運階梯 I</span></div></div><div className="lobby-currency"><b>✦ {progress.crystals}</b><b>◈ {progress.sigils}</b></div></header>
     <p className="island-location"><Sparkles size={11} />每日任務 {completedQuests}/3</p>
     <section className="island-landmarks" aria-label="冒險大廳入口">
@@ -141,7 +141,7 @@ function TitleScreen() {
     </section>
     <section className="island-record"><div><small>最高遠征</small><b>WAVE {String(progress.bestWave).padStart(2, "0")}</b></div><div><small>完成遠征</small><b>{progress.wins} <em>次</em></b></div><div><small>今日印記</small><b>{progress.sigils} <em>/ 600</em></b></div></section>
     <div className={`lobby-settings-panel island-settings ${settingsOpen ? "is-open" : ""}`}><button className="lobby-settings-toggle" onClick={() => setSettingsOpen((open) => !open)}><span><Settings2 size={14} />設定與音效</span><ChevronLeft size={15} /></button>{settingsOpen && <div className="settings-strip lobby-settings"><button className={progress.settings.sfxEnabled ? "setting-on" : ""} onClick={() => setSetting("sfxEnabled", !progress.settings.sfxEnabled)}><Volume2 size={15} />音效</button><button className={progress.settings.musicEnabled ? "setting-on" : ""} onClick={() => setSetting("musicEnabled", !progress.settings.musicEnabled)}><Music2 size={15} />音樂</button></div>}</div>
-    {departing && <div className="expedition-departure" role="status" aria-live="polite"><div className="departure-party">{selectedHeroes.map((heroId) => <span key={heroId} style={{ "--party-color": HEROES[heroId].color } as React.CSSProperties}>{HEROES[heroId].name.slice(0, 1)}</span>)}</div><div><small>命運骰塔</small><b>遠征隊伍，出發！</b><span>正駛向下一段命運……</span></div><i>⛵</i></div>}
+    {departing && <div className="expedition-departure" role="status" aria-live="polite"><div className="departure-party">{selectedHeroes.map((heroId) => <span key={heroId} style={{ "--party-color": HEROES[heroId].color } as React.CSSProperties}>{HEROES[heroId].name.slice(0, 1)}</span>)}</div><div><small>命運骰塔</small><b>遠征隊伍，出發！</b><span>正踏上下一段命運……</span></div><i><Swords size={23} /></i></div>}
   </section>;
 }
 

@@ -38,6 +38,7 @@
 | `dice_tower_castle_vignette` | 原創骰塔城堡小島，作為組隊遠征中央入口 | `/manus-storage/dice-tower-castle-vignette_54d9981d.png` |
 | `dice_tower_dungeon_vignette` | 原創紫晶地城門小島，作為副本入口 | `/manus-storage/dice-tower-dungeon-vignette_d285c369.png` |
 | `dice_tower_grand_kingdom_map` | 原創高奇幻日式RPG王都地圖；白石尖塔、藍青屋頂、王國旗幟與雲海遠景 | `/manus-storage/dice-tower-grand-kingdom-map_bbb421d8.png` |
+| `dice_tower_grounded_kingdom_map` | 原創大陸地形王都；草原、森林、河流、山脈與相連道路，無浮島或海上元素 | `/manus-storage/dice-tower-grounded-kingdom-map_9c9209df.png` |
 
 | Name | Description | Runtime Asset |
 | --- | --- | --- |
