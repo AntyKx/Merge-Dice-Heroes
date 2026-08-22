@@ -30,6 +30,14 @@
 
 **聖騎士替換素材：** 使用者新提供 20 格、768×600 px 的透明 PNG，包括 idle 6 格、attack 5 格、move 6 格、skill 3 格。待機影格為金髮藍披風、盾牌與長劍的完整輪廓；技能第 2 格具有大面積金白天使翼與法陣，重編譯時需要保留特效比例，但在棋盤可視區內裁切且不侵入生命條安全區。
 
+## Floating Island Lobby Assets
+
+| Name | Description | Runtime URL |
+| --- | --- | --- |
+| `dice_tower_island_map` | 原創直式浮島王國大廳主場景；中央骰塔與各入口的留白地標區 | `/manus-storage/dice-tower-island-map_a71cc5b2.png` |
+| `dice_tower_castle_vignette` | 原創骰塔城堡小島，作為組隊遠征中央入口 | `/manus-storage/dice-tower-castle-vignette_54d9981d.png` |
+| `dice_tower_dungeon_vignette` | 原創紫晶地城門小島，作為副本入口 | `/manus-storage/dice-tower-dungeon-vignette_d285c369.png` |
+
 | Name | Description | Runtime Asset |
 | --- | --- | --- |
 | `knight` | 神聖騎士：守護／阻擋（更新既有職業視覺） | `/manus-storage/knight_idle_cea764bb.webp`、`knight_attack_f691c2ef.webp` |
