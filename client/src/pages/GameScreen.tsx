@@ -5,7 +5,7 @@ import "./shopEnhancements.css";
 import "./lobbyCompact.css";
 import "./dailyCelebration.css";
 import "./islandLobby.css";
-import { BatteryCharging, Check, ChevronLeft, Coins, Gem, Gift, Hammer, Heart, Info, Lock, MapPinned, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Trophy, Volume2, X, Zap } from "lucide-react";
+import { BatteryCharging, Check, ChevronLeft, Coins, Gem, Gift, Hammer, Heart, Info, Lock, MapPinned, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
 import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
@@ -20,7 +20,7 @@ const KINGDOM_NIGHT_MAP_URL = "/manus-storage/kingdom-night-map_d4bb0984.png";
 
 type LobbyWeather = "day" | "night";
 type ScenePreviewMode = "auto" | LobbyWeather;
-type LobbyTab = "kingdom" | "journal" | "records" | "settings";
+type LobbyTab = "kingdom" | "journal" | "settings";
 type SceneTapTarget = LobbyModuleId | "guide";
 type ExpeditionBannerStyle = "verdant" | "crimson" | "moon";
 
@@ -173,16 +173,14 @@ function TitleScreen() {
       <button className="hud-resource hud-stamina" onClick={() => openScreen("dungeon")} aria-label={`體力 ${progress.stamina} / 20，前往副本`}><BatteryCharging size={16} /><span><small>體力</small><b>{progress.stamina}<em>/20</em></b></span></button>
       <button className="hud-menu" onClick={() => setLobbyTab("settings")} aria-label="開啟設定"><Menu size={18} /></button>
     </header>
-    <p className="island-location"><Sparkles size={11} /><b>{weatherMeta.label}</b><span>· {weatherMeta.detail} · 任務 {completedQuests}/3</span></p>
+    <p className="island-location"><Sparkles size={11} /><b>{weatherMeta.label}</b></p>
     <section className="island-landmarks" aria-label="冒險大廳入口">
-      <div className="theatre-hero-party" aria-label="目前遠征小隊">{selectedHeroes.slice(0, 3).map((heroId, index) => <span key={heroId} className={`hero-piece tier-${index + 1}`} style={{ "--hero-color": HEROES[heroId].color } as React.CSSProperties}><b>{HEROES[heroId].name.slice(0, 1)}</b><i /></span>)}<small>部署隊伍</small></div>
       {landmark("equipment", "forge")}{landmark("shop", "market")}{landmark("daily", "journal")}{landmark("dungeon", "dungeon")}
       <button className={`island-landmark landmark-guide ${tappedSceneTarget === "guide" ? "is-tapped" : ""}`} onClick={() => triggerSceneTap("guide", () => openScreen("guide"))} aria-label="策略圖鑑，骰型與職業；進入策略圖鑑" />
     </section>
     {lobbyTab === "journal" && <aside className="island-guide-sheet" aria-label="王都導覽：今日任務"><header><span><Gift size={15} />今日導覽</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><p>今日有 <b>{claimableQuests}</b> 項獎勵可領取，完成行動即可累積鑽石與素材。</p><div><button onClick={() => openScreen("daily")}>查看每日任務 <ChevronLeft size={15} /></button><button onClick={() => openScreen("shop")}>前往命運商店 <ChevronLeft size={15} /></button></div></aside>}
-    {lobbyTab === "records" && <aside className="island-guide-sheet island-record-sheet" aria-label="王都導覽：冒險紀錄"><header><span><Trophy size={15} />冒險紀錄</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><div className="record-grid"><span><small>最高遠征</small><b>WAVE {String(progress.bestWave).padStart(2, "0")}</b></span><span><small>完成遠征</small><b>{progress.wins} 次</b></span><span><small>今日印記</small><b>{progress.sigils} / 600</b></span></div></aside>}
     {lobbyTab === "settings" && <aside className="island-guide-sheet" aria-label="王都導覽：設定與音效"><header><span><Settings2 size={15} />設定與音效</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><p>依裝置偏好減少動態時，王都的雲、風、水面與燈火效果會自動停用。</p><div className="scene-preview-controls"><small>場景預覽</small><span><button className={scenePreviewMode === "auto" ? "is-selected" : ""} onClick={() => setScenePreviewMode("auto")}>自動</button><button className={scenePreviewMode === "day" ? "is-selected" : ""} onClick={() => setScenePreviewMode("day")}>白天</button><button className={scenePreviewMode === "night" ? "is-selected" : ""} onClick={() => setScenePreviewMode("night")}>夜晚</button></span></div><div className="banner-picker"><small>遠征隊旗</small><span><button className={bannerStyle === "verdant" ? "is-selected banner-verdant" : "banner-verdant"} onClick={() => setBannerStyle("verdant")} aria-label="選擇青綠遠征旗" /><button className={bannerStyle === "crimson" ? "is-selected banner-crimson" : "banner-crimson"} onClick={() => setBannerStyle("crimson")} aria-label="選擇赤紅遠征旗" /><button className={bannerStyle === "moon" ? "is-selected banner-moon" : "banner-moon"} onClick={() => setBannerStyle("moon")} aria-label="選擇月藍遠征旗" /></span></div><div><button className={progress.settings.sfxEnabled ? "is-selected" : ""} onClick={() => setSetting("sfxEnabled", !progress.settings.sfxEnabled)}><Volume2 size={15} />音效 {progress.settings.sfxEnabled ? "開啟" : "關閉"}</button><button className={progress.settings.musicEnabled ? "setting-on" : ""} onClick={() => setSetting("musicEnabled", !progress.settings.musicEnabled)}><Music2 size={15} />音樂 {progress.settings.musicEnabled ? "開啟" : "關閉"}</button></div></aside>}
-    <nav className="island-tabbar" aria-label="王都導覽分頁"><button className={lobbyTab === "kingdom" ? "is-active" : ""} onClick={() => setLobbyTab("kingdom")}><MapPinned size={17} /><span>王都</span></button><button className="tab-expedition" disabled={departing} onClick={launchExpedition}><Swords size={17} /><span>{departing ? "啟程" : "遠征"}</span></button><button className={lobbyTab === "journal" ? "is-active" : ""} onClick={() => setLobbyTab("journal")}><Gift size={17} /><span>導覽</span>{claimableQuests > 0 && <i />}</button><button className={lobbyTab === "records" ? "is-active" : ""} onClick={() => setLobbyTab("records")}><Trophy size={17} /><span>戰績</span></button><button className={lobbyTab === "settings" ? "is-active" : ""} onClick={() => setLobbyTab("settings")}><Settings2 size={17} /><span>設定</span></button></nav>
+    <nav className="island-tabbar" aria-label="王都導覽分頁"><button className={lobbyTab === "kingdom" ? "is-active" : ""} onClick={() => setLobbyTab("kingdom")}><MapPinned size={17} /><span>王都</span></button><button className="tab-expedition" disabled={departing} onClick={launchExpedition}><Swords size={17} /><span>{departing ? "啟程" : "遠征"}</span></button><button className={lobbyTab === "journal" ? "is-active" : ""} onClick={() => setLobbyTab("journal")}><Gift size={17} /><span>導覽</span>{claimableQuests > 0 && <i />}</button></nav>
     {departing && <div className="expedition-departure" role="status" aria-live="polite"><div className="departure-party">{selectedHeroes.map((heroId) => <span key={heroId} style={{ "--party-color": HEROES[heroId].color } as React.CSSProperties}>{HEROES[heroId].name.slice(0, 1)}</span>)}</div><div><small>命運骰塔</small><b>遠征隊伍，出發！</b><span>正踏上下一段命運……</span></div><i><Swords size={23} /></i></div>}
   </section>;
 }
