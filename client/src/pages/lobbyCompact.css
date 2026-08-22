@@ -1,0 +1,45 @@
+/* 精靈骰塔劇場：首頁採舞台海報般的單頁節奏，先呈現遠征與所有入口，再以高度斷點精簡留白。 */
+.lobby-screen { height:100dvh; min-height:0; display:flex; flex-direction:column; overflow:hidden; padding:12px 14px max(10px,env(safe-area-inset-bottom)); }
+.lobby-screen .lobby-topbar { flex:0 0 auto; }
+.lobby-screen .lobby-mark { width:38px; height:38px; flex-basis:38px; border-radius:12px; }
+.lobby-screen .lobby-profile strong { font-size:12px; }
+.lobby-screen .lobby-profile span { margin-top:1px; }
+.lobby-screen .lobby-hero { min-height:190px; margin-top:10px; border-radius:21px; }
+.lobby-screen .lobby-hero-copy { width:65%; padding:14px 0 10px 14px; }
+.lobby-screen .lobby-hero h1 { font-size:20px; }
+.lobby-screen .lobby-hero-copy>p:not(.screen-kicker) { margin:6px 0 9px; font-size:9px; line-height:1.4; }
+.lobby-screen .lobby-expedition { min-height:35px; padding:0 10px; border-radius:11px; font-size:10px; }
+.lobby-screen .lobby-hero-dice { right:7px; top:26px; width:104px; height:116px; }
+.lobby-screen .lobby-hero-dice span { font-size:47px; }
+.lobby-screen .lobby-section { margin-top:10px; }
+.lobby-screen .lobby-section-heading { margin-bottom:5px; }
+.lobby-screen .lobby-section-heading span { font-size:12px; }
+.lobby-screen .lobby-grid { gap:6px; }
+.lobby-screen .lobby-card { min-height:59px; grid-template-columns:29px 1fr auto; gap:5px; padding:7px; border-radius:13px; }
+.lobby-screen .lobby-card i { width:28px; height:28px; border-radius:9px; font-size:16px; }
+.lobby-screen .lobby-card b { font-size:10px; }
+.lobby-screen .lobby-card small { font-size:7px; }
+.lobby-screen .lobby-card>span { font-size:14px; }
+.lobby-screen .lobby-card--wide { min-height:49px; }
+.lobby-screen .lobby-record { margin-top:8px; border-radius:12px; }
+.lobby-screen .lobby-record>div { gap:2px; padding:6px 5px; }
+.lobby-screen .lobby-record small,.lobby-screen .lobby-record em { font-size:7px; }
+.lobby-screen .lobby-record b { font-size:10px; }
+.lobby-screen .lobby-settings { margin-top:6px; }
+.lobby-screen .lobby-settings .text-button { font-size:9px; }
+
+@media (max-height: 730px) {
+  .lobby-screen { padding-top:8px; }
+  .lobby-screen .lobby-currency b { padding:4px 5px; font-size:8px; }
+  .lobby-screen .lobby-hero { min-height:166px; margin-top:7px; }
+  .lobby-screen .lobby-hero-copy { padding-top:10px; }
+  .lobby-screen .lobby-hero h1 { font-size:18px; }
+  .lobby-screen .lobby-hero-copy>p:not(.screen-kicker) { margin:4px 0 7px; font-size:8px; }
+  .lobby-screen .lobby-hero-dice { top:19px; width:92px; height:102px; }
+  .lobby-screen .lobby-hero-dice span { font-size:42px; }
+  .lobby-screen .lobby-section { margin-top:7px; }
+  .lobby-screen .lobby-card { min-height:53px; padding:6px; }
+  .lobby-screen .lobby-card--wide { min-height:44px; }
+  .lobby-screen .lobby-record { margin-top:6px; }
+  .lobby-screen .lobby-settings { margin-top:3px; }
+}
