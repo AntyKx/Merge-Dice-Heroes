@@ -8,6 +8,7 @@
 | --- | --- | --- | --- |
 | `visual_target` | 完整直式戰鬥畫面構圖參考，僅供畫面 QA | 390×844 px | `/manus-storage/merge-dice-heroes-visual-target_06be46d8.png` |
 | `battlefield` | 直式 S 型道路與劇場紙雕地形背景 | 390×844 px，填滿遊戲視窗 | `/manus-storage/merge-dice-heroes-battlefield_1a6df969.png` |
+| `kingdom_night_map` | 與日間王都設施對位的獨立星夜王都場景；夜空、月光、暖窗燈、河面反光與地城紫光 | 1440×2560 px，依本機時間於 19:00–05:59 使用 | `/manus-storage/kingdom-night-map_d4bb0984.png` |
 
 ## Sprites
 
