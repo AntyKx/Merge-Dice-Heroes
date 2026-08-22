@@ -21,6 +21,7 @@ const KINGDOM_NIGHT_MAP_URL = "/manus-storage/kingdom-night-map_d4bb0984.png";
 type LobbyWeather = "day" | "night";
 type ScenePreviewMode = "auto" | LobbyWeather;
 type LobbyTab = "kingdom" | "journal" | "records" | "settings";
+type SceneTapTarget = LobbyModuleId | "castle" | "guide";
 
 const getLobbyWeather = (date: Date): LobbyWeather => {
   const hour = date.getHours();
@@ -134,6 +135,7 @@ function TitleScreen() {
   const { openScreen, progress, setSetting, selectedHeroes } = useGameStore();
   const [departing, setDeparting] = useState(false);
   const [lobbyTab, setLobbyTab] = useState<LobbyTab>("kingdom");
+  const [tappedSceneTarget, setTappedSceneTarget] = useState<SceneTapTarget | null>(null);
   const [autoWeather, setAutoWeather] = useState<LobbyWeather>(() => getLobbyWeather(new Date()));
   const [scenePreviewMode, setScenePreviewMode] = useState<ScenePreviewMode>("auto");
   useEffect(() => {
@@ -156,8 +158,9 @@ function TitleScreen() {
   const sceneMapUrl = weather === "night" ? KINGDOM_NIGHT_MAP_URL : ISLAND_MAP_URL;
   const moduleStatus: Record<LobbyModuleId, string> = { equipment: `${equippedCount} / 3 已裝備`, shop: `${progress.sigils} ◈`, daily: `${completedQuests} / 3 完成 · ${claimedCount} 已領`, dungeon: `${progress.stamina} / 20 體力` };
   const notices: Partial<Record<LobbyModuleId, { label: string; reward?: boolean }>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment ? { label: "可強化" } : undefined, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop ? { label: "免費刷新" } : undefined, daily: claimableQuests && !progress.lobbyRead.daily ? { label: `可領取 ${claimableQuests}`, reward: true } : undefined, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon ? { label: "可挑戰" } : undefined };
-  const landmark = (moduleId: LobbyModuleId, className: string) => { const module = LOBBY_MODULES[moduleId]; const notice = notices[moduleId]; return <button className={`island-landmark landmark-${className} island-stage-${islandStage} ${notice ? "has-notice" : ""}`} onClick={() => openScreen(moduleId)} aria-label={`${module.label}，${moduleStatus[moduleId]}；進入${module.label}`}>{notice && <em className={notice.reward ? "is-reward" : ""} aria-label={notice.label} />}</button>; };
-  const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
+  const triggerSceneTap = (target: SceneTapTarget, action: () => void) => { setTappedSceneTarget(target); window.setTimeout(() => { setTappedSceneTarget(null); action(); }, 160); };
+  const landmark = (moduleId: LobbyModuleId, className: string) => { const module = LOBBY_MODULES[moduleId]; const notice = notices[moduleId]; return <button className={`island-landmark landmark-${className} island-stage-${islandStage} ${notice ? "has-notice" : ""} ${tappedSceneTarget === moduleId ? "is-tapped" : ""}`} onClick={() => triggerSceneTap(moduleId, () => openScreen(moduleId))} aria-label={`${module.label}，${moduleStatus[moduleId]}；進入${module.label}`}>{notice && <em className={notice.reward ? "is-reward" : ""} aria-label={notice.label} />}</button>; };
+  const launchExpedition = () => { if (departing) return; setTappedSceneTarget("castle"); window.setTimeout(() => { setTappedSceneTarget(null); setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); }, 160); };
   return <section className={`lobby-screen island-lobby lobby-progress-${completedQuests} map-stage-${islandStage} weather-${weather} ${departing ? "is-departing" : ""}`}>
     <div className="island-map-art" style={{ backgroundImage: `url(${sceneMapUrl})` }} aria-hidden="true" />
     <div className="kingdom-environment" aria-hidden="true"><i className="scene-flag flag-castle" /><i className="scene-flag flag-market" /><i className="scene-waterwheel" /><i className="scene-smoke" /><i className="scene-night-light night-forge" /><i className="scene-night-light night-market" /></div>
@@ -170,10 +173,10 @@ function TitleScreen() {
     </header>
     <p className="island-location"><Sparkles size={11} /><b>{weatherMeta.label}</b><span>· {weatherMeta.detail} · 任務 {completedQuests}/3</span></p>
     <section className="island-landmarks" aria-label="冒險大廳入口">
-      <button className="island-castle" disabled={departing} onClick={launchExpedition}><span><small>命運骰塔</small><b>{departing ? "隊伍啟航中" : "組隊遠征"}</b><em><Swords size={13} />{departing ? "整裝出發" : "開始冒險"}</em></span></button>
+      <button className={`island-castle ${tappedSceneTarget === "castle" ? "is-tapped" : ""}`} disabled={departing} onClick={launchExpedition} aria-label={departing ? "遠征隊伍啟航中" : "命運骰塔城門，開始組隊遠征"}><span className="castle-gate-entry"><Swords size={15} /><b>{departing ? "啟程" : "遠征"}</b><i aria-hidden="true" /></span></button>
       <div className="theatre-hero-party" aria-label="目前遠征小隊">{selectedHeroes.slice(0, 3).map((heroId, index) => <span key={heroId} className={`hero-piece tier-${index + 1}`} style={{ "--hero-color": HEROES[heroId].color } as React.CSSProperties}><b>{HEROES[heroId].name.slice(0, 1)}</b><i /></span>)}<small>部署隊伍</small></div>
       {landmark("equipment", "forge")}{landmark("shop", "market")}{landmark("daily", "journal")}{landmark("dungeon", "dungeon")}
-      <button className="island-landmark landmark-guide" onClick={() => openScreen("guide")} aria-label="策略圖鑑，骰型與職業；進入策略圖鑑" />
+      <button className={`island-landmark landmark-guide ${tappedSceneTarget === "guide" ? "is-tapped" : ""}`} onClick={() => triggerSceneTap("guide", () => openScreen("guide"))} aria-label="策略圖鑑，骰型與職業；進入策略圖鑑" />
     </section>
     {lobbyTab === "journal" && <aside className="island-guide-sheet" aria-label="王都導覽：今日任務"><header><span><Gift size={15} />今日導覽</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><p>今日有 <b>{claimableQuests}</b> 項獎勵可領取，完成行動即可累積鑽石與素材。</p><div><button onClick={() => openScreen("daily")}>查看每日任務 <ChevronLeft size={15} /></button><button onClick={() => openScreen("shop")}>前往命運商店 <ChevronLeft size={15} /></button></div></aside>}
     {lobbyTab === "records" && <aside className="island-guide-sheet island-record-sheet" aria-label="王都導覽：冒險紀錄"><header><span><Trophy size={15} />冒險紀錄</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><div className="record-grid"><span><small>最高遠征</small><b>WAVE {String(progress.bestWave).padStart(2, "0")}</b></span><span><small>完成遠征</small><b>{progress.wins} 次</b></span><span><small>今日印記</small><b>{progress.sigils} / 600</b></span></div></aside>}
