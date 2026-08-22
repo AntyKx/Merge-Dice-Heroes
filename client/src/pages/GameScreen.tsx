@@ -136,12 +136,22 @@ function TitleScreen() {
   const [departing, setDeparting] = useState(false);
   const [lobbyTab, setLobbyTab] = useState<LobbyTab>("kingdom");
   const [weather, setWeather] = useState<LobbyWeather>(() => getLobbyWeather(new Date()));
+  const weatherVideoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const syncWeather = () => setWeather(getLobbyWeather(new Date()));
     syncWeather();
     const timer = window.setInterval(syncWeather, 60_000);
     return () => window.clearInterval(timer);
   }, []);
+  useEffect(() => {
+    if (weather !== "rainy") return;
+    const video = weatherVideoRef.current;
+    if (!video) return;
+    const playRain = () => { void video.play().catch(() => undefined); };
+    playRain();
+    video.addEventListener("canplay", playRain, { once: true });
+    return () => video.removeEventListener("canplay", playRain);
+  }, [weather]);
   const claimedCount = progress.daily.claimed.length;
   const completedQuests = DAILY_QUESTS.filter((quest) => (quest.id === "battle" ? progress.daily.battles : quest.id === "merge" ? progress.daily.merges : progress.daily.victories) >= quest.target).length;
   const claimableQuests = DAILY_QUESTS.filter((quest) => (quest.id === "battle" ? progress.daily.battles : quest.id === "merge" ? progress.daily.merges : progress.daily.victories) >= quest.target && !progress.daily.claimed.includes(quest.id)).length;
@@ -158,7 +168,7 @@ function TitleScreen() {
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
   return <section className={`lobby-screen island-lobby lobby-progress-${completedQuests} map-stage-${islandStage} weather-${weather} ${departing ? "is-departing" : ""}`}>
     <div className="island-map-art" style={{ backgroundImage: `url(${ISLAND_MAP_URL})` }} aria-hidden="true" />
-    {weather === "rainy" && <video className="kingdom-weather-video" autoPlay muted loop playsInline preload="auto" aria-hidden="true"><source src={KINGDOM_RAIN_OVERLAY_URL} type="video/mp4" /></video>}
+    {weather === "rainy" && <video ref={weatherVideoRef} className="kingdom-weather-video" autoPlay muted loop playsInline preload="auto" aria-hidden="true"><source src={KINGDOM_RAIN_OVERLAY_URL} type="video/mp4" /></video>}
     <header className="island-game-hud" aria-label="玩家資源">
       <button className="hud-level" onClick={() => openScreen("team")} aria-label={`玩家等級 ${playerLevel}，查看隊伍`}><span>LV.</span><b>{String(playerLevel).padStart(2, "0")}</b><i><em style={{ width: `${levelProgress / 3 * 100}%` }} /></i></button>
       <button className="hud-resource hud-gold" onClick={() => openScreen("shop")} aria-label={`金幣 ${progress.sigils}，前往命運商店`}><Coins size={15} /><span><small>金幣</small><b>{progress.sigils}</b></span></button>
