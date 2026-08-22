@@ -1,5 +1,5 @@
 /** 精靈骰塔劇場：垂直舞台卷軸介面，命運青綠標示可操作決策，戰鬥規則完全由 game/ 引擎掌管。 */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BookOpen, ChevronLeft, Heart, Info, Lock, Music2, Pause, Play, RotateCcw, Settings2, Shield, Sparkles, Swords, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DICE_COMBINATIONS, HEROES, TALENTS, WAVES } from "@/game/config";
@@ -10,6 +10,31 @@ const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 
+const FIRE_MAGE_FRAMES = {
+  idle: [
+    "/manus-storage/fire_mage_idle_01_dd9c787a.png",
+    "/manus-storage/fire_mage_idle_02_d7113068.png",
+    "/manus-storage/fire_mage_idle_03_240faef6.png",
+    "/manus-storage/fire_mage_idle_04_2e185838.png",
+    "/manus-storage/fire_mage_idle_05_ce629a5d.png",
+    "/manus-storage/fire_mage_idle_06_ff80c5af.png",
+  ],
+  attack: [
+    "/manus-storage/fire_mage_attack_01_2e246144.png",
+    "/manus-storage/fire_mage_attack_02_eb89f132.png",
+    "/manus-storage/fire_mage_attack_03_f2655bd2.png",
+    "/manus-storage/fire_mage_attack_04_eaea91ba.png",
+    "/manus-storage/fire_mage_attack_05_a29906ca.png",
+  ],
+  skill: [
+    "/manus-storage/fire_mage_skill_01_5419226e.png",
+    "/manus-storage/fire_mage_skill_02_7f873606.png",
+    "/manus-storage/fire_mage_skill_03_8116e215.png",
+  ],
+} as const;
+
+type FireMageAction = keyof typeof FIRE_MAGE_FRAMES;
+
 const leaderSkill: Record<HeroId, string> = {
   knight: "全體英雄獲得護盾",
   fireMage: "火焰隕石轟炸敵軍",
@@ -19,9 +44,20 @@ const leaderSkill: Record<HeroId, string> = {
 
 const classOffset: Record<HeroId, string> = { knight: "0% 0%", fireMage: "100% 0%", archer: "0% 100%", priest: "100% 100%" };
 
-function HeroPortrait({ heroId, size = "small" }: { heroId: HeroId; size?: "small" | "large" }) {
+function FireMageSprite({ action }: { action: FireMageAction }) {
+  const [frame, setFrame] = useState(0);
+  const frames = FIRE_MAGE_FRAMES[action];
+  useEffect(() => {
+    const timer = window.setInterval(() => setFrame((current) => action === "idle" ? (current + 1) % frames.length : Math.min(current + 1, frames.length - 1)), action === "idle" ? 140 : 82);
+    return () => window.clearInterval(timer);
+  }, [action, frames.length]);
+  return <img className={`fire-mage-sprite is-${action}`} src={frames[frame]} alt="" />;
+}
+
+function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal = 0 }: { heroId: HeroId; size?: "small" | "large"; action?: FireMageAction; animationSignal?: number }) {
   const definition = HEROES[heroId];
   const HeroMark = heroId === "knight" ? Shield : heroId === "fireMage" ? Zap : heroId === "archer" ? Swords : Sparkles;
+  if (heroId === "fireMage") return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId} has-user-sprite`} style={{ borderColor: definition.color }} aria-hidden="true"><FireMageSprite key={`${action}-${animationSignal}`} action={action} /></span>;
   return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId}`} style={{ backgroundImage: `url(${HEROES_URL})`, backgroundPosition: classOffset[heroId], borderColor: definition.color }} aria-hidden="true"><span className="hero-sigil"><HeroMark size={size === "large" ? 24 : 16} strokeWidth={2.7} /></span></span>;
 }
 
@@ -95,7 +131,15 @@ function HeroTile({ hero, index, selected, onPointerDown, onPointerUp }: { hero:
   if (!hero) return <button className={`hero-tile is-empty ${locked ? "is-locked" : ""}`} disabled={locked} aria-label={locked ? "被 Boss 封鎖的格子" : "空的英雄格"}><span>{locked ? <Lock size={16} /> : ""}</span></button>;
   const definition = HEROES[hero.heroId];
   const hp = Math.max(0, hero.hp / hero.maxHp) * 100;
-  return <button className={`hero-tile tier-${hero.tier} ${selected ? "is-selected" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={() => onPointerDown(index)} onPointerUp={() => onPointerUp(index)} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}`}><HeroPortrait heroId={hero.heroId} /><b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}<em className="attack-orb" style={{ animationDuration: `${Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
+  const fireMageAction: FireMageAction = hero.heroId === "fireMage" && run?.phase === "MERGING" && run.lastCombination?.kind === "FOUR_KIND" && run.leaderId === "fireMage"
+    ? "skill"
+    : hero.heroId === "fireMage" && run?.phase === "COMBAT" && hero.cooldown > 0.8
+      ? "attack"
+      : "idle";
+  const characterVisual = hero.heroId === "fireMage"
+    ? <span className="fire-mage-board-sprite"><FireMageSprite key={`${fireMageAction}-${hero.attackCount}`} action={fireMageAction} /></span>
+    : <HeroPortrait heroId={hero.heroId} action={fireMageAction} animationSignal={hero.attackCount} />;
+  return <button className={`hero-tile tier-${hero.tier} ${selected ? "is-selected" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={() => onPointerDown(index)} onPointerUp={() => onPointerUp(index)} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}`}>{characterVisual}<b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}<em className="attack-orb" style={{ animationDuration: `${Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
 }
 
 function Board() {
