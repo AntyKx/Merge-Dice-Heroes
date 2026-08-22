@@ -40,6 +40,8 @@
 | `dice_tower_grand_kingdom_map` | 原創高奇幻日式RPG王都地圖；白石尖塔、藍青屋頂、王國旗幟與雲海遠景 | `/manus-storage/dice-tower-grand-kingdom-map_bbb421d8.png` |
 | `dice_tower_grounded_kingdom_map` | 原創大陸地形王都；草原、森林、河流、山脈與相連道路，無浮島或海上元素 | `/manus-storage/dice-tower-grounded-kingdom-map_9c9209df.png` |
 | `dice_tower_grounded_kingdom_ambient` | 原創8秒無聲循環王都環境影片；遠景雲霧、森林微風與河面光點 | `/manus-storage/dice-tower-grounded-kingdom-ambient_16c89713.mp4` |
+| `dice_tower_cute_kingdom_map` | 原創可愛Q版王都靜態後備地圖；圓潤城堡、童話樹木與明亮草原 | `/manus-storage/dice-tower-cute-kingdom-map_0943dda0.png` |
+| `dice_tower_cute_kingdom_ambient` | 原創8秒無聲可愛王都環境影片；雲朵、草地與圓潤樹木的低動態循環 | `/manus-storage/dice-tower-cute-kingdom-ambient_ead8aa56.mp4` |
 
 | Name | Description | Runtime Asset |
 | --- | --- | --- |

@@ -14,8 +14,8 @@ import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, ShopOfferId, Ta
 const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
-const ISLAND_MAP_URL = "/manus-storage/dice-tower-grounded-kingdom-map_9c9209df.png";
-const ISLAND_AMBIENT_VIDEO_URL = "/manus-storage/dice-tower-grounded-kingdom-ambient_16c89713.mp4";
+const ISLAND_MAP_URL = "/manus-storage/dice-tower-cute-kingdom-map_0943dda0.png";
+const ISLAND_AMBIENT_VIDEO_URL = "/manus-storage/dice-tower-cute-kingdom-ambient_ead8aa56.mp4";
 const ISLAND_DUNGEON_URL = "/manus-storage/dice-tower-dungeon-vignette_d285c369.png";
 
 type HeroAnimationAction = "idle" | "attack" | "skill";
