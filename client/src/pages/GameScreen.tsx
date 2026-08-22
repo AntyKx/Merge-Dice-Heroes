@@ -15,7 +15,6 @@ const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const ISLAND_MAP_URL = "/manus-storage/dice-tower-cute-facilities-kingdom-map_34e8ffb9.png";
-const ISLAND_AMBIENT_VIDEO_URL = "/manus-storage/dice-tower-cute-facilities-ambient_b92496c9.mp4";
 
 type HeroAnimationAction = "idle" | "attack" | "skill";
 
@@ -118,7 +117,6 @@ function TitleScreen() {
   const { openScreen, progress, setSetting, selectedHeroes } = useGameStore();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [departing, setDeparting] = useState(false);
-  const [ambientReady, setAmbientReady] = useState(false);
   const claimedCount = progress.daily.claimed.length;
   const completedQuests = DAILY_QUESTS.filter((quest) => (quest.id === "battle" ? progress.daily.battles : quest.id === "merge" ? progress.daily.merges : progress.daily.victories) >= quest.target).length;
   const claimableQuests = DAILY_QUESTS.filter((quest) => (quest.id === "battle" ? progress.daily.battles : quest.id === "merge" ? progress.daily.merges : progress.daily.victories) >= quest.target && !progress.daily.claimed.includes(quest.id)).length;
@@ -132,8 +130,6 @@ function TitleScreen() {
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
   return <section className={`lobby-screen island-lobby lobby-progress-${completedQuests} map-stage-${islandStage} ${departing ? "is-departing" : ""}`}>
     <div className="island-map-art" style={{ backgroundImage: `url(${ISLAND_MAP_URL})` }} aria-hidden="true" />
-    <video className={`island-ambient-video ${ambientReady ? "is-ready" : ""}`} autoPlay muted loop playsInline preload="metadata" poster={ISLAND_MAP_URL} onCanPlay={() => setAmbientReady(true)} onError={() => setAmbientReady(false)} aria-hidden="true"><source src={ISLAND_AMBIENT_VIDEO_URL} type="video/mp4" /></video>
-    <div className="island-environment" aria-hidden="true"><span className="map-cloud cloud-one" /><span className="map-cloud cloud-two" /><span className="map-cloud cloud-three" /><span className="road-glimmer glimmer-one" /><span className="road-glimmer glimmer-two" /><span className="island-expansion expansion-one" /><span className="island-expansion expansion-two" /><span className="island-expansion expansion-three" /></div>
     <header className="lobby-topbar island-topbar"><div className="lobby-profile"><div className="lobby-mark"><img src={LOGO_URL} alt="" /></div><div><small>浮島王國</small><strong>骰塔見習者</strong><span>Lv. 01 · 命運階梯 I</span></div></div><div className="lobby-currency"><b>✦ {progress.crystals}</b><b>◈ {progress.sigils}</b></div></header>
     <p className="island-location"><Sparkles size={11} />每日任務 {completedQuests}/3</p>
     <section className="island-landmarks" aria-label="冒險大廳入口">
