@@ -7,10 +7,11 @@ let eventSequence = 0;
 const cloneHero = (hero: HeroInstance | null) => (hero ? { ...hero } : null);
 const cloneEnemy = (enemy: EnemyInstance) => ({ ...enemy });
 
-export function makeCombatState(wave: number): CombatState {
+export function makeCombatState(wave: number, castleBonus = 0): CombatState {
   const definition = WAVES[wave - 1];
   const pendingEnemies = definition.enemies.flatMap(({ enemyId, count }) => Array.from({ length: count }, () => enemyId));
-  return { castleHp: 20, castleMaxHp: 20, enemies: [], pendingEnemies, spawnCooldown: 0.25, elapsed: 0, defeated: 0, damageEvents: [] };
+  const castleMaxHp = 20 + castleBonus;
+  return { castleHp: castleMaxHp, castleMaxHp, enemies: [], pendingEnemies, spawnCooldown: 0.25, elapsed: 0, defeated: 0, damageEvents: [] };
 }
 
 function createEnemy(enemyId: EnemyId, wave: number): EnemyInstance {
@@ -24,9 +25,9 @@ export function getRunModifiers(run: RunState): RunModifiers {
   const stacks = (id: string) => run.activeTalents.find((talent) => talent.id === id)?.stacks ?? 0;
   const jobs = new Set(run.board.filter(Boolean).map((hero) => hero?.heroId));
   return {
-    attackMultiplier: 1 + stacks("t3-force") * 0.3 + (jobs.size >= 3 ? stacks("triad") * 0.15 : 0),
+    attackMultiplier: 1 + run.equipmentBonuses.attackMultiplier + stacks("t3-force") * 0.3 + (jobs.size >= 3 ? stacks("triad") * 0.15 : 0),
     speedMultiplier: 1 + stacks("t1-tempo") * 0.15,
-    extraRerolls: stacks("reroll-plus"),
+    extraRerolls: run.equipmentBonuses.extraRerolls + stacks("reroll-plus"),
     freeFirstReroll: stacks("free-reroll") > 0,
     pairExtraSummonChance: stacks("pair-echo") * 0.2,
     smallStraightSummon: stacks("straight-call") > 0,

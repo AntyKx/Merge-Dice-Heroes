@@ -1,11 +1,11 @@
 /** 精靈骰塔劇場：垂直舞台卷軸介面，命運青綠標示可操作決策，戰鬥規則完全由 game/ 引擎掌管。 */
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, ChevronLeft, Heart, Info, Lock, Music2, Pause, Play, RotateCcw, Settings2, Shield, Sparkles, Swords, Volume2, X, Zap } from "lucide-react";
+import { BatteryCharging, BookOpen, Check, ChevronLeft, Gift, Heart, Info, Lock, Music2, PackageOpen, Pause, Play, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
-import { DICE_COMBINATIONS, HEROES, SELECTABLE_HERO_IDS, TALENTS, WAVES } from "@/game/config";
+import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, TALENTS, WAVES } from "@/game/config";
 import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
 import { useGameStore } from "@/game/store";
-import type { HeroId, HeroInstance, TalentDefinition } from "@/game/types";
+import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, TalentDefinition } from "@/game/types";
 
 const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
@@ -110,26 +110,53 @@ const LOBBY_MODULES: Record<LobbyModuleId, { label: string; title: string; eyebr
 
 function TitleScreen() {
   const { openScreen, progress, setSetting } = useGameStore();
+  const claimedCount = progress.daily.claimed.length;
+  const completedQuests = DAILY_QUESTS.filter((quest) => (quest.id === "battle" ? progress.daily.battles : quest.id === "merge" ? progress.daily.merges : progress.daily.victories) >= quest.target).length;
+  const equippedCount = Object.values(progress.equipped).filter(Boolean).length;
+  const moduleStatus: Record<LobbyModuleId, string> = { equipment: `${equippedCount} / 3 已裝備`, shop: `${progress.crystals} ✦`, daily: `${completedQuests} / 3 完成 · ${claimedCount} 已領`, dungeon: `${progress.stamina} / 20 體力` };
   return <section className="lobby-screen">
-    <header className="lobby-topbar"><div className="lobby-profile"><div className="lobby-mark"><img src={LOGO_URL} alt="" /></div><div><small>冒險者</small><strong>骰塔見習者</strong><span>Lv. 01 · 命運階梯 I</span></div></div><div className="lobby-currency"><b>✦ 560</b><b>◈ 120</b></div></header>
+    <header className="lobby-topbar"><div className="lobby-profile"><div className="lobby-mark"><img src={LOGO_URL} alt="" /></div><div><small>冒險者</small><strong>骰塔見習者</strong><span>Lv. 01 · 命運階梯 I</span></div></div><div className="lobby-currency"><b>✦ {progress.crystals}</b><b>◈ {progress.sigils}</b></div></header>
     <section className="lobby-hero"><div className="lobby-hero-copy"><p className="screen-kicker">命運骰塔 · 大廳</p><h1>下一段冒險，<br /><em>由你決定。</em></h1><p>整備隊伍、收取任務獎賞，或踏入新的命運副本。</p><button className="lobby-expedition" onClick={() => openScreen("team")}><Swords size={18} />組隊遠征<span>›</span></button></div><div className="lobby-hero-dice"><span>⚄</span><i>命運之門</i></div></section>
-    <section className="lobby-section"><div className="lobby-section-heading"><span>冒險入口</span><small>今日進度</small></div><div className="lobby-grid">{(Object.keys(LOBBY_MODULES) as LobbyModuleId[]).map((moduleId) => { const module = LOBBY_MODULES[moduleId]; return <button key={moduleId} className={`lobby-card accent-${module.accent}`} onClick={() => openScreen(moduleId)}><i>{module.icon}</i><div><b>{module.label}</b><small>{module.status}</small></div><span>›</span></button>; })}<button className="lobby-card accent-blue lobby-card--wide" onClick={() => openScreen("guide")}><i><BookOpen size={22} /></i><div><b>策略圖鑑</b><small>骰型、職業、天賦與規則一覽</small></div><span>›</span></button></div></section>
-    <section className="lobby-record"><div><small>最高遠征</small><b>WAVE {String(progress.bestWave).padStart(2, "0")}</b></div><div><small>完成遠征</small><b>{progress.wins} <em>次</em></b></div><div><small>本週印記</small><b>420 <em>/ 600</em></b></div></section>
+    <section className="lobby-section"><div className="lobby-section-heading"><span>冒險入口</span><small>今日進度</small></div><div className="lobby-grid">{(Object.keys(LOBBY_MODULES) as LobbyModuleId[]).map((moduleId) => { const module = LOBBY_MODULES[moduleId]; return <button key={moduleId} className={`lobby-card accent-${module.accent}`} onClick={() => openScreen(moduleId)}><i>{module.icon}</i><div><b>{module.label}</b><small>{moduleStatus[moduleId]}</small></div><span>›</span></button>; })}<button className="lobby-card accent-blue lobby-card--wide" onClick={() => openScreen("guide")}><i><BookOpen size={22} /></i><div><b>策略圖鑑</b><small>骰型、職業、天賦與規則一覽</small></div><span>›</span></button></div></section>
+    <section className="lobby-record"><div><small>最高遠征</small><b>WAVE {String(progress.bestWave).padStart(2, "0")}</b></div><div><small>完成遠征</small><b>{progress.wins} <em>次</em></b></div><div><small>本週印記</small><b>{progress.sigils} <em>/ 600</em></b></div></section>
     <div className="settings-strip lobby-settings"><span><Settings2 size={15} />設定</span><button className={progress.settings.sfxEnabled ? "setting-on" : ""} onClick={() => setSetting("sfxEnabled", !progress.settings.sfxEnabled)}><Volume2 size={15} />音效</button><button className={progress.settings.musicEnabled ? "setting-on" : ""} onClick={() => setSetting("musicEnabled", !progress.settings.musicEnabled)}><Music2 size={15} />音樂</button></div>
   </section>;
 }
 
+function ModuleHeader({ moduleId }: { moduleId: LobbyModuleId }) { const { openScreen } = useGameStore(); const module = LOBBY_MODULES[moduleId]; return <><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />返回大廳</button><div className="module-heading"><i>{module.icon}</i><div><p className="screen-kicker">{module.eyebrow}</p><h2>{module.title}</h2><p>{module.summary}</p></div></div></>; }
+
+const SLOT_LABELS: Record<EquipmentSlot, string> = { weapon: "武器", armor: "護甲", relic: "遺物" };
+
+function EquipmentScreen() {
+  const { progress, equipItem, unequipItem, openScreen } = useGameStore(); const bonuses = getEquipmentBonuses(progress.equipped);
+  return <section className="lobby-module-screen accent-gold"><ModuleHeader moduleId="equipment" /><div className="equipment-bonus-strip"><span><Swords size={15} />攻擊 +{Math.round(bonuses.attackMultiplier * 100)}%</span><span><Shield size={15} />城堡 +{bonuses.castleBonus}</span><span><RotateCcw size={15} />重骰 +{bonuses.extraRerolls}</span></div><div className="equipment-slots">{(["weapon", "armor", "relic"] as EquipmentSlot[]).map((slot) => <button key={slot} className="equipment-slot" onClick={() => progress.equipped[slot] && unequipItem(slot)}><small>{SLOT_LABELS[slot]}</small><b>{progress.equipped[slot] ? EQUIPMENT[progress.equipped[slot]!].name : "尚未裝備"}</b><span>{progress.equipped[slot] ? "點擊卸下" : "背包內選擇"}</span></button>)}</div><div className="module-status"><span>背包 {progress.inventory.length} 件</span><b>裝備在下一局生效</b></div><div className="inventory-list">{progress.inventory.map((equipmentId) => { const item = EQUIPMENT[equipmentId]; const equipped = progress.equipped[item.slot] === equipmentId; return <article key={equipmentId} className={equipped ? "is-equipped" : ""}><i>{item.icon}</i><div><b>{item.name}</b><p>{item.description}</p><small>{SLOT_LABELS[item.slot]} · {item.rarity}</small></div><button onClick={() => equipItem(equipmentId)}>{equipped ? <><Check size={14} />已裝備</> : "裝備"}</button></article>; })}</div><button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><PackageOpen size={17} />返回冒險大廳</button></section>;
+}
+
+function DailyScreen() {
+  const { progress, claimDailyReward, openScreen } = useGameStore(); const values: Record<DailyQuestId, number> = { battle: progress.daily.battles, merge: progress.daily.merges, victory: progress.daily.victories };
+  return <section className="lobby-module-screen accent-coral"><ModuleHeader moduleId="daily" /><div className="module-status"><span>今日任務 {progress.daily.claimed.length} / {DAILY_QUESTS.length} 已領取</span><b>刷新於 00:00</b></div><div className="quest-list">{DAILY_QUESTS.map((quest) => { const value = values[quest.id]; const ready = value >= quest.target && !progress.daily.claimed.includes(quest.id); const claimed = progress.daily.claimed.includes(quest.id); return <article key={quest.id} className={claimed ? "is-claimed" : ready ? "is-ready" : ""}><div className="quest-top"><div><b>{quest.title}</b><p>{quest.description}</p></div><em>{value} / {quest.target}</em></div><div className="quest-progress"><i style={{ width: `${Math.min(100, value / quest.target * 100)}%` }} /></div><footer><span><Gift size={13} />命運碎晶 ×{quest.rewardCrystals}</span><button disabled={!ready} onClick={() => claimDailyReward(quest.id)}>{claimed ? <><Check size={13} />已領取</> : ready ? "領取獎勵" : "進行中"}</button></footer></article>; })}</div><button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button></section>;
+}
+
+function DungeonScreen() {
+  const { progress, selectDungeon, openScreen } = useGameStore();
+  return <section className="lobby-module-screen accent-violet"><ModuleHeader moduleId="dungeon" /><div className="dungeon-energy"><BatteryCharging size={17} /><b>體力 {progress.stamina} / 20</b><span>每次挑戰消耗對應體力</span></div><div className="dungeon-list">{DUNGEONS.map((dungeon, index) => { const unlocked = dungeon.unlocked || (index > 0 && (progress.dungeonClears[DUNGEONS[index - 1].id] ?? 0) > 0); const enoughEnergy = progress.stamina >= dungeon.energyCost; return <article key={dungeon.id} className={!unlocked ? "is-locked" : ""}><div className="dungeon-stage-number">{String(index + 1).padStart(2, "0")}</div><div><b>{dungeon.title}</b><p>{dungeon.description}</p><small>推薦戰力 {dungeon.recommendedPower} · 體力 {dungeon.energyCost}</small></div><footer><span><Gift size={13} />{dungeon.reward.label} · ✦{dungeon.reward.crystals}</span><button disabled={!unlocked || !enoughEnergy} onClick={() => selectDungeon(dungeon.id)}>{!unlocked ? <><Lock size={13} />未解鎖</> : !enoughEnergy ? "體力不足" : "挑戰"}</button></footer></article>; })}</div><button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button></section>;
+}
+
 function LobbyModuleScreen({ moduleId }: { moduleId: LobbyModuleId }) {
-  const { openScreen } = useGameStore(); const module = LOBBY_MODULES[moduleId];
-  return <section className={`lobby-module-screen accent-${module.accent}`}><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />返回大廳</button><div className="module-heading"><i>{module.icon}</i><div><p className="screen-kicker">{module.eyebrow}</p><h2>{module.title}</h2><p>{module.summary}</p></div></div><div className="module-status"><span>{module.status}</span><b>今日可領取</b></div><div className="module-list">{module.items.map((item) => <article key={item.title}><div><b>{item.title}</b><p>{item.detail}</p></div><em>{item.tag}</em></article>)}</div>{moduleId === "dungeon" ? <button className="primary-cta wide-cta" onClick={() => openScreen("team")}><Swords size={17} />前往組隊</button> : <button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button>}</section>;
+  const { openScreen } = useGameStore();
+  if (moduleId === "equipment") return <EquipmentScreen />;
+  if (moduleId === "daily") return <DailyScreen />;
+  if (moduleId === "dungeon") return <DungeonScreen />;
+  const module = LOBBY_MODULES.shop;
+  return <section className="lobby-module-screen accent-teal"><ModuleHeader moduleId="shop" /><div className="module-status"><span>刷新：06:42:18</span><b>命運碎晶</b></div><div className="module-list">{module.items.map((item) => <article key={item.title}><div><b>{item.title}</b><p>{item.detail}</p></div><em>{item.tag}</em></article>)}</div><button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button></section>;
 }
 
 function TeamScreen() {
-  const { openScreen, selectedHeroes, toggleTeamHero } = useGameStore();
+  const { openScreen, selectedHeroes, selectedDungeonId, toggleTeamHero } = useGameStore();
   return <section className="selection-screen">
     <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到舞台</button>
     <p className="screen-kicker">第一步 · 編排隊伍</p><h2>選擇三位登場英雄</h2><p className="screen-subtitle">每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。</p>
-    <div className="selection-count"><span>{selectedHeroes.length}</span>/3 已選</div>
+    {selectedDungeonId && <div className="dungeon-launch-note"><ShieldCheck size={15} />即將挑戰：{DUNGEONS.find((dungeon) => dungeon.id === selectedDungeonId)?.title} · 進入命運舞台時扣除體力</div>}<div className="selection-count"><span>{selectedHeroes.length}</span>/3 已選</div>
     <div className="hero-choice-grid">{SELECTABLE_HERO_IDS.map((heroId) => {
       const definition = HEROES[heroId]; const selected = selectedHeroes.includes(heroId);
       return <button key={heroId} className={`hero-choice ${selected ? "is-selected" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} onClick={() => toggleTeamHero(heroId)}><span className="hero-choice-art"><img src={HERO_PORTRAITS[heroId]} alt="" /><em>{definition.classLabel}</em></span><div><b>{definition.name}</b><small>{definition.tierNotes[1]}</small></div><i>{selected ? "已選" : "選擇"}</i></button>;

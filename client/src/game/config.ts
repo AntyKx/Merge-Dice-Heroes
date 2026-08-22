@@ -7,6 +7,12 @@ import type {
   HeroId,
   TalentDefinition,
   WaveDefinition,
+  DailyQuestDefinition,
+  DungeonDefinition,
+  EquipmentBonuses,
+  EquipmentDefinition,
+  EquipmentId,
+  EquipmentSlot,
 } from "./types";
 
 export const HEROES: Record<HeroId, HeroDefinition> = {
@@ -93,6 +99,34 @@ export const HEROES: Record<HeroId, HeroDefinition> = {
 };
 
 export const SELECTABLE_HERO_IDS: HeroId[] = ["knight", "fireMage", "priest", "assassin", "frostQueen", "ranger", "bard", "deathKnight", "engineer", "fighter"];
+
+export const EQUIPMENT: Record<EquipmentId, EquipmentDefinition> = {
+  morningBlade: { id: "morningBlade", name: "晨星長劍", slot: "weapon", rarity: "稀有", description: "全隊起始攻擊 +8%。", icon: "⚔", bonuses: { attackMultiplier: 0.08 } },
+  watcherCloak: { id: "watcherCloak", name: "守望者披風", slot: "armor", rarity: "普通", description: "城堡最大生命 +3。", icon: "◒", bonuses: { castleBonus: 3 } },
+  fateDiceBox: { id: "fateDiceBox", name: "命運骰匣", slot: "relic", rarity: "史詩", description: "每局額外獲得 1 次重骰。", icon: "⚄", bonuses: { extraRerolls: 1 } },
+};
+
+export const DAILY_QUESTS: DailyQuestDefinition[] = [
+  { id: "battle", title: "完成 3 場戰鬥", target: 3, description: "完成波次戰鬥。", rewardCrystals: 30 },
+  { id: "merge", title: "合成 3 次英雄", target: 3, description: "將相同英雄升階。", rewardCrystals: 20 },
+  { id: "victory", title: "完成 1 局遠征", target: 1, description: "守住命運舞台。", rewardCrystals: 50 },
+];
+
+export const DUNGEONS: DungeonDefinition[] = [
+  { id: "ruinCorridor", title: "廢墟迴廊", description: "敵軍攻速提高的遺跡戰場。", energyCost: 5, recommendedPower: 180, startWave: 3, reward: { crystals: 45, equipmentId: "watcherCloak", label: "守望者披風素材" }, unlocked: true },
+  { id: "frostAltar", title: "霜凍祭壇", description: "寒霜壓境的高難度試煉。", energyCost: 8, recommendedPower: 320, startWave: 6, reward: { crystals: 70, equipmentId: "fateDiceBox", label: "霜華紋章" }, unlocked: false },
+  { id: "shadowTrial", title: "暮影試煉", description: "精英敵人的連戰舞台。", energyCost: 10, recommendedPower: 480, startWave: 9, reward: { crystals: 100, label: "暗影系列素材" }, unlocked: false },
+];
+
+export const EMPTY_EQUIPMENT_BONUSES: EquipmentBonuses = { attackMultiplier: 0, castleBonus: 0, extraRerolls: 0 };
+
+export function getEquipmentBonuses(equipped: Partial<Record<EquipmentSlot, EquipmentId>>): EquipmentBonuses {
+  return Object.values(equipped).reduce<EquipmentBonuses>((total, id) => {
+    if (!id) return total;
+    const bonuses = EQUIPMENT[id].bonuses;
+    return { attackMultiplier: total.attackMultiplier + (bonuses.attackMultiplier ?? 0), castleBonus: total.castleBonus + (bonuses.castleBonus ?? 0), extraRerolls: total.extraRerolls + (bonuses.extraRerolls ?? 0) };
+  }, { ...EMPTY_EQUIPMENT_BONUSES });
+}
 
 export const ENEMIES: Record<EnemyId, EnemyDefinition> = {
   slime: { id: "slime", name: "藍史萊姆", color: "#55a5dd", hp: 34, speed: 0.04, attack: 7, attackInterval: 1.2, castleDamage: 1, tags: [] },

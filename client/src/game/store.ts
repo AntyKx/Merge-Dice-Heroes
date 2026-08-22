@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import { emitAudio } from "./audio";
-import { DICE_COMBINATIONS, HEROES } from "./config";
+import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES } from "./config";
 import { advanceCombat } from "./engine/combat";
 import {
   beginReroll,
   chooseHeroSummon,
   chooseTalent,
+  createDungeonRun,
   createRun,
   finishReroll,
   mergeBoardSelection,
@@ -21,7 +22,7 @@ import {
 } from "./engine/run";
 import { defaultProgress, loadProgress, saveProgress } from "./persistence";
 import { createHero } from "./rules/merge";
-import type { DiceCombinationKind, HeroId, PlayerProgress, RunState } from "./types";
+import type { DailyQuestId, DiceCombinationKind, DungeonId, EquipmentId, EquipmentSlot, HeroId, PlayerProgress, RunState } from "./types";
 
 export type GameScreen = "title" | "team" | "leader" | "game" | "guide" | "equipment" | "shop" | "daily" | "dungeon";
 
@@ -29,6 +30,7 @@ interface GameStore {
   screen: GameScreen;
   selectedHeroes: HeroId[];
   leaderId: HeroId;
+  selectedDungeonId?: DungeonId;
   run?: RunState;
   progress: PlayerProgress;
   selectedBoardIndexes: number[];
@@ -38,6 +40,10 @@ interface GameStore {
   toggleTeamHero: (heroId: HeroId) => void;
   chooseLeader: (heroId: HeroId) => void;
   startRun: () => void;
+  selectDungeon: (dungeonId: DungeonId) => void;
+  equipItem: (equipmentId: EquipmentId) => void;
+  unequipItem: (slot: EquipmentSlot) => void;
+  claimDailyReward: (questId: DailyQuestId) => void;
   startDemo: (fireMageTier?: 2 | 3, showcaseHero?: HeroId, castMode?: "leader" | "ultimate") => void;
   restartRun: () => void;
   toggleLock: (index: number) => void;
@@ -73,24 +79,32 @@ function persist(progress: PlayerProgress) {
 
 function maybeRecord(previous: RunState | undefined, next: RunState, progress: PlayerProgress) {
   if (!previous || previous.phase === next.phase || !["VICTORY", "DEFEAT"].includes(next.phase)) return progress;
+  const victorious = next.phase === "VICTORY";
   const updated = {
     ...progress,
-    wins: progress.wins + (next.phase === "VICTORY" ? 1 : 0),
-    losses: progress.losses + (next.phase === "DEFEAT" ? 1 : 0),
+    wins: progress.wins + (victorious ? 1 : 0),
+    losses: progress.losses + (victorious ? 0 : 1),
     bestWave: Math.max(progress.bestWave, next.wave),
+    crystals: progress.crystals + (victorious ? (next.dungeonId ? (DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)?.reward.crystals ?? 0) : 18) : 0),
+    inventory: victorious && next.dungeonId && DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)?.reward.equipmentId && !progress.inventory.includes(DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)!.reward.equipmentId!) ? [...progress.inventory, DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)!.reward.equipmentId!] : progress.inventory,
+    dungeonClears: victorious && next.dungeonId ? { ...progress.dungeonClears, [next.dungeonId]: (progress.dungeonClears[next.dungeonId] ?? 0) + 1 } : progress.dungeonClears,
+    daily: victorious ? { ...progress.daily, victories: progress.daily.victories + 1 } : progress.daily,
   };
   return persist(updated);
 }
+
+const dailyValue = (progress: PlayerProgress, questId: DailyQuestId) => questId === "battle" ? progress.daily.battles : questId === "merge" ? progress.daily.merges : progress.daily.victories;
 
 export const useGameStore = create<GameStore>((set, get) => ({
   screen: "title",
   selectedHeroes: ["knight", "fireMage", "ranger"],
   leaderId: "knight",
+  selectedDungeonId: undefined,
   progress: loadedProgress,
   selectedBoardIndexes: [],
   autoSpeed: 1,
   showDebug: false,
-  openScreen: (screen) => set({ screen, selectedBoardIndexes: [] }),
+  openScreen: (screen) => set((state) => ({ screen, selectedBoardIndexes: [], selectedDungeonId: screen === "title" ? undefined : state.selectedDungeonId })),
   toggleTeamHero: (heroId) => set((state) => {
     const selectedHeroes = state.selectedHeroes.includes(heroId)
       ? state.selectedHeroes.filter((id) => id !== heroId)
@@ -100,10 +114,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
   }),
   chooseLeader: (leaderId) => set({ leaderId }),
   startRun: () => {
-    const { selectedHeroes, leaderId } = get();
+    const { selectedHeroes, leaderId, selectedDungeonId, progress } = get();
     if (selectedHeroes.length !== 3) return;
-    set({ run: createRun(selectedHeroes, leaderId), screen: "game", selectedBoardIndexes: [] });
+    const equipmentBonuses = getEquipmentBonuses(progress.equipped);
+    const dungeon = selectedDungeonId ? DUNGEONS.find((candidate) => candidate.id === selectedDungeonId) : undefined;
+    if (dungeon && progress.stamina < dungeon.energyCost) return;
+    const nextProgress = dungeon ? persist({ ...progress, stamina: progress.stamina - dungeon.energyCost }) : progress;
+    const run = dungeon ? createDungeonRun(selectedHeroes, leaderId, dungeon.id, equipmentBonuses) : createRun(selectedHeroes, leaderId, Math.random, equipmentBonuses);
+    set({ run, progress: nextProgress, selectedDungeonId: undefined, screen: "game", selectedBoardIndexes: [] });
   },
+  selectDungeon: (selectedDungeonId) => set((state) => {
+    const dungeon = DUNGEONS.find((candidate) => candidate.id === selectedDungeonId);
+    const index = DUNGEONS.findIndex((candidate) => candidate.id === selectedDungeonId);
+    const previous = DUNGEONS[index - 1];
+    const unlocked = dungeon?.unlocked || (previous ? (state.progress.dungeonClears[previous.id] ?? 0) > 0 : false);
+    return dungeon && unlocked ? { selectedDungeonId, screen: "team" } : state;
+  }),
+  equipItem: (equipmentId) => set((state) => {
+    if (!state.progress.inventory.includes(equipmentId)) return state;
+    const slot = EQUIPMENT[equipmentId].slot;
+    return { progress: persist({ ...state.progress, equipped: { ...state.progress.equipped, [slot]: state.progress.equipped[slot] === equipmentId ? undefined : equipmentId } }) };
+  }),
+  unequipItem: (slot) => set((state) => ({ progress: persist({ ...state.progress, equipped: { ...state.progress.equipped, [slot]: undefined } }) })),
+  claimDailyReward: (questId) => set((state) => {
+    const quest = DAILY_QUESTS.find((candidate) => candidate.id === questId);
+    if (!quest || state.progress.daily.claimed.includes(questId) || dailyValue(state.progress, questId) < quest.target) return state;
+    return { progress: persist({ ...state.progress, crystals: state.progress.crystals + quest.rewardCrystals, daily: { ...state.progress.daily, claimed: [...state.progress.daily.claimed, questId] } }) };
+  }),
   startDemo: (fireMageTier = 2, showcaseHero: HeroId = "ranger", castMode?: "leader" | "ultimate") => {
     const random = () => 0.42;
     let run = createRun(["knight", "fireMage", showcaseHero], castMode ? showcaseHero : "fireMage", random);
@@ -118,8 +155,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ run, screen: "game", selectedBoardIndexes: [] });
   },
   restartRun: () => {
-    const { selectedHeroes, leaderId } = get();
-    set({ run: createRun(selectedHeroes, leaderId), screen: "game", selectedBoardIndexes: [] });
+    const { selectedHeroes, leaderId, progress } = get();
+    set({ run: createRun(selectedHeroes, leaderId, Math.random, getEquipmentBonuses(progress.equipped)), screen: "game", selectedBoardIndexes: [] });
   },
   toggleLock: (index) => set((state) => state.run ? { run: toggleLock(state.run, index) } : state),
   reroll: () => {
@@ -152,7 +189,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!state.run || !state.selectedBoardIndexes.length) return state;
     const run = mergeBoardSelection(state.run, state.selectedBoardIndexes, state.selectedBoardIndexes[0]);
     if (run !== state.run) emitAudio("merge", state.progress.settings);
-    return { run, selectedBoardIndexes: [] };
+    const progress = run !== state.run ? persist({ ...state.progress, daily: { ...state.progress.daily, merges: state.progress.daily.merges + 1 } }) : state.progress;
+    return { run, progress, selectedBoardIndexes: [] };
   }),
   swapBoardHeroes: (from, to) => set((state) => {
     if (!state.run || state.run.phase !== "MERGING" || from === to || state.run.combat.lockedTile === to) return state;
@@ -165,7 +203,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   combatTick: (delta) => set((state) => {
     if (!state.run) return state;
     const run = advanceCombat(state.run, delta);
-    return { run, progress: maybeRecord(state.run, run, state.progress) };
+    const resolvedBattle = state.run.phase === "COMBAT" && run.phase !== "COMBAT";
+    const baseProgress = resolvedBattle ? persist({ ...state.progress, daily: { ...state.progress.daily, battles: state.progress.daily.battles + 1 } }) : state.progress;
+    return { run, progress: maybeRecord(state.run, run, baseProgress) };
   }),
   prepareTalents: () => set((state) => state.run ? { run: prepareTalents(state.run) } : state),
   takeTalent: (talentId) => set((state) => {

@@ -11,6 +11,10 @@ export type EnemyId =
 
 export type HeroTier = 1 | 2 | 3;
 export type TalentRarity = "common" | "rare" | "epic";
+export type EquipmentSlot = "weapon" | "armor" | "relic";
+export type EquipmentId = "morningBlade" | "watcherCloak" | "fateDiceBox";
+export type DailyQuestId = "battle" | "merge" | "victory";
+export type DungeonId = "ruinCorridor" | "frostAltar" | "shadowTrial";
 export type GamePhase =
   | "PREPARING"
   | "ROLLING"
@@ -163,12 +167,64 @@ export interface RunState {
   talentChoices: TalentDefinition[];
   message: string;
   runId: number;
+  equipmentBonuses: EquipmentBonuses;
+  dungeonId?: DungeonId;
+}
+
+export interface EquipmentBonuses {
+  attackMultiplier: number;
+  castleBonus: number;
+  extraRerolls: number;
+}
+
+export interface EquipmentDefinition {
+  id: EquipmentId;
+  name: string;
+  slot: EquipmentSlot;
+  rarity: "普通" | "稀有" | "史詩";
+  description: string;
+  icon: string;
+  bonuses: Partial<EquipmentBonuses>;
+}
+
+export interface DailyQuestDefinition {
+  id: DailyQuestId;
+  title: string;
+  target: number;
+  description: string;
+  rewardCrystals: number;
+}
+
+export interface DailyQuestState {
+  dayKey: string;
+  battles: number;
+  merges: number;
+  victories: number;
+  claimed: DailyQuestId[];
+}
+
+export interface DungeonDefinition {
+  id: DungeonId;
+  title: string;
+  description: string;
+  energyCost: number;
+  recommendedPower: number;
+  startWave: number;
+  reward: { crystals: number; equipmentId?: EquipmentId; label: string };
+  unlocked: boolean;
 }
 
 export interface PlayerProgress {
   wins: number;
   losses: number;
   bestWave: number;
+  crystals: number;
+  sigils: number;
+  stamina: number;
+  inventory: EquipmentId[];
+  equipped: Partial<Record<EquipmentSlot, EquipmentId>>;
+  daily: DailyQuestState;
+  dungeonClears: Partial<Record<DungeonId, number>>;
   settings: {
     musicEnabled: boolean;
     sfxEnabled: boolean;

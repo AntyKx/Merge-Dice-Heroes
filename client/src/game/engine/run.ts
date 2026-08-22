@@ -1,32 +1,42 @@
-import { DICE_COMBINATIONS, HEROES, TALENTS, WAVES } from "../config";
+import { DICE_COMBINATIONS, DUNGEONS, HEROES, TALENTS, WAVES } from "../config";
 import { makeCombatState, getRunModifiers } from "./combat";
 import { evaluateDice, randomDie, rollUnlockedDice, toggleDiceLock } from "../rules/dice";
 import { createHero, firstEmptySlot, getMergeCandidates, mergeHeroes, summonOnBoard } from "../rules/merge";
-import type { DiceCombinationKind, HeroId, HeroInstance, RunState, TalentDefinition } from "../types";
+import type { DiceCombinationKind, DungeonId, EquipmentBonuses, HeroId, HeroInstance, RunState, TalentDefinition } from "../types";
 
 const emptyBoard = () => Array<HeroInstance | null>(16).fill(null);
 
 function generateDice(random: () => number) { return Array.from({ length: 5 }, () => randomDie(random)); }
 
-export function createRun(selectedHeroes: HeroId[], leaderId: HeroId, random: () => number = Math.random): RunState {
+const emptyEquipmentBonuses: EquipmentBonuses = { attackMultiplier: 0, castleBonus: 0, extraRerolls: 0 };
+
+export function createRun(selectedHeroes: HeroId[], leaderId: HeroId, random: () => number = Math.random, equipmentBonuses: EquipmentBonuses = emptyEquipmentBonuses): RunState {
   return {
     phase: "SELECTING_DICE",
     wave: 1,
     selectedHeroes,
     leaderId,
     board: emptyBoard(),
-    dice: { values: generateDice(random), locked: [false, false, false, false, false], rerollsLeft: 2, maxRerolls: 2, noComboStreak: 0, isRolling: false },
+    dice: { values: generateDice(random), locked: [false, false, false, false, false], rerollsLeft: 2 + equipmentBonuses.extraRerolls, maxRerolls: 2 + equipmentBonuses.extraRerolls, noComboStreak: 0, isRolling: false },
     summonEnergy: 1,
     recycleEnergy: 0,
     activeTalents: [],
-    combat: makeCombatState(1),
+    combat: makeCombatState(1, equipmentBonuses.castleBonus),
     pendingHeroChoice: false,
     pendingFreeMerge: false,
     usedTwoMerge: false,
     talentChoices: [],
     message: "第一幕開演。保留想要的骰子，或直接結算。",
     runId: Date.now(),
+    equipmentBonuses: { ...equipmentBonuses },
   };
+}
+
+export function createDungeonRun(selectedHeroes: HeroId[], leaderId: HeroId, dungeonId: DungeonId, equipmentBonuses: EquipmentBonuses, random: () => number = Math.random): RunState {
+  const dungeon = DUNGEONS.find((candidate) => candidate.id === dungeonId);
+  const base = createRun(selectedHeroes, leaderId, random, equipmentBonuses);
+  if (!dungeon) return base;
+  return { ...base, dungeonId, wave: dungeon.startWave, combat: makeCombatState(dungeon.startWave, equipmentBonuses.castleBonus), message: `副本：${dungeon.title} 開演！特殊規則已啟動。` };
 }
 
 function summon(run: RunState, heroId: HeroId): RunState {
@@ -226,7 +236,7 @@ export function nextWave(run: RunState, random: () => number = Math.random): Run
     phase: "SELECTING_DICE",
     wave,
     dice: { values: generateDice(random), locked: [false, false, false, false, false], rerollsLeft: 2 + modifiers.extraRerolls, maxRerolls: 2 + modifiers.extraRerolls, noComboStreak: run.dice.noComboStreak, isRolling: false },
-    combat: { ...makeCombatState(wave), castleHp: run.combat.castleHp, castleMaxHp: run.combat.castleMaxHp },
+    combat: { ...makeCombatState(wave, run.equipmentBonuses.castleBonus), castleHp: run.combat.castleHp, castleMaxHp: run.combat.castleMaxHp },
     lastCombination: undefined,
     message: `第 ${wave} 波：${WAVES[wave - 1].title}。先用骰子布局。`,
   };
