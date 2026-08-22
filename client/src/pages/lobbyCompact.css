@@ -28,6 +28,20 @@
 .lobby-screen .lobby-settings { margin-top:6px; }
 .lobby-screen .lobby-settings .text-button { font-size:9px; }
 
+.lobby-screen { position:relative; transition:background .42s var(--ease-out); }
+.lobby-screen:before,.lobby-screen:after { content:""; position:absolute; z-index:0; pointer-events:none; border-radius:50%; opacity:0; transition:opacity .42s var(--ease-out),transform .42s var(--ease-out); }
+.lobby-screen:before { width:164px; height:164px; left:-76px; bottom:56px; background:radial-gradient(circle,rgba(60,181,149,.24),transparent 69%); transform:scale(.7); }
+.lobby-screen:after { width:190px; height:190px; right:-90px; bottom:-45px; background:radial-gradient(circle,rgba(241,185,72,.34),transparent 69%); transform:scale(.7); }
+.lobby-screen>* { position:relative; z-index:1; }
+.lobby-screen.lobby-progress-1 { background:radial-gradient(circle at 91% 7%,rgba(251,204,94,.43),transparent 26%),radial-gradient(circle at 10% 52%,rgba(31,180,146,.27),transparent 30%),linear-gradient(165deg,#f9efcf 0%,#e6efd3 44%,#cfe8dc 100%); }
+.lobby-screen.lobby-progress-2:before,.lobby-screen.lobby-progress-2:after { opacity:1; transform:scale(1); }
+.lobby-screen.lobby-progress-2 { background:radial-gradient(circle at 90% 7%,rgba(255,213,106,.52),transparent 26%),radial-gradient(circle at 10% 52%,rgba(34,182,145,.33),transparent 31%),linear-gradient(165deg,#fff2c6 0%,#e3f0d0 44%,#c8e8da 100%); }
+.lobby-screen.lobby-progress-3:before,.lobby-screen.lobby-progress-3:after { opacity:1; transform:scale(1.18); }
+.lobby-screen.lobby-progress-3 { background:radial-gradient(circle at 90% 7%,rgba(255,213,106,.68),transparent 26%),radial-gradient(circle at 9% 53%,rgba(34,185,148,.43),transparent 31%),linear-gradient(165deg,#fff3c1 0%,#e4f2cc 44%,#bde5d6 100%); }
+.lobby-card aside { display:grid; justify-items:end; gap:2px; align-items:center; }.lobby-card aside>span { color:#a18b5b; font-size:14px; }.lobby-card aside em { display:flex; gap:2px; align-items:center; padding:2px 4px; border-radius:999px; color:#ffffff; background:#d75b54; box-shadow:0 1px 0 rgba(109,37,31,.2); font-size:7px; font-style:normal; font-weight:900; white-space:nowrap; }.lobby-card aside em.is-reward { background:#d94b4b; }.lobby-card.has-notice i:after { content:""; position:absolute; top:-3px; right:-3px; width:8px; height:8px; border:2px solid #fffdf3; border-radius:50%; background:#e24f4f; }.lobby-card i { position:relative; }
+.lobby-settings-panel { margin-top:6px; display:grid; justify-items:center; gap:4px; }.lobby-settings-toggle { display:flex; align-items:center; gap:4px; border:0; padding:3px 5px; color:#617a78; background:transparent; font-size:9px; font-weight:900; }.lobby-settings-toggle span { display:flex; align-items:center; gap:3px; }.lobby-settings-toggle>svg { transition:transform .2s var(--ease-out); transform:rotate(-90deg); }.lobby-settings-panel.is-open .lobby-settings-toggle>svg { transform:rotate(-180deg); }.lobby-settings-panel .lobby-settings { margin-top:0; animation:settingsReveal .18s var(--ease-out) both; }.lobby-settings-panel .lobby-settings:before { display:none; }
+@keyframes settingsReveal { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
+
 @media (max-height: 730px) {
   .lobby-screen { padding-top:8px; }
   .lobby-screen .lobby-currency b { padding:4px 5px; font-size:8px; }
