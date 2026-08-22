@@ -38,7 +38,7 @@ interface GameStore {
   toggleTeamHero: (heroId: HeroId) => void;
   chooseLeader: (heroId: HeroId) => void;
   startRun: () => void;
-  startDemo: () => void;
+  startDemo: (fireMageTier?: 2 | 3) => void;
   restartRun: () => void;
   toggleLock: (index: number) => void;
   reroll: () => void;
@@ -104,12 +104,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (selectedHeroes.length !== 3) return;
     set({ run: createRun(selectedHeroes, leaderId), screen: "game", selectedBoardIndexes: [] });
   },
-  startDemo: () => {
+  startDemo: (fireMageTier = 2) => {
     const random = () => 0.42;
     let run = createRun(["knight", "fireMage", "archer"], "fireMage", random);
     const board = [...run.board];
     board[0] = createHero("knight", 2);
-    board[5] = createHero("fireMage", 2);
+    board[5] = createHero("fireMage", fireMageTier);
     board[10] = createHero("archer", 1);
     board[14] = createHero("knight", 1);
     run = { ...run, board, phase: "COMBAT", message: "展示模式：第 1 波自動戰鬥中。" };

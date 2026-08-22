@@ -125,7 +125,7 @@ function EnemyStrip() {
   </div>;
 }
 
-function HeroTile({ hero, index, selected, onPointerDown, onPointerUp }: { hero: HeroInstance | null; index: number; selected: boolean; onPointerDown: (index: number) => void; onPointerUp: (index: number) => void; }) {
+function HeroTile({ hero, index, selected, previewing, onPointerDown, onPointerUp, onPointerCancel }: { hero: HeroInstance | null; index: number; selected: boolean; previewing: boolean; onPointerDown: (index: number) => void; onPointerUp: (index: number) => void; onPointerCancel: () => void; }) {
   const { run } = useGameStore();
   const locked = run?.combat.lockedTile === index;
   if (!hero) return <button className={`hero-tile is-empty ${locked ? "is-locked" : ""}`} disabled={locked} aria-label={locked ? "被 Boss 封鎖的格子" : "空的英雄格"}><span>{locked ? <Lock size={16} /> : ""}</span></button>;
@@ -136,23 +136,49 @@ function HeroTile({ hero, index, selected, onPointerDown, onPointerUp }: { hero:
     : hero.heroId === "fireMage" && run?.phase === "COMBAT" && hero.cooldown > 0.8
       ? "attack"
       : "idle";
+  const displayAction: FireMageAction = previewing && hero.heroId === "fireMage" ? "attack" : fireMageAction;
   const characterVisual = hero.heroId === "fireMage"
-    ? <span className="fire-mage-board-sprite"><FireMageSprite key={`${fireMageAction}-${hero.attackCount}`} action={fireMageAction} /></span>
+    ? <span className={`fire-mage-board-sprite tier-${hero.tier} is-${displayAction}`}><FireMageSprite key={`${displayAction}-${hero.attackCount}`} action={displayAction} /></span>
     : <HeroPortrait heroId={hero.heroId} action={fireMageAction} animationSignal={hero.attackCount} />;
-  return <button className={`hero-tile tier-${hero.tier} ${selected ? "is-selected" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={() => onPointerDown(index)} onPointerUp={() => onPointerUp(index)} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}`}>{characterVisual}<b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}<em className="attack-orb" style={{ animationDuration: `${Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
+  return <button className={`hero-tile tier-${hero.tier} ${selected ? "is-selected" : ""} ${previewing ? "is-previewing" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); onPointerDown(index); }} onPointerUp={(event) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); onPointerUp(index); }} onPointerCancel={onPointerCancel} onContextMenu={(event) => event.preventDefault()} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}。長按可預覽攻擊動畫。`}><span className="hero-visual-zone">{characterVisual}{previewing && hero.heroId !== "fireMage" && <span className="preview-slash" />}</span><b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}{previewing && <span className="preview-badge"><Swords size={9} />預覽</span>}<em className="attack-orb" style={{ animationDuration: `${previewing ? .42 : Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
 }
 
 function Board() {
   const { run, selectedBoardIndexes, selectBoardHero, swapBoardHeroes } = useGameStore();
   const dragIndex = useRef<number | null>(null);
+  const longPressTimer = useRef<number | undefined>(undefined);
+  const longPressStarted = useRef(false);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   if (!run) return null;
-  const pointerDown = (index: number) => { dragIndex.current = index; };
+  const pointerDown = (index: number) => {
+    dragIndex.current = index;
+    longPressStarted.current = false;
+    longPressTimer.current = window.setTimeout(() => {
+      longPressStarted.current = true;
+      setPreviewIndex(index);
+    }, 460);
+  };
   const pointerUp = (index: number) => {
+    if (longPressTimer.current) window.clearTimeout(longPressTimer.current);
+    if (longPressStarted.current) {
+      longPressStarted.current = false;
+      dragIndex.current = null;
+      setPreviewIndex(null);
+      return;
+    }
+    if (run.phase !== "MERGING") { dragIndex.current = null; return; }
     if (dragIndex.current === null) return;
     if (dragIndex.current === index) selectBoardHero(index); else swapBoardHeroes(dragIndex.current, index);
     dragIndex.current = null;
   };
-  return <section className="board-section"><div className="section-heading"><span><Swords size={15} />英雄舞台</span><small>點選 3 名同職同階後合成；拖曳可交換位置。</small></div><div className="hero-board">{run.board.map((hero, index) => <HeroTile key={hero?.id ?? `empty-${index}`} hero={hero} index={index} selected={selectedBoardIndexes.includes(index)} onPointerDown={pointerDown} onPointerUp={pointerUp} />)}</div></section>;
+  const cancelPointer = () => {
+    if (longPressTimer.current) window.clearTimeout(longPressTimer.current);
+    longPressStarted.current = false;
+    dragIndex.current = null;
+    setPreviewIndex(null);
+  };
+  const previewFixture = new URLSearchParams(window.location.search).get("preview");
+  return <section className="board-section"><div className="section-heading"><span><Swords size={15} />英雄舞台</span><small>點選 3 名同職同階後合成；拖曳可交換；長按預覽攻擊。</small></div><div className="hero-board">{run.board.map((hero, index) => <HeroTile key={hero?.id ?? `empty-${index}`} hero={hero} index={index} selected={selectedBoardIndexes.includes(index)} previewing={previewIndex === index || (Boolean(previewFixture) && (previewFixture === "all" || hero?.heroId === "fireMage"))} onPointerDown={pointerDown} onPointerUp={pointerUp} onPointerCancel={cancelPointer} />)}</div></section>;
 }
 
 function DiceTray() {
@@ -242,8 +268,10 @@ export default function GameScreen() {
   const screen = useGameStore((state) => state.screen);
   const startDemo = useGameStore((state) => state.startDemo);
   useEffect(() => {
-    if (!new URLSearchParams(window.location.search).has("demo")) return;
-    const timer = window.setTimeout(startDemo, 0);
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("demo")) return;
+    const fireMageTier = params.get("preview") === "3" ? 3 : 2;
+    const timer = window.setTimeout(() => startDemo(fireMageTier), 0);
     return () => window.clearTimeout(timer);
   }, [startDemo]);
   return <main className="game-frame">{screen === "title" && <TitleScreen />}{screen === "team" && <TeamScreen />}{screen === "leader" && <LeaderScreen />}{screen === "game" && <BattleScreen />}{screen === "guide" && <GuideScreen />}</main>;
