@@ -4,7 +4,7 @@ import "./shopEnhancements.css";
 import "./lobbyCompact.css";
 import "./dailyCelebration.css";
 import "./islandLobby.css";
-import { BatteryCharging, BookOpen, Check, ChevronLeft, Gift, Hammer, Heart, Info, Lock, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
+import { BatteryCharging, Check, ChevronLeft, Gift, Hammer, Heart, Info, Lock, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
 import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
@@ -128,7 +128,7 @@ function TitleScreen() {
   const islandStage = Math.min(3, DUNGEONS.filter((dungeon) => (progress.dungeonClears[dungeon.id] ?? 0) > 0).length);
   const moduleStatus: Record<LobbyModuleId, string> = { equipment: `${equippedCount} / 3 已裝備`, shop: `${progress.sigils} ◈`, daily: `${completedQuests} / 3 完成 · ${claimedCount} 已領`, dungeon: `${progress.stamina} / 20 體力` };
   const notices: Partial<Record<LobbyModuleId, { label: string; reward?: boolean }>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment ? { label: "可強化" } : undefined, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop ? { label: "免費刷新" } : undefined, daily: claimableQuests && !progress.lobbyRead.daily ? { label: `可領取 ${claimableQuests}`, reward: true } : undefined, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon ? { label: "可挑戰" } : undefined };
-  const landmark = (moduleId: LobbyModuleId, className: string) => { const module = LOBBY_MODULES[moduleId]; const notice = notices[moduleId]; return <button className={`island-landmark landmark-${className} island-stage-${islandStage} ${notice ? "has-notice" : ""}`} onClick={() => openScreen(moduleId)} aria-label={`${module.label}，${moduleStatus[moduleId]}，島嶼成長階段 ${islandStage + 1}`}><span className="landmark-art"><i>{module.icon}</i></span><strong>{module.label}</strong><small>{moduleStatus[moduleId]}</small>{notice && <em className={notice.reward ? "is-reward" : ""}>{notice.reward && <Gift size={9} />}{notice.label}</em>}</button>; };
+  const landmark = (moduleId: LobbyModuleId, className: string) => { const module = LOBBY_MODULES[moduleId]; const notice = notices[moduleId]; return <button className={`island-landmark landmark-${className} island-stage-${islandStage} ${notice ? "has-notice" : ""}`} onClick={() => openScreen(moduleId)} aria-label={`${module.label}，${moduleStatus[moduleId]}，島嶼成長階段 ${islandStage + 1}`}><strong>{module.label}</strong><small>{moduleStatus[moduleId]}</small>{notice && <em className={notice.reward ? "is-reward" : ""}>{notice.reward && <Gift size={9} />}{notice.label}</em>}</button>; };
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
   return <section className={`lobby-screen island-lobby lobby-progress-${completedQuests} map-stage-${islandStage} ${departing ? "is-departing" : ""}`}>
     <div className="island-map-art" style={{ backgroundImage: `url(${ISLAND_MAP_URL})` }} aria-hidden="true" />
@@ -139,7 +139,7 @@ function TitleScreen() {
     <section className="island-landmarks" aria-label="冒險大廳入口">
       <button className="island-castle" disabled={departing} onClick={launchExpedition}><span><small>命運骰塔</small><b>{departing ? "隊伍啟航中" : "組隊遠征"}</b><em><Swords size={13} />{departing ? "整裝出發" : "開始冒險"}</em></span></button>
       {landmark("equipment", "forge")}{landmark("shop", "market")}{landmark("daily", "journal")}{landmark("dungeon", "dungeon")}
-      <button className="island-landmark landmark-guide" onClick={() => openScreen("guide")}><span className="landmark-art"><BookOpen size={15} /></span><strong>策略圖鑑</strong><small>骰型與職業</small></button>
+      <button className="island-landmark landmark-guide" onClick={() => openScreen("guide")}><strong>策略圖鑑</strong><small>骰型與職業</small></button>
     </section>
     <section className="island-record"><div><small>最高遠征</small><b>WAVE {String(progress.bestWave).padStart(2, "0")}</b></div><div><small>完成遠征</small><b>{progress.wins} <em>次</em></b></div><div><small>今日印記</small><b>{progress.sigils} <em>/ 600</em></b></div></section>
     <div className={`lobby-settings-panel island-settings ${settingsOpen ? "is-open" : ""}`}><button className="lobby-settings-toggle" onClick={() => setSettingsOpen((open) => !open)}><span><Settings2 size={14} />設定與音效</span><ChevronLeft size={15} /></button>{settingsOpen && <div className="settings-strip lobby-settings"><button className={progress.settings.sfxEnabled ? "setting-on" : ""} onClick={() => setSetting("sfxEnabled", !progress.settings.sfxEnabled)}><Volume2 size={15} />音效</button><button className={progress.settings.musicEnabled ? "setting-on" : ""} onClick={() => setSetting("musicEnabled", !progress.settings.musicEnabled)}><Music2 size={15} />音樂</button></div>}</div>
