@@ -21,6 +21,7 @@ const KINGDOM_NIGHT_MAP_URL = "/manus-storage/kingdom-night-map_d4bb0984.png";
 type LobbyWeather = "day" | "night";
 type ScenePreviewMode = "auto" | LobbyWeather;
 type LobbyTab = "kingdom" | "journal" | "records" | "settings";
+type LandmarkPreviewId = LobbyModuleId | "guide";
 
 const getLobbyWeather = (date: Date): LobbyWeather => {
   const hour = date.getHours();
@@ -134,6 +135,8 @@ function TitleScreen() {
   const { openScreen, progress, setSetting, selectedHeroes } = useGameStore();
   const [departing, setDeparting] = useState(false);
   const [lobbyTab, setLobbyTab] = useState<LobbyTab>("kingdom");
+  const [activeLandmark, setActiveLandmark] = useState<LandmarkPreviewId | null>(null);
+  const activeLandmarkRef = useRef<LandmarkPreviewId | null>(null);
   const [autoWeather, setAutoWeather] = useState<LobbyWeather>(() => getLobbyWeather(new Date()));
   const [scenePreviewMode, setScenePreviewMode] = useState<ScenePreviewMode>("auto");
   useEffect(() => {
@@ -156,7 +159,8 @@ function TitleScreen() {
   const sceneMapUrl = weather === "night" ? KINGDOM_NIGHT_MAP_URL : ISLAND_MAP_URL;
   const moduleStatus: Record<LobbyModuleId, string> = { equipment: `${equippedCount} / 3 已裝備`, shop: `${progress.sigils} ◈`, daily: `${completedQuests} / 3 完成 · ${claimedCount} 已領`, dungeon: `${progress.stamina} / 20 體力` };
   const notices: Partial<Record<LobbyModuleId, { label: string; reward?: boolean }>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment ? { label: "可強化" } : undefined, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop ? { label: "免費刷新" } : undefined, daily: claimableQuests && !progress.lobbyRead.daily ? { label: `可領取 ${claimableQuests}`, reward: true } : undefined, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon ? { label: "可挑戰" } : undefined };
-  const landmark = (moduleId: LobbyModuleId, className: string) => { const module = LOBBY_MODULES[moduleId]; const notice = notices[moduleId]; return <button className={`island-landmark landmark-${className} island-stage-${islandStage} ${notice ? "has-notice" : ""}`} onClick={() => openScreen(moduleId)} aria-label={`${module.label}，${moduleStatus[moduleId]}，島嶼成長階段 ${islandStage + 1}`}><strong>{module.label}</strong><small>{moduleStatus[moduleId]}</small>{notice && <em className={notice.reward ? "is-reward" : ""}>{notice.reward && <Gift size={9} />}{notice.label}</em>}</button>; };
+  const activateLandmark = (landmarkId: LandmarkPreviewId, destination: LobbyModuleId | "guide") => { if (activeLandmarkRef.current === landmarkId) { activeLandmarkRef.current = null; setActiveLandmark(null); openScreen(destination); } else { activeLandmarkRef.current = landmarkId; setActiveLandmark(landmarkId); } };
+  const landmark = (moduleId: LobbyModuleId, className: string) => { const module = LOBBY_MODULES[moduleId]; const notice = notices[moduleId]; const isActive = activeLandmark === moduleId; return <button className={`island-landmark landmark-${className} island-stage-${islandStage} ${notice ? "has-notice" : ""} ${isActive ? "is-previewing" : ""}`} onClick={() => activateLandmark(moduleId, moduleId)} aria-label={`${module.label}，${moduleStatus[moduleId]}；首次點擊顯示名稱，再次點擊進入`} aria-pressed={isActive}>{isActive && <span className="landmark-callout"><b>{module.label}</b><small>{moduleStatus[moduleId]}</small><i>再按一次進入</i></span>}{notice && <em className={notice.reward ? "is-reward" : ""} aria-label={notice.label}>{notice.reward ? <Gift size={9} /> : "!"}</em>}</button>; };
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
   return <section className={`lobby-screen island-lobby lobby-progress-${completedQuests} map-stage-${islandStage} weather-${weather} ${departing ? "is-departing" : ""}`}>
     <div className="island-map-art" style={{ backgroundImage: `url(${sceneMapUrl})` }} aria-hidden="true" />
@@ -173,7 +177,7 @@ function TitleScreen() {
       <button className="island-castle" disabled={departing} onClick={launchExpedition}><span><small>命運骰塔</small><b>{departing ? "隊伍啟航中" : "組隊遠征"}</b><em><Swords size={13} />{departing ? "整裝出發" : "開始冒險"}</em></span></button>
       <div className="theatre-hero-party" aria-label="目前遠征小隊">{selectedHeroes.slice(0, 3).map((heroId, index) => <span key={heroId} className={`hero-piece tier-${index + 1}`} style={{ "--hero-color": HEROES[heroId].color } as React.CSSProperties}><b>{HEROES[heroId].name.slice(0, 1)}</b><i /></span>)}<small>部署隊伍</small></div>
       {landmark("equipment", "forge")}{landmark("shop", "market")}{landmark("daily", "journal")}{landmark("dungeon", "dungeon")}
-      <button className="island-landmark landmark-guide" onClick={() => openScreen("guide")}><strong>策略圖鑑</strong><small>骰型與職業</small></button>
+      <button className={`island-landmark landmark-guide ${activeLandmark === "guide" ? "is-previewing" : ""}`} onClick={() => activateLandmark("guide", "guide")} aria-label="策略圖鑑，骰型與職業；首次點擊顯示名稱，再次點擊進入" aria-pressed={activeLandmark === "guide"}>{activeLandmark === "guide" && <span className="landmark-callout"><b>策略圖鑑</b><small>骰型與職業</small><i>再按一次進入</i></span>}</button>
     </section>
     {lobbyTab === "journal" && <aside className="island-guide-sheet" aria-label="王都導覽：今日任務"><header><span><Gift size={15} />今日導覽</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><p>今日有 <b>{claimableQuests}</b> 項獎勵可領取，完成行動即可累積鑽石與素材。</p><div><button onClick={() => openScreen("daily")}>查看每日任務 <ChevronLeft size={15} /></button><button onClick={() => openScreen("shop")}>前往命運商店 <ChevronLeft size={15} /></button></div></aside>}
     {lobbyTab === "records" && <aside className="island-guide-sheet island-record-sheet" aria-label="王都導覽：冒險紀錄"><header><span><Trophy size={15} />冒險紀錄</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><div className="record-grid"><span><small>最高遠征</small><b>WAVE {String(progress.bestWave).padStart(2, "0")}</b></span><span><small>完成遠征</small><b>{progress.wins} 次</b></span><span><small>今日印記</small><b>{progress.sigils} / 600</b></span></div></aside>}
