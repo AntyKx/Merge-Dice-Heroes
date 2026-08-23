@@ -29,9 +29,9 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 30
     },
     "attack": {
-      "scale": 2.12,
+      "scale": 3,
       "shiftX": 0,
-      "shiftY": 3
+      "shiftY": 30
     },
     "skill": {
       "scale": 2.5,

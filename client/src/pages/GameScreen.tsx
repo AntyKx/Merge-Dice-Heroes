@@ -100,14 +100,18 @@ function HeroFrameSprite({ heroId, action, animationSignal = 0, boardLayout }: {
   const [frame, setFrame] = useState(0);
   const range = frameSheet?.actions[action];
   const frameCount = range?.count ?? 0;
+  const attackFrameParam = new URLSearchParams(window.location.search).get("attackFrame");
+  const fixedAttackFrame = action === "attack" && attackFrameParam !== null
+    ? Math.max(0, Math.min(frameCount - 1, Number.parseInt(attackFrameParam, 10) || 0))
+    : null;
   useEffect(() => {
-    if (!frameCount) return;
+    if (!frameCount || fixedAttackFrame !== null) return;
     const interval = action === "idle" ? 145 : action === "attack" ? 88 : 132;
     const timer = window.setInterval(() => setFrame((current) => (current + 1) % frameCount), interval);
     return () => window.clearInterval(timer);
-  }, [action, animationSignal, frameCount]);
+  }, [action, animationSignal, fixedAttackFrame, frameCount]);
   if (!frameSheet || !range) return null;
-  const frameIndex = range.start + frame;
+  const frameIndex = range.start + (fixedAttackFrame ?? frame);
   const position = frameSheet.totalFrames > 1 ? (frameIndex / (frameSheet.totalFrames - 1)) * 100 : 0;
   return <span className={`frame-hero-sprite is-${action}`} style={{ backgroundImage: `url(${frameSheet.source})`, backgroundSize: `auto ${frameSheet.totalFrames * 100}%`, backgroundPosition: `center ${position}%`, transform: boardLayout ? `translate(${boardLayout.shiftX}%, ${boardLayout.shiftY}%) scale(${boardLayout.scale})` : undefined }} aria-hidden="true" />;
 }
