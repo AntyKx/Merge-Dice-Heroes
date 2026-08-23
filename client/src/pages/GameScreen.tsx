@@ -16,8 +16,6 @@ import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, ShopOfferId, Ta
 const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
-const KINGDOM_NIGHT_MAP_URL = "/manus-storage/kingdom-night-map_d4bb0984.png";
-const SIMPLE_CUTE_LOBBY_URL = "/manus-storage/simple-cute-kingdom-standby-day_e6e10e37.png";
 
 type LobbyWeather = "day" | "night";
 type ScenePreviewMode = "auto" | LobbyWeather;
@@ -150,13 +148,14 @@ function TitleScreen() {
   const hasDungeonAttempt = DUNGEONS.some((dungeon, index) => (dungeon.unlocked || (index > 0 && (progress.dungeonClears[DUNGEONS[index - 1].id] ?? 0) > 0)) && progress.stamina >= dungeon.energyCost);
   const playerLevel = 1 + Math.floor(progress.wins / 3);
   const levelProgress = (progress.wins % 3) + 1;
+  const storyChapter = 1 + Math.floor(progress.wins / 4);
+  const storyProgress = Math.max(6, Math.min(100, Math.round(progress.bestWave / 10 * 100)));
   const weather = scenePreviewMode === "auto" ? autoWeather : scenePreviewMode;
   const weatherMeta = LOBBY_WEATHER_META[weather];
-  const sceneMapUrl = weather === "night" ? KINGDOM_NIGHT_MAP_URL : SIMPLE_CUTE_LOBBY_URL;
   const actionNotice: Partial<Record<LobbyModuleId, boolean>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop, daily: claimableQuests > 0 && !progress.lobbyRead.daily, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon };
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
   return <section className={`lobby-screen cute-hub-lobby weather-${weather} banner-${bannerStyle} ${departing ? "is-departing" : ""}`}>
-    <div className="cute-hub-art" style={{ backgroundImage: `url(${sceneMapUrl})` }} aria-hidden="true" />
+    <div className="cute-hub-art" aria-hidden="true"><i className="cute-cloud cloud-one" /><i className="cute-cloud cloud-two" /><i className="cute-castle-silhouette"><b /><em /><span /></i></div>
     <header className="cute-hub-hud" aria-label="玩家資源">
       <button className="cute-level" onClick={() => openScreen("team")} aria-label={`玩家等級 ${playerLevel}，查看隊伍`}><span>LV.</span><b>{String(playerLevel).padStart(2, "0")}</b><i><em style={{ width: `${levelProgress / 3 * 100}%` }} /></i></button>
       <button className="cute-resource" onClick={() => openScreen("shop")} aria-label={`金幣 ${progress.sigils}，前往商店`}><Coins size={14} /><b>{progress.sigils}</b></button>
@@ -164,11 +163,8 @@ function TitleScreen() {
       <button className="cute-resource" onClick={() => openScreen("dungeon")} aria-label={`體力 ${progress.stamina} / 20，前往副本`}><BatteryCharging size={15} /><b>{progress.stamina}/20</b></button>
       <button className="cute-menu" onClick={() => setLobbyTab("settings")} aria-label="開啟設定"><Menu size={19} /></button>
     </header>
-    <div className="cute-hub-title"><span>命運骰塔王都</span><small>{weatherMeta.label}</small></div>
-    <main className="cute-hub-standby" aria-label="英雄待命區">
-      <button className="cute-hub-party" onClick={() => openScreen("team")} aria-label="查看並調整遠征隊伍">
-        <div>{selectedHeroes.slice(0, 3).map((heroId, index) => <span key={heroId} className={`cute-party-hero hero-${index + 1}`}><HeroPortrait heroId={heroId} /><i>{HEROES[heroId].name.slice(0, 1)}</i></span>)}</div><small>遠征小隊</small>
-      </button>
+    <section className="cute-story-progress" aria-label="主線進度"><div><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div><small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small><i><em style={{ width: `${storyProgress}%` }} /></i></section>
+    <main className="cute-hub-standby" aria-label="王都遠征入口">
       <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><Swords size={22} /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
       <section className="cute-facility-row" aria-label="王都設施">
         <button className="facility-button facility-forge" onClick={() => openScreen("equipment")}><Hammer size={17} /><span>裝備</span>{actionNotice.equipment && <i />}</button>
