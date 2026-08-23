@@ -10,6 +10,7 @@ import "./courtyardEntranceTheme.css";
 import "./courtyardSignboards.css";
 import "./courtyardHomeEmblems.css";
 import "./heroCardAlignment.css";
+import "./teamEditFormation.css";
 import { BatteryCharging, Check, ChevronLeft, Coins, Gem, Gift, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
@@ -140,6 +141,26 @@ function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal
   return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId}`} style={{ backgroundImage: `url(${HEROES_URL})`, backgroundPosition: classOffset[heroId], borderColor: definition.color }} aria-hidden="true"><span className="hero-sigil"><HeroMark size={size === "large" ? 24 : 16} strokeWidth={2.7} /></span></span>;
 }
 
+/** Design reminder: the lobby team control mirrors the user's gilded three-slot formation reference while portraits remain live player data. */
+function TeamEditFormation({ selectedHeroes, onEdit }: { selectedHeroes: HeroId[]; onEdit: () => void }) {
+  const slots = Array.from({ length: 3 }, (_, index) => selectedHeroes[index] ?? null);
+  return <button className="team-edit-formation" onClick={onEdit} aria-label={`編輯遠征隊伍，目前已選 ${selectedHeroes.length} 名英雄`}>
+    <span className="team-edit-formation__crest" aria-hidden="true"><i /> <b>★</b> <i /></span>
+    <span className="team-edit-formation__rail">
+      {slots.map((heroId, index) => {
+        const hero = heroId ? HEROES[heroId] : null;
+        const profile = heroId ? LEADER_CARD_PROFILES[heroId] : null;
+        return <span className={`team-edit-formation__slot ${heroId ? "is-filled" : "is-empty"}`} key={heroId ?? `empty-${index}`} style={hero ? { "--formation-color": hero.color } as React.CSSProperties : undefined}>
+          {heroId && <img src={HERO_PORTRAITS[heroId]} alt="" />}
+          <em aria-hidden="true">{profile?.emblem ?? "＋"}</em>
+        </span>;
+      })}
+      <span className="team-edit-formation__edit" aria-hidden="true"><Sparkles size={20} /><small>編輯</small></span>
+    </span>
+    <span className="team-edit-formation__copy"><small>遠征編隊</small><b>{selectedHeroes.length}/3 名英雄已就位</b></span>
+  </button>;
+}
+
 function LeaderHeroShowcase({ heroId }: { heroId: HeroId }) {
   const definition = HEROES[heroId];
   const profile = LEADER_CARD_PROFILES[heroId];
@@ -213,7 +234,7 @@ function TitleScreen() {
     <section className="cute-story-progress" aria-label="主線進度"><span className="story-scroll-end story-scroll-left" aria-hidden="true" /><span className="story-scroll-end story-scroll-right" aria-hidden="true" /><div><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div><small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small><i><em style={{ width: `${storyProgress}%` }} /></i></section>
     <main className="cute-hub-standby" aria-label="王都遠征入口">
       <img className="castle-walkway-party" src={CASTLE_WALKWAY_PARTY_URL} alt="" aria-hidden="true" />
-      <button className="party-edit-button" onClick={() => openScreen("team")} aria-label="編輯遠征隊伍"><span className="party-edit-roster">{selectedHeroes.map((heroId) => <i key={heroId} style={{ "--roster-color": HEROES[heroId].color } as React.CSSProperties}>{HEROES[heroId].name.slice(0, 1)}</i>)}</span><span><small>已選 {selectedHeroes.length}/3 名英雄</small><b>隊伍編輯</b></span><Sparkles size={17} /></button>
+      <TeamEditFormation selectedHeroes={selectedHeroes} onEdit={() => openScreen("team")} />
       <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><img src={ASTERVOW_ICON_URLS.castle} alt="" /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
     </main>
     {lobbyTab === "menu" && <aside className="courtyard-dropdown" aria-label="王都功能選單"><button onClick={() => setLobbyTab("inbox")}><PackageOpen size={16} /><span>收件匣</span>{claimableQuests > 0 && <i />}</button><button onClick={() => setLobbyTab("settings")}><Settings2 size={16} /><span>設定</span></button><button onClick={() => openScreen("guide")}><Sparkles size={16} /><span>圖鑑</span></button><button onClick={() => setLobbyTab("announcements")}><Info size={16} /><span>公告</span></button></aside>}
