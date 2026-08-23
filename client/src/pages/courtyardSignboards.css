@@ -1,0 +1,126 @@
+/* Design reminder: each subpage title is a physical courtyard sign. The shared wood-and-parchment construction grounds every destination; one small material accent differentiates the forge, market, journal, rune gate, archive, and expedition command. */
+
+.courtyard-signboard {
+  --sign-tint:#2b8f80;
+  --sign-dark:#166b64;
+  position:relative;
+  display:grid;
+  grid-template-columns:58px minmax(0,1fr);
+  align-items:center;
+  gap:0;
+  margin:8px 0 16px;
+  padding:2px 0 4px 7px;
+}
+.courtyard-signboard:before {
+  content:"";
+  position:absolute;
+  z-index:0;
+  top:10px;
+  bottom:1px;
+  left:30px;
+  width:6px;
+  border:1px solid #63412a;
+  border-radius:4px;
+  background:linear-gradient(90deg,#8d5c34,#c18b52 46%,#704426);
+  box-shadow:2px 2px 0 rgba(78,47,27,.23);
+}
+.courtyard-signboard:after {
+  content:"";
+  position:absolute;
+  z-index:0;
+  right:1px;
+  bottom:0;
+  left:45px;
+  height:8px;
+  border-radius:50%;
+  background:rgba(80,55,29,.15);
+  filter:blur(4px);
+}
+.sign-emblem {
+  position:relative;
+  z-index:2;
+  display:grid;
+  width:51px;
+  height:51px;
+  place-items:center;
+  border:3px solid #69432a;
+  border-radius:17px 13px 17px 13px;
+  color:var(--sign-dark);
+  background:linear-gradient(145deg,#fffce1 0 19%,#f1d582 58%,#cc9043);
+  box-shadow:inset 0 0 0 2px rgba(255,255,239,.82),0 3px 0 #69432a,0 6px 10px rgba(73,45,24,.18);
+}
+.sign-emblem:before {
+  content:"";
+  position:absolute;
+  inset:5px;
+  border:1px solid rgba(110,69,37,.38);
+  border-radius:11px 8px 11px 8px;
+  pointer-events:none;
+}
+.sign-emblem svg { position:relative; z-index:1; stroke-width:2.8; }
+.sign-logo-crest { position:relative; z-index:1; width:31px; height:31px; object-fit:contain; filter:drop-shadow(0 1px 0 rgba(255,255,236,.85)); }
+.sign-plaque {
+  position:relative;
+  z-index:1;
+  min-height:70px;
+  display:grid;
+  align-content:center;
+  gap:1px;
+  margin-left:-5px;
+  padding:7px 15px 8px 18px;
+  border:3px solid #70482d;
+  border-radius:5px 12px 12px 5px;
+  color:#563b2a;
+  background:linear-gradient(180deg,#fff9d6 0 9%,#f5dfa2 10% 55%,#dfae67 56% 100%);
+  box-shadow:inset 0 1px rgba(255,255,241,.92),inset 0 -2px rgba(111,69,33,.2),0 4px 0 #70482d,0 7px 13px rgba(76,49,27,.15);
+}
+.sign-plaque:before {
+  content:"";
+  position:absolute;
+  inset:5px;
+  border-top:1px solid rgba(255,255,235,.8);
+  border-bottom:1px solid rgba(111,69,33,.2);
+  border-radius:2px 8px 8px 2px;
+  pointer-events:none;
+}
+.sign-plaque p,.sign-plaque h2,.sign-plaque small { position:relative; z-index:1; margin:0; }
+.sign-plaque p { color:var(--sign-dark); font-size:7px; font-weight:950; letter-spacing:.08em; }
+.sign-plaque h2 { color:#553827; font-family:"Mochiy Pop One","Noto Sans TC",sans-serif; font-size:16px; line-height:1.28; letter-spacing:-.06em; }
+.sign-plaque small { overflow:hidden; color:#83684e; font-size:7px; font-weight:800; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
+.sign-nail { position:absolute; z-index:2; top:8px; width:6px; height:6px; border:1px solid #805523; border-radius:50%; background:radial-gradient(circle at 35% 30%,#fff1aa 0 15%,#d19a3e 35%,#825425 100%); box-shadow:0 1px 0 rgba(80,42,17,.55); }
+.sign-nail-left { left:9px; }.sign-nail-right { right:9px; }
+
+.sign-equipment { --sign-tint:#d99b39; --sign-dark:#9a5d1f; }
+.sign-equipment .sign-plaque { background:linear-gradient(180deg,#fff9d9 0 9%,#f1d59d 10% 55%,#d69b4e 56% 100%); }
+.sign-equipment .sign-emblem { background:linear-gradient(145deg,#fff8cf,#f0bd55 64%,#a9672c); }
+.sign-shop { --sign-tint:#2b9f92; --sign-dark:#116b69; }
+.sign-shop .sign-plaque { border-color:#236b64; background:linear-gradient(180deg,#ecfff1 0 9%,#bde8cd 10% 55%,#65aa8b 56% 100%); box-shadow:inset 0 1px rgba(255,255,241,.92),inset 0 -2px rgba(13,81,65,.2),0 4px 0 #236b64,0 7px 13px rgba(41,91,69,.16); }
+.sign-shop .sign-plaque h2 { color:#174f4e; }.sign-shop .sign-plaque small { color:#477369; }.sign-shop .sign-emblem { background:linear-gradient(145deg,#edfff1,#9cdbc3 64%,#358a76); }
+.sign-daily { --sign-tint:#a46d43; --sign-dark:#687f42; }
+.sign-daily .sign-plaque { background:linear-gradient(180deg,#fffbdc 0 9%,#e8e8a9 10% 55%,#a9bd6e 56% 100%); }
+.sign-daily .sign-emblem { background:linear-gradient(145deg,#fffdda,#d9e795 64%,#8ba55a); }
+.sign-dungeon { --sign-tint:#8461a6; --sign-dark:#5e407e; }
+.sign-dungeon .sign-plaque { border-color:#553874; background:linear-gradient(180deg,#f9edff 0 9%,#dfc4f1 10% 55%,#9c77bd 56% 100%); box-shadow:inset 0 1px rgba(255,255,241,.88),inset 0 -2px rgba(64,38,93,.22),0 4px 0 #553874,0 7px 13px rgba(63,41,85,.18); }
+.sign-dungeon .sign-plaque h2 { color:#4b326c; }.sign-dungeon .sign-plaque small { color:#746286; }.sign-dungeon .sign-emblem { background:linear-gradient(145deg,#fff1ff,#d4b4ee 64%,#8458a9); }
+.sign-guide { --sign-tint:#4b92b1; --sign-dark:#2e687f; }
+.sign-guide .sign-plaque { border-color:#2d617a; background:linear-gradient(180deg,#effbff 0 9%,#c9e5e6 10% 55%,#76afbf 56% 100%); box-shadow:inset 0 1px rgba(255,255,241,.9),inset 0 -2px rgba(26,69,83,.2),0 4px 0 #2d617a,0 7px 13px rgba(44,78,91,.16); }
+.sign-guide .sign-plaque h2 { font-size:14px; color:#294f67; }.sign-guide .sign-plaque small { color:#4b7180; }.sign-guide .sign-emblem { background:linear-gradient(145deg,#f0fdff,#badce7 64%,#5f9fb7); }
+.sign-team { --sign-tint:#268d7c; --sign-dark:#126b62; }
+.sign-team .sign-plaque { background:linear-gradient(180deg,#edfff1 0 9%,#c7ead2 10% 55%,#73ac87 56% 100%); }
+.sign-leader { --sign-tint:#b6634f; --sign-dark:#904835; }
+.sign-leader .sign-plaque { background:linear-gradient(180deg,#fff4dc 0 9%,#f2d1a0 10% 55%,#cf8a63 56% 100%); }
+.sign-leader .sign-emblem { background:linear-gradient(145deg,#fff4d8,#e7ba76 64%,#b7664c); }
+
+.selection-screen>.courtyard-signboard { margin-top:10px; }
+.guide-screen>.courtyard-signboard { margin-top:10px; }
+.guide-screen .guide-mark { display:none; }
+
+@media (max-height:730px) {
+  .courtyard-signboard { grid-template-columns:51px minmax(0,1fr); margin:5px 0 11px; padding-left:4px; }
+  .courtyard-signboard:before { left:26px; }
+  .sign-emblem { width:44px; height:44px; border-radius:14px 11px 14px 11px; }
+  .sign-emblem svg { width:22px; height:22px; }
+  .sign-plaque { min-height:61px; padding:6px 12px 6px 15px; }
+  .sign-plaque h2 { font-size:14px; }
+  .sign-plaque small { font-size:6px; }
+}

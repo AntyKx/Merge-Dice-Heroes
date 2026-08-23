@@ -119,6 +119,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -131,6 +135,13 @@
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
   }
+}
+
+/* The portrait game never exposes a horizontal document scrollbar. */
+html, #root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 @layer components {
@@ -210,10 +221,15 @@ button { font-family: inherit; }
 .die { overflow:hidden; border-color:#a98a54; background:linear-gradient(145deg,#fffef2 0%,#f1e1ba 62%,#d6b86f 100%); box-shadow:inset 3px 3px 0 rgba(255,255,255,.86),inset -3px -3px 0 rgba(158,124,50,.17),0 4px 0 #a88b58; }.die:before { content:""; position:absolute; width:31px; height:31px; left:-12px; top:-12px; transform:rotate(45deg); background:linear-gradient(135deg,rgba(255,255,255,.8),rgba(255,255,255,0)); }.die:after { content:"◆"; position:absolute; right:4px; bottom:1px; color:rgba(181,131,40,.52); font-size:8px; }.die b { position:relative; z-index:1; color:#21495a; text-shadow:0 1px #fff; }.die.is-locked { color:#fffced; border-color:#167a6e; background:linear-gradient(145deg,#64c8b3,#168d7c 62%,#0e625d); box-shadow:inset 3px 3px 0 rgba(230,255,247,.39),inset -3px -3px 0 rgba(0,70,62,.26),0 4px 0 #0e6860; }.die.is-locked b { color:#fffdf1; text-shadow:0 2px rgba(8,73,66,.46); }.die.is-locked:after { color:#f7cd61; }.dice-topline strong { color:#4c7180; font-weight:900; }.game-button.teal { background:linear-gradient(135deg,#24af98,#14776d); }.game-button.amber { background:linear-gradient(135deg,#ffda74,#d99c29); }
 .wave-plate { position:relative; border-color:#cdb273; }.wave-plate:before { content:"✦"; color:#c39331; font-size:8px; margin-right:4px; }.castle-gate { border:1px solid #e4c56a; background:linear-gradient(135deg,#337f7f,#1b6068); }.stage-copy { border:1px solid rgba(209,169,75,.58); }.talent-strip>span:after { content:"◆"; color:#c79632; font-size:8px; }
 .hero-portrait.has-frame-sprite { display:grid; place-items:center; background:radial-gradient(circle at 50% 36%,#fff7df,#d6e8e2 72%,#7c9f9a); }.frame-hero-sprite { width:100%; height:100%; display:block; background-repeat:no-repeat; filter:drop-shadow(0 2px 1px rgba(19,27,48,.48)); }.hero-portrait .frame-hero-sprite { transform:scale(1.34); transform-origin:center 56%; }.hero-board-sprite .frame-hero-sprite { transform-origin:center 90%; }.frame-hero-sprite.is-attack { filter:brightness(1.13) saturate(1.16) drop-shadow(0 0 4px var(--attack-glow,#ffd071)); }.frame-hero-sprite.is-skill { filter:brightness(1.18) drop-shadow(0 0 7px rgba(255,216,94,.86)); }.hero-portrait.has-frame-sprite:after { z-index:3; }.hero-tile.is-casting .hero-visual-zone:after { content:""; position:absolute; z-index:0; inset:4%; border-radius:50%; pointer-events:none; background:radial-gradient(circle,rgba(255,243,161,.66),rgba(111,208,255,.28) 45%,transparent 72%); animation:heroCastPulse .62s ease-in-out infinite alternate; }.hero-tile.is-casting .hero-board-sprite,.hero-tile.is-casting .hero-portrait { position:relative; z-index:1; }
-.hero-board-sprite { --attack-glow:#ffd071; --attack-tint:rgba(255,198,78,.35); position:absolute; z-index:1; inset:0; overflow:hidden; pointer-events:none; }.hero-board-sprite .frame-hero-sprite { position:absolute; inset:0; }.hero-tile.is-previewing .hero-board-sprite { animation:heroPreview .58s ease-in-out infinite alternate; }.hero-board-sprite.is-attack:after { content:""; position:absolute; z-index:0; inset:18% 13% 22%; border-radius:50%; pointer-events:none; background:radial-gradient(ellipse,var(--attack-tint),transparent 71%); mix-blend-mode:screen; animation:attackBloom .52s ease-in-out infinite alternate; }.hero-board-sprite.tier-2.is-attack:before,.hero-board-sprite.tier-3.is-attack:before { content:""; position:absolute; z-index:0; border-radius:50%; pointer-events:none; background:radial-gradient(ellipse,color-mix(in srgb,var(--attack-glow) 63%,white),var(--attack-tint) 44%,transparent 74%); animation:attackBloom .52s ease-in-out infinite alternate; }.hero-board-sprite.tier-2.is-attack:before { width:68%; height:45%; left:16%; top:29%; }.hero-board-sprite.tier-3.is-attack:before { width:82%; height:56%; left:9%; top:23%; box-shadow:0 0 12px var(--attack-glow); }
+.hero-board-sprite { --attack-glow:#ffd071; --attack-tint:rgba(255,198,78,.35); position:absolute; z-index:1; inset:0; overflow:hidden; pointer-events:none; }.hero-board-sprite .frame-hero-sprite { position:absolute; z-index:1; inset:0; }.hero-tile.is-previewing .hero-board-sprite { animation:heroPreview .58s ease-in-out infinite alternate; }.hero-board-sprite.is-attack:after { content:""; position:absolute; z-index:0; inset:18% 13% 22%; border-radius:50%; pointer-events:none; background:radial-gradient(ellipse,var(--attack-tint),transparent 71%); mix-blend-mode:screen; animation:attackBloom .52s ease-in-out infinite alternate; }.hero-board-sprite.tier-2.is-attack:before,.hero-board-sprite.tier-3.is-attack:before { content:""; position:absolute; z-index:0; border-radius:50%; pointer-events:none; background:radial-gradient(ellipse,color-mix(in srgb,var(--attack-glow) 63%,white),var(--attack-tint) 44%,transparent 74%); animation:attackBloom .52s ease-in-out infinite alternate; }.hero-board-sprite.tier-2.is-attack:before { width:68%; height:45%; left:16%; top:29%; }.hero-board-sprite.tier-3.is-attack:before { width:82%; height:56%; left:9%; top:23%; box-shadow:0 0 12px var(--attack-glow); }
 .hero-board-sprite.hero-fireMage { --attack-glow:#ffb15f; --attack-tint:rgba(255,91,57,.42); }.hero-board-sprite.hero-knight { --attack-glow:#ffe58e; --attack-tint:rgba(255,224,121,.34); }.hero-board-sprite.hero-priest { --attack-glow:#efc5ff; --attack-tint:rgba(202,139,239,.31); }.hero-board-sprite.hero-ranger { --attack-glow:#c4f47a; --attack-tint:rgba(105,186,81,.33); }.hero-board-sprite.hero-engineer { --attack-glow:#ffd06b; --attack-tint:rgba(224,147,50,.35); }.hero-board-sprite.hero-deathKnight { --attack-glow:#c4a1ff; --attack-tint:rgba(100,74,190,.36); }.hero-board-sprite.hero-bard { --attack-glow:#86edf2; --attack-tint:rgba(56,177,188,.33); }.hero-board-sprite.hero-fighter { --attack-glow:#ffbf76; --attack-tint:rgba(223,113,55,.35); }.hero-board-sprite.hero-frostQueen { --attack-glow:#a6edff; --attack-tint:rgba(82,185,236,.32); }.hero-board-sprite.hero-assassin { --attack-glow:#f0a6ff; --attack-tint:rgba(180,76,186,.34); }
+.hero-tile.hero-knight { --hero-safe-bottom:10px; }
 @keyframes goldAura { to { box-shadow:0 0 0 4px rgba(255,210,76,.75),0 0 19px rgba(249,209,74,.9); } } @keyframes heroPreview { to { transform:translateX(5px) scale(1.15); filter:brightness(1.2) drop-shadow(0 0 5px rgba(245,179,56,.8)); } } @keyframes attackBloom { to { transform:scale(1.13); opacity:.62; filter:brightness(1.18); } } @keyframes previewSlash { from { transform:translateX(-24%) rotate(-28deg); opacity:0; } 35% { opacity:1; } to { transform:translateX(36%) rotate(-28deg); opacity:0; } }
 @keyframes heroCastPulse { to { transform:scale(1.11); opacity:.7; filter:brightness(1.22); } }
+
+/* Casting preserves the tile-sized sprite box; only portraits participate in the relative stacking context. */
+.hero-tile.is-casting .hero-board-sprite { position:absolute; z-index:1; }
+.hero-tile.is-casting .hero-portrait { position:relative; z-index:1; }
 
 /* 英雄舞台一致性：隊長卡片採用相同逐影格資料，待機輪廓沿用每職業量測縮放。 */
 .leader-option { min-height:116px; gap:12px; padding:8px 10px 8px 8px; }
@@ -221,6 +237,24 @@ button { font-family: inherit; }
 .leader-hero-showcase:after { content:""; position:absolute; inset:3px; border:1px solid rgba(255,255,255,.7); border-radius:12px 8px 8px 12px; pointer-events:none; }
 .leader-hero-showcase .frame-hero-sprite { position:absolute; inset:0; transform-origin:center 90%; }
 .leader-option.is-selected .leader-hero-showcase { box-shadow:inset 0 0 0 2px rgba(255,255,255,.78),0 0 14px color-mix(in srgb,var(--hero-color) 42%,transparent); }
+
+/* 隊長卡系統：每張卡依英雄檔案的色材、飾紋、武器方向與角色安全邊界形成獨立小舞台。 */
+.leader-list { gap:12px; }
+.leader-option { position:relative; isolation:isolate; min-height:124px; gap:13px; padding:8px 10px 8px 8px; overflow:hidden; border-color:color-mix(in srgb,var(--hero-color) 23%,#bfa879); background:linear-gradient(110deg,#fffdf6 0%,color-mix(in srgb,var(--leader-glow) 23%,#fffdf6) 64%,#f0eee1 100%); box-shadow:0 4px 0 rgba(75,84,65,.1); }
+.leader-option:before { content:""; position:absolute; z-index:-1; width:154px; height:154px; right:-73px; top:-68px; border-radius:50%; background:radial-gradient(circle,color-mix(in srgb,var(--leader-accent) 35%,transparent) 0 20%,transparent 21% 36%,color-mix(in srgb,var(--leader-accent) 18%,transparent) 37% 39%,transparent 40%); transform:rotate(18deg); }
+.leader-option.is-selected { border-color:var(--leader-accent); box-shadow:inset 0 0 0 1px rgba(255,255,255,.78),0 5px 0 color-mix(in srgb,var(--leader-accent) 26%,rgba(75,84,65,.1)),0 9px 17px color-mix(in srgb,var(--leader-accent) 18%,transparent); }
+.leader-hero-showcase { flex-basis:102px; border-radius:18px 12px 12px 18px; border-color:var(--leader-accent); background:linear-gradient(155deg,var(--leader-sky),var(--leader-ground)); box-shadow:inset 0 0 0 2px rgba(255,255,255,.72),0 3px 0 color-mix(in srgb,var(--leader-ground) 44%,#5c6a63); }
+.leader-hero-showcase:before { content:""; position:absolute; z-index:0; width:126px; height:126px; left:-27px; bottom:-47px; border:1px dashed color-mix(in srgb,var(--leader-glow) 85%,transparent); border-radius:50%; background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--leader-glow) 42%,transparent) 0 24%,transparent 25% 51%,color-mix(in srgb,var(--leader-accent) 35%,transparent) 52% 53%,transparent 54%); }
+.leader-hero-showcase:after { z-index:4; border-color:color-mix(in srgb,var(--leader-glow) 78%,white); }
+.leader-stage-aura { position:absolute; z-index:1; left:13%; right:13%; bottom:9%; height:27%; border-radius:50%; background:radial-gradient(ellipse,color-mix(in srgb,var(--leader-glow) 76%,transparent),transparent 68%); filter:blur(2px); }
+.leader-stage-emblem { position:absolute; z-index:3; top:6px; left:7px; display:grid; place-items:center; width:21px; height:21px; border:1px solid color-mix(in srgb,var(--leader-glow) 80%,white); border-radius:7px; color:var(--leader-glow); background:color-mix(in srgb,var(--leader-ground) 76%,#263f53); box-shadow:0 2px 4px rgba(25,44,56,.28); font-family:"Mochiy Pop One","Noto Sans TC",sans-serif; font-size:10px; }
+.leader-stage-label { position:absolute; z-index:3; right:6px; bottom:5px; max-width:71px; overflow:hidden; color:#fffbed; font-size:7px; font-weight:900; line-height:1.2; text-align:right; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 2px rgba(16,43,55,.72); }
+.leader-hero-showcase .frame-hero-sprite { z-index:2; filter:drop-shadow(0 3px 2px rgba(18,39,55,.36)); }
+.leader-aligned-portrait { position:absolute; z-index:2; left:50%; bottom:6px; width:98px; height:98px; object-fit:contain; transform:translateX(-50%); filter:drop-shadow(0 3px 2px rgba(18,39,55,.36)); }
+.leader-static-portrait { position:absolute; z-index:2; left:50%; top:50%; display:block; transform-origin:center; }.leader-static-portrait .hero-portrait { width:69px; height:69px; }
+.leader-static-art { display:block; width:82px; height:82px; object-fit:contain; filter:drop-shadow(0 3px 2px rgba(18,39,55,.3)); }
+.leader-card-copy { position:relative; z-index:1; align-self:stretch; align-content:center; gap:3px!important; }
+.leader-card-role { display:flex; align-items:center; gap:4px; margin:0; color:color-mix(in srgb,var(--leader-accent) 75%,#385161); font-size:8px; font-weight:900; letter-spacing:.04em; }.leader-card-role i { display:grid; place-items:center; width:15px; height:15px; border-radius:5px; color:#fffdf0; background:var(--leader-accent); box-shadow:inset 0 -1px rgba(43,61,59,.2); font-family:"Mochiy Pop One","Noto Sans TC",sans-serif; font-size:8px; font-style:normal; }.leader-card-copy b { color:#264755; font-family:"Mochiy Pop One","Noto Sans TC",sans-serif; font-size:15px; letter-spacing:-.05em; }.leader-card-copy strong { max-width:180px; color:#5d757c; font-size:10px; line-height:1.35; }.leader-option>span:not(.leader-hero-showcase) { position:relative; z-index:1; border:1px solid color-mix(in srgb,var(--leader-accent) 30%,transparent); color:color-mix(in srgb,var(--leader-accent) 76%,#385161); background:color-mix(in srgb,var(--leader-glow) 54%,white); }
 
 /* 冒險大廳：以隊伍整備與各項目入口取代直接開局，維持紙雕舞台的暖色世界觀。 */
 .lobby-screen,.lobby-module-screen { min-height:100dvh; padding:max(16px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom)); overflow:auto; background:radial-gradient(circle at 91% 7%,rgba(251,204,94,.38),transparent 26%),radial-gradient(circle at 10% 52%,rgba(34,168,144,.17),transparent 28%),linear-gradient(165deg,#f9efcf 0%,#f1e4bf 44%,#d9e9dd 100%); }

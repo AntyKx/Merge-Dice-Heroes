@@ -1,25 +1,42 @@
 /** 精靈骰塔劇場：垂直舞台卷軸介面，命運青綠標示可操作決策，戰鬥規則完全由 game/ 引擎掌管。 */
-/* Design reminder: a bright, original chibi-JRPG kingdom remains the fixed scenic stage; mobile HUD, navigation, and weather layers must clarify progress without obscuring baked-in landmarks or introducing camera movement. */
+/* Design reminder: a bright, original hand-painted chibi castle courtyard is the fixed scenic stage; mobile HUD, progress, and compact actions must stay legible without covering the focal castle. */
 import { useEffect, useRef, useState } from "react";
 import "./shopEnhancements.css";
 import "./lobbyCompact.css";
 import "./dailyCelebration.css";
 import "./islandLobby.css";
 import "./simpleCuteLobby.css";
-import { BatteryCharging, Check, ChevronLeft, Coins, Gem, Gift, Hammer, Heart, Info, Lock, MapPinned, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
+import "./courtyardEntranceTheme.css";
+import "./courtyardSignboards.css";
+import "./courtyardHomeEmblems.css";
+import "./heroCardAlignment.css";
+import { BatteryCharging, Check, ChevronLeft, Coins, Gem, Gift, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
 import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
+import { LEADER_CARD_PROFILES } from "@/game/leaderCardProfiles";
 import { useGameStore } from "@/game/store";
 import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, ShopOfferId, TalentDefinition } from "@/game/types";
 
 const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
+const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
+const CASTLE_WALKWAY_PARTY_URL = "/manus-storage/castle-walkway-party-transparent_1070719d.png";
+const ASTERVOW_ICON_URLS = {
+  equipment: "/manus-storage/equipment_b47d9ea9.png",
+  shop: "/manus-storage/shop_410470c0.png",
+  daily: "/manus-storage/daily_5ebf446e.png",
+  guide: "/manus-storage/guide_4803f3b1.png",
+  dungeon: "/manus-storage/dungeon_540de8ab.png",
+  castle: "/manus-storage/castle_6220a0fb.png",
+  expedition: "/manus-storage/expedition_a43a1129.png",
+  forge: "/manus-storage/forge_195bcb52.png",
+} as const;
 
 type LobbyWeather = "day" | "night";
 type ScenePreviewMode = "auto" | LobbyWeather;
-type LobbyTab = "kingdom" | "journal" | "settings";
+type LobbyTab = "kingdom" | "menu" | "inbox" | "announcements" | "settings";
 type ExpeditionBannerStyle = "verdant" | "crimson" | "moon";
 
 const getLobbyWeather = (date: Date): LobbyWeather => {
@@ -39,29 +56,42 @@ type FrameRange = { start: number; count: number };
 type HeroFrameSheet = { source: string; totalFrames: number; actions: Record<HeroAnimationAction, FrameRange> };
 
 const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
-  fireMage: { source: "/manus-storage/fireMage_1d8ba3b5.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  knight: { source: "/manus-storage/holy_paladin_v2_4e2083d3.webp", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  priest: { source: "/manus-storage/priest_06f2f936.webp", totalFrames: 13, actions: { idle: { start: 0, count: 5 }, attack: { start: 5, count: 5 }, skill: { start: 10, count: 3 } } },
-  ranger: { source: "/manus-storage/ranger_dd823f17.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  engineer: { source: "/manus-storage/engineer_16b7f9e2.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  deathKnight: { source: "/manus-storage/deathKnight_b6832a48.webp", totalFrames: 13, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 4 }, skill: { start: 10, count: 3 } } },
-  bard: { source: "/manus-storage/bard_6a888ed1.webp", totalFrames: 13, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 2 } } },
-  fighter: { source: "/manus-storage/fighter_4f0da582.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  frostQueen: { source: "/manus-storage/frostQueen_4afc6c08.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  assassin: { source: "/manus-storage/assassin_5d5e75f5.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  fireMage: { source: "/manus-storage/groundclean_fireMage_fixed_canvas_bdf6b084.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  knight: { source: "/manus-storage/groundclean_knight_fixed_canvas_dafb5053.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  priest: { source: "/manus-storage/groundclean_priest_fixed_canvas_9240d47e.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  ranger: { source: "/manus-storage/groundclean_ranger_fixed_canvas_96e4d6f3.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  engineer: { source: "/manus-storage/groundclean_engineer_fixed_canvas_4427bd00.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  deathKnight: { source: "/manus-storage/groundclean_deathKnight_fixed_canvas_a22d8ff0.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  bard: { source: "/manus-storage/groundclean_bard_fixed_canvas_c3d7ad0f.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  fighter: { source: "/manus-storage/groundclean_fighter_fixed_canvas_2d474081.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  frostQueen: { source: "/manus-storage/groundclean_frostQueen_fixed_canvas_10044275.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  assassin: { source: "/manus-storage/groundclean_assassin_fixed_canvas_89f14dc2.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
 };
 
 const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
-  knight: "/manus-storage/knight_e04e7edb.webp",
-  fireMage: "/manus-storage/fire-mage_69098bcc.webp",
-  priest: "/manus-storage/priest_cdb9439c.webp",
-  assassin: "/manus-storage/assassin_6dc251bd.webp",
-  frostQueen: "/manus-storage/frost-queen_9e2ac060.webp",
-  ranger: "/manus-storage/ranger_c3a1fc95.webp",
-  bard: "/manus-storage/bard_2a50639e.webp",
-  deathKnight: "/manus-storage/death-knight_8d85600c.webp",
-  engineer: "/manus-storage/engineer_6fba977b.webp",
-  fighter: "/manus-storage/fighter_9eaee4ec.webp",
+  knight: "/manus-storage/clean_roster_knight_5f490405.png",
+  fireMage: "/manus-storage/clean_roster_fireMage_e5c91d38.png",
+  priest: "/manus-storage/clean_roster_priest_508c9320.png",
+  assassin: "/manus-storage/clean_roster_assassin_9a5b5b10.png",
+  frostQueen: "/manus-storage/clean_roster_frostQueen_1eeac3eb.png",
+  ranger: "/manus-storage/clean_roster_ranger_f86f8a0b.png",
+  bard: "/manus-storage/clean_roster_bard_bb147e2a.png",
+  deathKnight: "/manus-storage/clean_roster_deathKnight_06915998.png",
+  engineer: "/manus-storage/clean_roster_engineer_0d197992.png",
+  fighter: "/manus-storage/clean_roster_fighter_87f7f6da.png",
+};
+
+const LEADER_CARD_PORTRAITS: Partial<Record<HeroId, string>> = {
+  knight: "/manus-storage/leader_aligned_knight_7191b988.png",
+  fireMage: "/manus-storage/leader_aligned_fireMage_15d6dd46.png",
+  priest: "/manus-storage/standard_leader_aligned_priest_87c184da.png",
+  assassin: "/manus-storage/standard_leader_aligned_assassin_43abfc89.png",
+  frostQueen: "/manus-storage/leader_aligned_frostQueen_e0d57e93.png",
+  ranger: "/manus-storage/standard_leader_aligned_ranger_a8988d3a.png",
+  bard: "/manus-storage/standard_leader_aligned_bard_5c86fab4.png",
+  deathKnight: "/manus-storage/standard_leader_aligned_deathKnight_16940410.png",
+  engineer: "/manus-storage/standard_leader_aligned_engineer_1b55c3c6.png",
+  fighter: "/manus-storage/standard_leader_aligned_fighter_f8a29e61.png",
 };
 
 const leaderSkill: Record<HeroId, string> = {
@@ -74,7 +104,7 @@ const leaderSkill: Record<HeroId, string> = {
   deathKnight: "冥衛誓約護盾前線",
   bard: "潮音合鳴治療並加速",
   fighter: "裂地重拳震撼前排",
-  frostQueen: "霜華領域凍傷敵軍",
+  frostQueen: "王室冰晶凍傷敵軍",
   assassin: "夜幕處決最危險目標",
 };
 
@@ -85,14 +115,18 @@ function HeroFrameSprite({ heroId, action, animationSignal = 0, boardLayout }: {
   const [frame, setFrame] = useState(0);
   const range = frameSheet?.actions[action];
   const frameCount = range?.count ?? 0;
+  const attackFrameParam = new URLSearchParams(window.location.search).get("attackFrame");
+  const fixedAttackFrame = action === "attack" && attackFrameParam !== null
+    ? Math.max(0, Math.min(frameCount - 1, Number.parseInt(attackFrameParam, 10) || 0))
+    : null;
   useEffect(() => {
-    if (!frameCount) return;
+    if (!frameCount || fixedAttackFrame !== null) return;
     const interval = action === "idle" ? 145 : action === "attack" ? 88 : 132;
     const timer = window.setInterval(() => setFrame((current) => (current + 1) % frameCount), interval);
     return () => window.clearInterval(timer);
-  }, [action, animationSignal, frameCount]);
+  }, [action, animationSignal, fixedAttackFrame, frameCount]);
   if (!frameSheet || !range) return null;
-  const frameIndex = range.start + frame;
+  const frameIndex = range.start + (fixedAttackFrame ?? frame);
   const position = frameSheet.totalFrames > 1 ? (frameIndex / (frameSheet.totalFrames - 1)) * 100 : 0;
   return <span className={`frame-hero-sprite is-${action}`} style={{ backgroundImage: `url(${frameSheet.source})`, backgroundSize: `auto ${frameSheet.totalFrames * 100}%`, backgroundPosition: `center ${position}%`, transform: boardLayout ? `translate(${boardLayout.shiftX}%, ${boardLayout.shiftY}%) scale(${boardLayout.scale})` : undefined }} aria-hidden="true" />;
 }
@@ -106,8 +140,14 @@ function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal
 
 function LeaderHeroShowcase({ heroId }: { heroId: HeroId }) {
   const definition = HEROES[heroId];
-  if (HERO_FRAME_SHEETS[heroId]) return <span className={`leader-hero-showcase hero-${heroId}`} style={{ borderColor: definition.color }} aria-hidden="true"><HeroFrameSprite key={`leader-${heroId}`} heroId={heroId} action="idle" boardLayout={HERO_BOARD_LAYOUT[heroId]?.idle} /></span>;
-  return <HeroPortrait heroId={heroId} size="large" />;
+  const profile = LEADER_CARD_PROFILES[heroId];
+  const idleLayout = HERO_BOARD_LAYOUT[heroId]?.idle;
+  const leaderLayout = idleLayout ? { ...idleLayout, scale: idleLayout.scale * profile.frameScale, shiftX: profile.shiftX, shiftY: idleLayout.shiftY + profile.shiftY } : undefined;
+  const stageStyle = { borderColor: definition.color, "--leader-sky": profile.sky, "--leader-ground": profile.ground, "--leader-glow": profile.glow, "--leader-accent": profile.accent } as React.CSSProperties;
+  const alignedPortrait = LEADER_CARD_PORTRAITS[heroId];
+  if (alignedPortrait) return <span className={`leader-hero-showcase leader-stage--${heroId}`} style={stageStyle} aria-hidden="true"><i className="leader-stage-aura" /><span className="leader-stage-emblem">{profile.emblem}</span><small className="leader-stage-label">{profile.stageLabel}</small><img className="leader-aligned-portrait" src={alignedPortrait} alt="" /></span>;
+  if (HERO_FRAME_SHEETS[heroId] && !profile.usePortrait) return <span className={`leader-hero-showcase leader-stage--${heroId}`} style={stageStyle} aria-hidden="true"><i className="leader-stage-aura" /><span className="leader-stage-emblem">{profile.emblem}</span><small className="leader-stage-label">{profile.stageLabel}</small><HeroFrameSprite key={`leader-${heroId}`} heroId={heroId} action="idle" boardLayout={leaderLayout} /></span>;
+  return <span className={`leader-hero-showcase leader-stage--${heroId} leader-stage--static`} style={stageStyle} aria-hidden="true"><i className="leader-stage-aura" /><span className="leader-stage-emblem">{profile.emblem}</span><small className="leader-stage-label">{profile.stageLabel}</small><span className="leader-static-portrait" style={{ transform: `translate(calc(-50% + ${profile.shiftX}px), calc(-50% + ${profile.shiftY}px)) scale(${profile.frameScale})` }}>{profile.usePortrait && HERO_PORTRAITS[heroId] ? <img className="leader-static-art" src={HERO_PORTRAITS[heroId]} alt="" /> : <HeroPortrait heroId={heroId} size="large" />}</span></span>;
 }
 
 function Header() {
@@ -143,6 +183,11 @@ function TitleScreen() {
     const timer = window.setInterval(syncWeather, 60_000);
     return () => window.clearInterval(timer);
   }, []);
+  useEffect(() => {
+    const stopLobbyPan = (event: TouchEvent) => event.preventDefault();
+    window.addEventListener("touchmove", stopLobbyPan, { passive: false });
+    return () => window.removeEventListener("touchmove", stopLobbyPan);
+  }, []);
   const claimableQuests = DAILY_QUESTS.filter((quest) => (quest.id === "battle" ? progress.daily.battles : quest.id === "merge" ? progress.daily.merges : progress.daily.victories) >= quest.target && !progress.daily.claimed.includes(quest.id)).length;
   const hasUpgradeableEquipment = progress.inventory.some((equipmentId) => { const level = progress.equipmentLevels[equipmentId] ?? 1; return level < 5 && progress.materials >= level * 8; });
   const hasDungeonAttempt = DUNGEONS.some((dungeon, index) => (dungeon.unlocked || (index > 0 && (progress.dungeonClears[DUNGEONS[index - 1].id] ?? 0) > 0)) && progress.stamina >= dungeon.energyCost);
@@ -155,33 +200,43 @@ function TitleScreen() {
   const actionNotice: Partial<Record<LobbyModuleId, boolean>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop, daily: claimableQuests > 0 && !progress.lobbyRead.daily, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon };
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
   return <section className={`lobby-screen cute-hub-lobby weather-${weather} banner-${bannerStyle} ${departing ? "is-departing" : ""}`}>
-    <div className="cute-hub-art" aria-hidden="true"><i className="cute-cloud cloud-one" /><i className="cute-cloud cloud-two" /><i className="cute-castle-silhouette"><b /><em /><span /></i></div>
+    <div className="cute-hub-art" style={{ backgroundImage: `url(${CUTE_LOBBY_BACKGROUND_URL})` }} aria-hidden="true" />
     <header className="cute-hub-hud" aria-label="玩家資源">
       <button className="cute-level" onClick={() => openScreen("team")} aria-label={`玩家等級 ${playerLevel}，查看隊伍`}><span>LV.</span><b>{String(playerLevel).padStart(2, "0")}</b><i><em style={{ width: `${levelProgress / 3 * 100}%` }} /></i></button>
       <button className="cute-resource" onClick={() => openScreen("shop")} aria-label={`金幣 ${progress.sigils}，前往商店`}><Coins size={14} /><b>{progress.sigils}</b></button>
       <button className="cute-resource" onClick={() => openScreen("daily")} aria-label={`鑽石 ${progress.crystals}，前往每日任務`}><Gem size={14} /><b>{progress.crystals}</b></button>
       <button className="cute-resource" onClick={() => openScreen("dungeon")} aria-label={`體力 ${progress.stamina} / 20，前往副本`}><BatteryCharging size={15} /><b>{progress.stamina}/20</b></button>
-      <button className="cute-menu" onClick={() => setLobbyTab("settings")} aria-label="開啟設定"><Menu size={19} /></button>
+      <button className="cute-menu" onClick={() => setLobbyTab(lobbyTab === "menu" ? "kingdom" : "menu")} aria-label="開啟王都選單"><Menu size={19} /></button>
     </header>
-    <section className="cute-story-progress" aria-label="主線進度"><div><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div><small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small><i><em style={{ width: `${storyProgress}%` }} /></i></section>
+    <section className="cute-story-progress" aria-label="主線進度"><span className="story-scroll-end story-scroll-left" aria-hidden="true" /><span className="story-scroll-end story-scroll-right" aria-hidden="true" /><div><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div><small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small><i><em style={{ width: `${storyProgress}%` }} /></i></section>
     <main className="cute-hub-standby" aria-label="王都遠征入口">
-      <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><Swords size={22} /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
-      <section className="cute-facility-row" aria-label="王都設施">
-        <button className="facility-button facility-forge" onClick={() => openScreen("equipment")}><Hammer size={17} /><span>裝備</span>{actionNotice.equipment && <i />}</button>
-        <button className="facility-button facility-shop" onClick={() => openScreen("shop")}><Coins size={17} /><span>商店</span>{actionNotice.shop && <i />}</button>
-        <button className="facility-button facility-daily" onClick={() => openScreen("daily")}><Gift size={17} /><span>任務</span>{actionNotice.daily && <i />}</button>
-        <button className="facility-button facility-dungeon" onClick={() => openScreen("dungeon")}><Swords size={17} /><span>副本</span>{actionNotice.dungeon && <i />}</button>
-        <button className="facility-button facility-guide" onClick={() => openScreen("guide")}><Sparkles size={17} /><span>圖鑑</span></button>
-      </section>
+      <img className="castle-walkway-party" src={CASTLE_WALKWAY_PARTY_URL} alt="" aria-hidden="true" />
+      <button className="party-edit-button" onClick={() => openScreen("team")} aria-label="編輯遠征隊伍"><span className="party-edit-roster">{selectedHeroes.map((heroId) => <i key={heroId} style={{ "--roster-color": HEROES[heroId].color } as React.CSSProperties}>{HEROES[heroId].name.slice(0, 1)}</i>)}</span><span><small>已選 {selectedHeroes.length}/3 名英雄</small><b>隊伍編輯</b></span><Sparkles size={17} /></button>
+      <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><img src={ASTERVOW_ICON_URLS.castle} alt="" /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
     </main>
-    {lobbyTab === "journal" && <aside className="cute-hub-sheet" aria-label="今日導覽"><header><span><Gift size={15} />今日導覽</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><p>目前有 <b>{claimableQuests}</b> 項獎勵可領取。完成遠征與合成後，別忘了回來收下每日獎勵。</p><div><button onClick={() => openScreen("daily")}>查看每日任務</button><button onClick={() => openScreen("shop")}>前往命運商店</button></div></aside>}
+    {lobbyTab === "menu" && <aside className="courtyard-dropdown" aria-label="王都功能選單"><button onClick={() => setLobbyTab("inbox")}><PackageOpen size={16} /><span>收件匣</span>{claimableQuests > 0 && <i />}</button><button onClick={() => setLobbyTab("settings")}><Settings2 size={16} /><span>設定</span></button><button onClick={() => openScreen("guide")}><Sparkles size={16} /><span>圖鑑</span></button><button onClick={() => setLobbyTab("announcements")}><Info size={16} /><span>公告</span></button></aside>}
+    {lobbyTab === "inbox" && <aside className="cute-hub-sheet courtyard-info-sheet" aria-label="收件匣"><header><span><PackageOpen size={15} />收件匣</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><article><b>每日任務進度</b><p>目前有 <strong>{claimableQuests}</strong> 項每日獎勵可領取。</p><button onClick={() => openScreen("daily")}>前往每日任務</button></article><article><b>命運商店</b><p>{progress.shop.freeRefreshAvailable ? "今日免費刷新可使用。" : "商店商品已準備完成。"}</p><button onClick={() => openScreen("shop")}>查看商店</button></article></aside>}
+    {lobbyTab === "announcements" && <aside className="cute-hub-sheet courtyard-info-sheet" aria-label="公告"><header><span><Info size={15} />王都公告</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><article><b>王都導覽更新</b><p>英雄、裝備、商店與副本已收整為底部四項導覽。</p></article><article><b>遠征隊集結</b><p>城堡前走道已成為冒險隊的出發集合點。</p></article></aside>}
     {lobbyTab === "settings" && <aside className="cute-hub-sheet" aria-label="設定與音效"><header><span><Settings2 size={15} />設定與音效</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><div className="cute-scene-selector"><small>場景預覽</small><span><button className={scenePreviewMode === "auto" ? "is-selected" : ""} onClick={() => setScenePreviewMode("auto")}>自動</button><button className={scenePreviewMode === "day" ? "is-selected" : ""} onClick={() => setScenePreviewMode("day")}>白天</button><button className={scenePreviewMode === "night" ? "is-selected" : ""} onClick={() => setScenePreviewMode("night")}>夜晚</button></span></div><div className="cute-banner-selector"><small>遠征隊旗</small><span><button className={bannerStyle === "verdant" ? "is-selected verdant" : "verdant"} onClick={() => setBannerStyle("verdant")} /><button className={bannerStyle === "crimson" ? "is-selected crimson" : "crimson"} onClick={() => setBannerStyle("crimson")} /><button className={bannerStyle === "moon" ? "is-selected moon" : "moon"} onClick={() => setBannerStyle("moon")} /></span></div><div className="cute-audio-toggle"><button className={progress.settings.sfxEnabled ? "is-selected" : ""} onClick={() => setSetting("sfxEnabled", !progress.settings.sfxEnabled)}><Volume2 size={15} />音效 {progress.settings.sfxEnabled ? "開啟" : "關閉"}</button><button className={progress.settings.musicEnabled ? "is-selected" : ""} onClick={() => setSetting("musicEnabled", !progress.settings.musicEnabled)}><Music2 size={15} />音樂 {progress.settings.musicEnabled ? "開啟" : "關閉"}</button></div></aside>}
-    <nav className="cute-hub-nav" aria-label="王都導覽"><button className={lobbyTab === "kingdom" ? "is-active" : ""} onClick={() => setLobbyTab("kingdom")}><MapPinned size={18} /><span>王都</span></button><button className="cute-nav-expedition" disabled={departing} onClick={launchExpedition}><Swords size={18} /><span>{departing ? "啟程" : "遠征"}</span></button><button className={lobbyTab === "journal" ? "is-active" : ""} onClick={() => setLobbyTab("journal")}><Gift size={18} /><span>導覽</span>{claimableQuests > 0 && <i />}</button></nav>
+    <nav className="cute-hub-nav kingdom-footer-nav" aria-label="王都導覽"><button className="cute-nav-heroes" onClick={() => openScreen("team")}><span className="nav-emblem"><img src={ASTERVOW_ICON_URLS.guide} alt="" /></span><span>英雄</span></button><button className="cute-nav-equipment" onClick={() => openScreen("equipment")}><span className="nav-emblem"><img src={ASTERVOW_ICON_URLS.equipment} alt="" /></span><span>裝備</span>{actionNotice.equipment && <i />}</button><button className="cute-nav-kingdom" onClick={() => setLobbyTab("kingdom")}><span className="nav-emblem"><img src={ASTERVOW_ICON_URLS.castle} alt="" /></span><span>王都</span></button><button className="cute-nav-shop" onClick={() => openScreen("shop")}><span className="nav-emblem"><img src={ASTERVOW_ICON_URLS.shop} alt="" /></span><span>商店</span>{actionNotice.shop && <i />}</button><button className="cute-nav-dungeon" onClick={() => openScreen("dungeon")}><span className="nav-emblem"><img src={ASTERVOW_ICON_URLS.dungeon} alt="" /></span><span>副本</span>{actionNotice.dungeon && <i />}</button></nav>
     {departing && <div className="expedition-departure" role="status" aria-live="polite"><div className="departure-party">{selectedHeroes.map((heroId) => <span key={heroId} style={{ "--party-color": HEROES[heroId].color } as React.CSSProperties}>{HEROES[heroId].name.slice(0, 1)}</span>)}</div><div><small>命運骰塔</small><b>遠征隊伍，出發！</b><span>正踏上下一段命運……</span></div><i><Swords size={23} /></i></div>}
   </section>;
 }
 
-function ModuleHeader({ moduleId }: { moduleId: LobbyModuleId }) { const { openScreen } = useGameStore(); const module = LOBBY_MODULES[moduleId]; return <><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />返回大廳</button><div className="module-heading"><i>{module.icon}</i><div><p className="screen-kicker">{module.eyebrow}</p><h2>{module.title}</h2><p>{module.summary}</p></div></div></>; }
+type CourtyardSignKind = LobbyModuleId | "guide" | "team" | "leader";
+
+const MODULE_SIGN_META: Record<LobbyModuleId, { location: string; icon: React.ReactNode }> = {
+  equipment: { location: "城堡工坊巷", icon: <Hammer size={26} /> },
+  shop: { location: "庭院市集", icon: <Coins size={26} /> },
+  daily: { location: "花園日誌亭", icon: <Gift size={26} /> },
+  dungeon: { location: "月影符文門", icon: <Swords size={26} /> },
+};
+
+function CourtyardSignboard({ kind, location, title, summary, icon }: { kind: CourtyardSignKind; location: string; title: string; summary: string; icon: React.ReactNode }) {
+  return <header className={`courtyard-signboard sign-${kind}`}><i className="sign-emblem" aria-hidden="true">{icon}</i><div className="sign-plaque"><span className="sign-nail sign-nail-left" /><span className="sign-nail sign-nail-right" /><p>{location}</p><h2>{title}</h2><small>{summary}</small></div></header>;
+}
+
+function ModuleHeader({ moduleId }: { moduleId: LobbyModuleId }) { const { openScreen } = useGameStore(); const module = LOBBY_MODULES[moduleId]; const sign = MODULE_SIGN_META[moduleId]; return <><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />返回大廳</button><CourtyardSignboard kind={moduleId} location={sign.location} title={module.title} summary={module.summary} icon={sign.icon} /></>; }
 
 const SLOT_LABELS: Record<EquipmentSlot, string> = { weapon: "武器", armor: "護甲", relic: "遺物" };
 
@@ -227,7 +282,7 @@ function TeamScreen() {
   const { openScreen, selectedHeroes, selectedDungeonId, toggleTeamHero } = useGameStore();
   return <section className="selection-screen">
     <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到舞台</button>
-    <p className="screen-kicker">第一步 · 編排隊伍</p><h2>選擇三位登場英雄</h2><p className="screen-subtitle">每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。</p>
+    <CourtyardSignboard kind="team" location="遠征旗亭 · 第一步" title="選擇三位登場英雄" summary="每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。" icon={<Swords size={26} />} />
     {selectedDungeonId && <div className="dungeon-launch-note"><ShieldCheck size={15} />即將挑戰：{DUNGEONS.find((dungeon) => dungeon.id === selectedDungeonId)?.title} · 進入命運舞台時扣除體力</div>}<div className="selection-count"><span>{selectedHeroes.length}</span>/3 已選</div>
     <div className="hero-choice-grid">{SELECTABLE_HERO_IDS.map((heroId) => {
       const definition = HEROES[heroId]; const selected = selectedHeroes.includes(heroId);
@@ -239,10 +294,18 @@ function TeamScreen() {
 
 function LeaderScreen() {
   const { openScreen, selectedHeroes, leaderId, chooseLeader, startRun } = useGameStore();
+  const previewAllLeaders = new URLSearchParams(window.location.search).get("leaderPreview") === "all";
+  const leaderPreviewOffset = Math.max(0, Number.parseInt(new URLSearchParams(window.location.search).get("leaderPreviewOffset") ?? "0", 10) || 0);
+  const displayedLeaderIds = previewAllLeaders ? SELECTABLE_HERO_IDS.slice(leaderPreviewOffset, leaderPreviewOffset + 5) : selectedHeroes;
   return <section className="selection-screen leader-screen">
     <button className="back-link" onClick={() => openScreen("team")}><ChevronLeft size={19} />重選隊伍</button>
-    <p className="screen-kicker">第二步 · 指定隊長</p><h2>選一位帶領本局</h2><p className="screen-subtitle">骰出四條時，隊長會立刻介入戰局；五條則由全隊合力展開必殺。</p>
-    <div className="leader-list">{selectedHeroes.map((heroId) => <button key={heroId} className={`leader-option ${leaderId === heroId ? "is-selected" : ""}`} style={{ "--hero-color": HEROES[heroId].color } as React.CSSProperties} onClick={() => chooseLeader(heroId)}><LeaderHeroShowcase heroId={heroId} /><div><b>{HEROES[heroId].name}</b><strong><Zap size={15} fill="currentColor" />{leaderSkill[heroId]}</strong></div><span>{leaderId === heroId ? "隊長" : "指定"}</span></button>)}</div>
+    <CourtyardSignboard kind="leader" location="城門指揮旗 · 第二步" title="選一位帶領本局" summary="骰出四條時，隊長會立刻介入戰局；五條則由全隊合力展開必殺。" icon={<ShieldCheck size={26} />} />
+    <div className="leader-list">{displayedLeaderIds.map((heroId) => {
+      const definition = HEROES[heroId];
+      const profile = LEADER_CARD_PROFILES[heroId];
+      const cardStyle = { "--hero-color": definition.color, "--leader-accent": profile.accent, "--leader-glow": profile.glow } as React.CSSProperties;
+      return <button key={heroId} className={`leader-option leader-card--${heroId} ${leaderId === heroId ? "is-selected" : ""}`} style={cardStyle} onClick={() => chooseLeader(heroId)}><LeaderHeroShowcase heroId={heroId} /><div className="leader-card-copy"><p className="leader-card-role"><i>{profile.emblem}</i>{profile.roleLabel}</p><b>{definition.name}</b><strong><Zap size={15} fill="currentColor" />{leaderSkill[heroId]}</strong></div><span>{leaderId === heroId ? "隊長" : "指定"}</span></button>;
+    })}</div>
     <button className="primary-cta wide-cta" onClick={startRun}><Sparkles size={18} />進入命運舞台</button>
   </section>;
 }
@@ -275,7 +338,7 @@ function HeroTile({ hero, index, selected, previewing, onPointerDown, onPointerU
   const characterVisual = HERO_FRAME_SHEETS[hero.heroId]
     ? <span className={`hero-board-sprite hero-${hero.heroId} tier-${hero.tier} is-${displayAction}`}><HeroFrameSprite key={`${displayAction}-${hero.attackCount}`} heroId={hero.heroId} action={displayAction} animationSignal={hero.attackCount} boardLayout={HERO_BOARD_LAYOUT[hero.heroId]?.[displayAction]} /></span>
     : <HeroPortrait heroId={hero.heroId} action={displayAction} animationSignal={hero.attackCount} />;
-  return <button className={`hero-tile tier-${hero.tier} ${selected ? "is-selected" : ""} ${previewing ? "is-previewing" : ""} ${displayAction === "skill" ? "is-casting" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); onPointerDown(index); }} onPointerUp={(event) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); onPointerUp(index); }} onPointerCancel={onPointerCancel} onContextMenu={(event) => event.preventDefault()} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}。長按可預覽攻擊動畫。`}><span className="hero-visual-zone">{characterVisual}{previewing && hero.heroId !== "fireMage" && <span className="preview-slash" />}</span><b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}{displayAction === "skill" && <span className="preview-badge"><Sparkles size={9} />{isUltimateCast ? "必殺" : "技能"}</span>}{previewing && <span className="preview-badge"><Swords size={9} />預覽</span>}<em className="attack-orb" style={{ animationDuration: `${previewing ? .42 : Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
+  return <button className={`hero-tile hero-${hero.heroId} tier-${hero.tier} ${selected ? "is-selected" : ""} ${previewing ? "is-previewing" : ""} ${displayAction === "skill" ? "is-casting" : ""} ${locked ? "is-locked" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} disabled={locked} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); onPointerDown(index); }} onPointerUp={(event) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); onPointerUp(index); }} onPointerCancel={onPointerCancel} onContextMenu={(event) => event.preventDefault()} aria-label={`${definition.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}。長按可預覽攻擊動畫。`}><span className="hero-visual-zone">{characterVisual}</span><b className="tier-badge">T{hero.tier}</b>{hero.shield > 0 && <i className="shield-icon"><Shield size={10} fill="currentColor" /></i>}{displayAction === "skill" && <span className="preview-badge"><Sparkles size={9} />{isUltimateCast ? "必殺" : "技能"}</span>}{previewing && <span className="preview-badge"><Swords size={9} />預覽</span>}<em className="attack-orb" style={{ animationDuration: `${previewing ? .42 : Math.max(.45, hero.cooldown + .4)}s` }} /><span className="tile-hp"><i style={{ width: `${hp}%` }} /></span></button>;
 }
 
 function Board() {
@@ -313,7 +376,10 @@ function Board() {
     setPreviewIndex(null);
   };
   const previewFixture = new URLSearchParams(window.location.search).get("preview");
-  return <section className="board-section"><div className="section-heading"><span><Swords size={15} />英雄舞台</span><small>點選 3 名同職同階後合成；拖曳可交換；長按預覽攻擊。</small></div><div className="hero-board">{run.board.map((hero, index) => <HeroTile key={hero?.id ?? `empty-${index}`} hero={hero} index={index} selected={selectedBoardIndexes.includes(index)} previewing={previewIndex === index || (Boolean(previewFixture) && (previewFixture === "all" || hero?.heroId === "fireMage"))} onPointerDown={pointerDown} onPointerUp={pointerUp} onPointerCancel={cancelPointer} />)}</div></section>;
+  const previewingFixture = (hero: HeroInstance | null) => Boolean(previewFixture) && (
+    previewFixture === "all" || hero?.heroId === previewFixture || (previewFixture === "3" && hero?.heroId === "fireMage")
+  );
+  return <section className="board-section"><div className="section-heading"><span><Swords size={15} />英雄舞台</span><small>點選 3 名同職同階後合成；拖曳可交換；長按預覽攻擊。</small></div><div className="hero-board">{run.board.map((hero, index) => <HeroTile key={hero?.id ?? `empty-${index}`} hero={hero} index={index} selected={selectedBoardIndexes.includes(index)} previewing={previewIndex === index || previewingFixture(hero)} onPointerDown={pointerDown} onPointerUp={pointerUp} onPointerCancel={cancelPointer} />)}</div></section>;
 }
 
 function DiceTray() {
@@ -397,7 +463,7 @@ function BattleScreen() {
 
 function GuideScreen() {
   const { openScreen } = useGameStore();
-  return <section className="guide-screen"><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />首頁</button><img className="guide-mark" src={LOGO_URL} alt="" /><p className="screen-kicker">策略圖鑑</p><h2>一局的勝機，從留下一顆骰子開始。</h2><div className="guide-cards"><article><span className="guide-icon dice-icon">⚄</span><h3>1. 留骰與重骰</h3><p>每波有五顆骰與兩次重骰。先點選鎖定值得保留的點數，再重骰其餘骰子。兩回合無組合後，下一回合會保證至少一對。</p></article><article><span className="guide-icon"><Sparkles size={24} /></span><h3>2. 召喚與合成</h3><p>骰型帶來召喚、隊長技或強化。三名同職、同階英雄點選後合成，T1 變 T2，T2 變 T3。棋盤滿時會轉成重整能量。</p></article><article><span className="guide-icon"><Swords size={24} /></span><h3>3. 守住十波</h3><p>英雄會自動迎敵。第 3、6、9 波後從三項天賦中選擇一項；第 10 波以雙階段 Boss 作為終幕。城堡生命歸零即失敗。</p></article></div><h3 className="dice-guide-heading">骰型一覽</h3><div className="combo-table">{Object.values(DICE_COMBINATIONS).slice().reverse().map((combo) => <div key={combo.kind}><b>{combo.label}</b><span>{combo.description}</span></div>)}</div><button className="primary-cta wide-cta" onClick={() => openScreen("team")}><Play size={17} fill="currentColor" />現在開演</button></section>;
+  return <section className="guide-screen"><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />首頁</button><CourtyardSignboard kind="guide" location="星圖檔案亭" title="一局的勝機，從留下一顆骰子開始。" summary="策略圖鑑 · 在出發前熟悉命運骰、召喚與守城規則。" icon={<img className="sign-logo-crest" src={LOGO_URL} alt="" />} /><div className="guide-cards"><article><span className="guide-icon dice-icon">⚄</span><h3>1. 留骰與重骰</h3><p>每波有五顆骰與兩次重骰。先點選鎖定值得保留的點數，再重骰其餘骰子。兩回合無組合後，下一回合會保證至少一對。</p></article><article><span className="guide-icon"><Sparkles size={24} /></span><h3>2. 召喚與合成</h3><p>骰型帶來召喚、隊長技或強化。三名同職、同階英雄點選後合成，T1 變 T2，T2 變 T3。棋盤滿時會轉成重整能量。</p></article><article><span className="guide-icon"><Swords size={24} /></span><h3>3. 守住十波</h3><p>英雄會自動迎敵。第 3、6、9 波後從三項天賦中選擇一項；第 10 波以雙階段 Boss 作為終幕。城堡生命歸零即失敗。</p></article></div><h3 className="dice-guide-heading">骰型一覽</h3><div className="combo-table">{Object.values(DICE_COMBINATIONS).slice().reverse().map((combo) => <div key={combo.kind}><b>{combo.label}</b><span>{combo.description}</span></div>)}</div><button className="primary-cta wide-cta" onClick={() => openScreen("team")}><Play size={17} fill="currentColor" />現在開演</button></section>;
 }
 
 export default function GameScreen() {
