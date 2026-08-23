@@ -55,7 +55,7 @@ type HeroFrameSheet = { source: string; totalFrames: number; actions: Record<Her
 
 const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
   fireMage: { source: "/manus-storage/fireMage_1d8ba3b5.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  knight: { source: "/manus-storage/holy_paladin_aligned_7ea16a17.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  knight: { source: "/manus-storage/holy_paladin_finalclean_717b3e67.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
   priest: { source: "/manus-storage/priest_06f2f936.webp", totalFrames: 13, actions: { idle: { start: 0, count: 5 }, attack: { start: 5, count: 5 }, skill: { start: 10, count: 3 } } },
   ranger: { source: "/manus-storage/ranger_dd823f17.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
   engineer: { source: "/manus-storage/engineer_16b7f9e2.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
@@ -343,7 +343,10 @@ function Board() {
     setPreviewIndex(null);
   };
   const previewFixture = new URLSearchParams(window.location.search).get("preview");
-  return <section className="board-section"><div className="section-heading"><span><Swords size={15} />英雄舞台</span><small>點選 3 名同職同階後合成；拖曳可交換；長按預覽攻擊。</small></div><div className="hero-board">{run.board.map((hero, index) => <HeroTile key={hero?.id ?? `empty-${index}`} hero={hero} index={index} selected={selectedBoardIndexes.includes(index)} previewing={previewIndex === index || (Boolean(previewFixture) && (previewFixture === "all" || hero?.heroId === "fireMage"))} onPointerDown={pointerDown} onPointerUp={pointerUp} onPointerCancel={cancelPointer} />)}</div></section>;
+  const previewingFixture = (hero: HeroInstance | null) => Boolean(previewFixture) && (
+    previewFixture === "all" || hero?.heroId === previewFixture || (previewFixture === "3" && hero?.heroId === "fireMage")
+  );
+  return <section className="board-section"><div className="section-heading"><span><Swords size={15} />英雄舞台</span><small>點選 3 名同職同階後合成；拖曳可交換；長按預覽攻擊。</small></div><div className="hero-board">{run.board.map((hero, index) => <HeroTile key={hero?.id ?? `empty-${index}`} hero={hero} index={index} selected={selectedBoardIndexes.includes(index)} previewing={previewIndex === index || previewingFixture(hero)} onPointerDown={pointerDown} onPointerUp={pointerUp} onPointerCancel={cancelPointer} />)}</div></section>;
 }
 
 function DiceTray() {

@@ -226,6 +226,10 @@ button { font-family: inherit; }
 @keyframes goldAura { to { box-shadow:0 0 0 4px rgba(255,210,76,.75),0 0 19px rgba(249,209,74,.9); } } @keyframes heroPreview { to { transform:translateX(5px) scale(1.15); filter:brightness(1.2) drop-shadow(0 0 5px rgba(245,179,56,.8)); } } @keyframes attackBloom { to { transform:scale(1.13); opacity:.62; filter:brightness(1.18); } } @keyframes previewSlash { from { transform:translateX(-24%) rotate(-28deg); opacity:0; } 35% { opacity:1; } to { transform:translateX(36%) rotate(-28deg); opacity:0; } }
 @keyframes heroCastPulse { to { transform:scale(1.11); opacity:.7; filter:brightness(1.22); } }
 
+/* Casting preserves the tile-sized sprite box; only portraits participate in the relative stacking context. */
+.hero-tile.is-casting .hero-board-sprite { position:absolute; z-index:1; }
+.hero-tile.is-casting .hero-portrait { position:relative; z-index:1; }
+
 /* 英雄舞台一致性：隊長卡片採用相同逐影格資料，待機輪廓沿用每職業量測縮放。 */
 .leader-option { min-height:116px; gap:12px; padding:8px 10px 8px 8px; }
 .leader-hero-showcase { position:relative; flex:0 0 94px; align-self:stretch; overflow:hidden; display:block; border:2px solid; border-radius:16px 11px 11px 16px; background:radial-gradient(circle at 50% 38%,#fff9e6 0%,#e7f0e6 57%,#a2c2b8 100%); box-shadow:inset 0 0 0 2px rgba(255,255,255,.7),0 2px 0 rgba(24,45,66,.16); }
