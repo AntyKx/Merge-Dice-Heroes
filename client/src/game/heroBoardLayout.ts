@@ -24,19 +24,19 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
   },
   "knight": {
     "idle": {
-      "scale": 1.95,
+      "scale": 1.36,
       "shiftX": 0,
-      "shiftY": 9.6
+      "shiftY": 0
     },
     "attack": {
-      "scale": 1.55,
+      "scale": 1.1,
       "shiftX": 0,
-      "shiftY": -2.8
+      "shiftY": 0
     },
     "skill": {
-      "scale": 1.75,
+      "scale": 1.15,
       "shiftX": 0,
-      "shiftY": 6.2
+      "shiftY": 0
     }
   },
   "priest": {

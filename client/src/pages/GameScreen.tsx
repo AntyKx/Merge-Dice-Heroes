@@ -55,7 +55,7 @@ type HeroFrameSheet = { source: string; totalFrames: number; actions: Record<Her
 
 const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
   fireMage: { source: "/manus-storage/fireMage_1d8ba3b5.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  knight: { source: "/manus-storage/holy_paladin_supplied_0229f8d0.webp", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  knight: { source: "/manus-storage/holy_paladin_aligned_7ea16a17.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
   priest: { source: "/manus-storage/priest_06f2f936.webp", totalFrames: 13, actions: { idle: { start: 0, count: 5 }, attack: { start: 5, count: 5 }, skill: { start: 10, count: 3 } } },
   ranger: { source: "/manus-storage/ranger_dd823f17.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
   engineer: { source: "/manus-storage/engineer_16b7f9e2.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
