@@ -21,3 +21,7 @@
 .hero-board-sprite .frame-hero-sprite.is-idle {
   filter: none;
 }
+
+.hero-visual-zone > .hero-board-sprite.hero-portrait.has-frame-sprite {
+  background: transparent;
+}

@@ -62,7 +62,7 @@ const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
   ranger: { source: "/manus-storage/standard_ranger_fixed_canvas_fa046443.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
   engineer: { source: "/manus-storage/standard_engineer_fixed_canvas_3e934953.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
   deathKnight: { source: "/manus-storage/standard_deathKnight_fixed_canvas_f9fad0c7.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  bard: { source: "/manus-storage/standard_bard_fixed_canvas_d6e54437.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  bard: { source: "/manus-storage/standard_bard_fixed_canvas_d6e54437.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count:3 } } },
   fighter: { source: "/manus-storage/standard_fighter_fixed_canvas_663eb791.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
   frostQueen: { source: "/manus-storage/royal_princess_fixed_canvas_98ddc383.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
   assassin: { source: "/manus-storage/standard_assassin_fixed_canvas_2f7e956c.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
