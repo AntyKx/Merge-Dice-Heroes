@@ -56,16 +56,16 @@ type FrameRange = { start: number; count: number };
 type HeroFrameSheet = { source: string; totalFrames: number; actions: Record<HeroAnimationAction, FrameRange> };
 
 const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
-  fireMage: { source: "/manus-storage/fire_mage_fixed_canvas_2c551dcf.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  knight: { source: "/manus-storage/holy_paladin_fixed_e6a98ee8.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  priest: { source: "/manus-storage/standard_priest_fixed_canvas_901218ea.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  ranger: { source: "/manus-storage/standard_ranger_fixed_canvas_fa046443.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  engineer: { source: "/manus-storage/standard_engineer_fixed_canvas_3e934953.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  deathKnight: { source: "/manus-storage/standard_deathKnight_fixed_canvas_f9fad0c7.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  bard: { source: "/manus-storage/standard_bard_fixed_canvas_d6e54437.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count:3 } } },
-  fighter: { source: "/manus-storage/standard_fighter_fixed_canvas_663eb791.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  frostQueen: { source: "/manus-storage/royal_princess_fixed_canvas_98ddc383.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  assassin: { source: "/manus-storage/standard_assassin_fixed_canvas_2f7e956c.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  fireMage: { source: "/manus-storage/groundclean_fireMage_fixed_canvas_bdf6b084.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  knight: { source: "/manus-storage/groundclean_knight_fixed_canvas_dafb5053.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  priest: { source: "/manus-storage/groundclean_priest_fixed_canvas_9240d47e.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  ranger: { source: "/manus-storage/groundclean_ranger_fixed_canvas_96e4d6f3.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  engineer: { source: "/manus-storage/groundclean_engineer_fixed_canvas_4427bd00.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  deathKnight: { source: "/manus-storage/groundclean_deathKnight_fixed_canvas_a22d8ff0.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  bard: { source: "/manus-storage/groundclean_bard_fixed_canvas_c3d7ad0f.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  fighter: { source: "/manus-storage/groundclean_fighter_fixed_canvas_2d474081.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  frostQueen: { source: "/manus-storage/groundclean_frostQueen_fixed_canvas_10044275.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  assassin: { source: "/manus-storage/groundclean_assassin_fixed_canvas_89f14dc2.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
 };
 
 const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
