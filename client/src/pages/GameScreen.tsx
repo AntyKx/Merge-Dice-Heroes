@@ -1,5 +1,5 @@
 /** 精靈骰塔劇場：垂直舞台卷軸介面，命運青綠標示可操作決策，戰鬥規則完全由 game/ 引擎掌管。 */
-/* Design reminder: a bright, original chibi-JRPG kingdom remains the fixed scenic stage; mobile HUD, navigation, and weather layers must clarify progress without obscuring baked-in landmarks or introducing camera movement. */
+/* Design reminder: a bright, original hand-painted chibi castle courtyard is the fixed scenic stage; mobile HUD, progress, and compact actions must stay legible without covering the focal castle. */
 import { useEffect, useRef, useState } from "react";
 import "./shopEnhancements.css";
 import "./lobbyCompact.css";
@@ -16,6 +16,7 @@ import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, ShopOfferId, Ta
 const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
+const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
 
 type LobbyWeather = "day" | "night";
 type ScenePreviewMode = "auto" | LobbyWeather;
@@ -155,7 +156,7 @@ function TitleScreen() {
   const actionNotice: Partial<Record<LobbyModuleId, boolean>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop, daily: claimableQuests > 0 && !progress.lobbyRead.daily, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon };
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
   return <section className={`lobby-screen cute-hub-lobby weather-${weather} banner-${bannerStyle} ${departing ? "is-departing" : ""}`}>
-    <div className="cute-hub-art" aria-hidden="true"><i className="cute-cloud cloud-one" /><i className="cute-cloud cloud-two" /><i className="cute-castle-silhouette"><b /><em /><span /></i></div>
+    <div className="cute-hub-art" style={{ backgroundImage: `url(${CUTE_LOBBY_BACKGROUND_URL})` }} aria-hidden="true" />
     <header className="cute-hub-hud" aria-label="玩家資源">
       <button className="cute-level" onClick={() => openScreen("team")} aria-label={`玩家等級 ${playerLevel}，查看隊伍`}><span>LV.</span><b>{String(playerLevel).padStart(2, "0")}</b><i><em style={{ width: `${levelProgress / 3 * 100}%` }} /></i></button>
       <button className="cute-resource" onClick={() => openScreen("shop")} aria-label={`金幣 ${progress.sigils}，前往商店`}><Coins size={14} /><b>{progress.sigils}</b></button>
