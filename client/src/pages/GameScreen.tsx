@@ -20,6 +20,16 @@ const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
+const ASTERVOW_ICON_URLS = {
+  equipment: "/manus-storage/equipment_b47d9ea9.png",
+  shop: "/manus-storage/shop_410470c0.png",
+  daily: "/manus-storage/daily_5ebf446e.png",
+  guide: "/manus-storage/guide_4803f3b1.png",
+  dungeon: "/manus-storage/dungeon_540de8ab.png",
+  castle: "/manus-storage/castle_6220a0fb.png",
+  expedition: "/manus-storage/expedition_a43a1129.png",
+  forge: "/manus-storage/forge_195bcb52.png",
+} as const;
 
 type LobbyWeather = "day" | "night";
 type ScenePreviewMode = "auto" | LobbyWeather;
@@ -169,18 +179,18 @@ function TitleScreen() {
     </header>
     <section className="cute-story-progress" aria-label="主線進度"><span className="story-scroll-end story-scroll-left" aria-hidden="true" /><span className="story-scroll-end story-scroll-right" aria-hidden="true" /><div><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div><small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small><i><em style={{ width: `${storyProgress}%` }} /></i></section>
     <main className="cute-hub-standby" aria-label="王都遠征入口">
-      <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><Swords size={22} /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
+      <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><img src={ASTERVOW_ICON_URLS.castle} alt="" /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
       <section className="cute-facility-row" aria-label="王都設施">
-        <button className="facility-button facility-forge" onClick={() => openScreen("equipment")}><span className="facility-emblem"><Hammer size={20} /><em /></span><span>裝備</span>{actionNotice.equipment && <i />}</button>
-        <button className="facility-button facility-shop" onClick={() => openScreen("shop")}><span className="facility-emblem"><Coins size={20} /><em /></span><span>商店</span>{actionNotice.shop && <i />}</button>
-        <button className="facility-button facility-daily" onClick={() => openScreen("daily")}><span className="facility-emblem"><Gift size={20} /><em /></span><span>任務</span>{actionNotice.daily && <i />}</button>
-        <button className="facility-button facility-dungeon" onClick={() => openScreen("dungeon")}><span className="facility-emblem"><Swords size={20} /><em /></span><span>副本</span>{actionNotice.dungeon && <i />}</button>
-        <button className="facility-button facility-guide" onClick={() => openScreen("guide")}><span className="facility-emblem"><Sparkles size={20} /><em /></span><span>圖鑑</span></button>
+        <button className="facility-button facility-forge" onClick={() => openScreen("equipment")}><span className="facility-emblem"><img src={ASTERVOW_ICON_URLS.forge} alt="" /></span><span>裝備</span>{actionNotice.equipment && <i />}</button>
+        <button className="facility-button facility-shop" onClick={() => openScreen("shop")}><span className="facility-emblem"><img src={ASTERVOW_ICON_URLS.shop} alt="" /></span><span>商店</span>{actionNotice.shop && <i />}</button>
+        <button className="facility-button facility-daily" onClick={() => openScreen("daily")}><span className="facility-emblem"><img src={ASTERVOW_ICON_URLS.daily} alt="" /></span><span>任務</span>{actionNotice.daily && <i />}</button>
+        <button className="facility-button facility-dungeon" onClick={() => openScreen("dungeon")}><span className="facility-emblem"><img src={ASTERVOW_ICON_URLS.dungeon} alt="" /></span><span>副本</span>{actionNotice.dungeon && <i />}</button>
+        <button className="facility-button facility-guide" onClick={() => openScreen("guide")}><span className="facility-emblem"><img src={ASTERVOW_ICON_URLS.guide} alt="" /></span><span>圖鑑</span></button>
       </section>
     </main>
     {lobbyTab === "journal" && <aside className="cute-hub-sheet" aria-label="今日導覽"><header><span><Gift size={15} />今日導覽</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><p>目前有 <b>{claimableQuests}</b> 項獎勵可領取。完成遠征與合成後，別忘了回來收下每日獎勵。</p><div><button onClick={() => openScreen("daily")}>查看每日任務</button><button onClick={() => openScreen("shop")}>前往命運商店</button></div></aside>}
     {lobbyTab === "settings" && <aside className="cute-hub-sheet" aria-label="設定與音效"><header><span><Settings2 size={15} />設定與音效</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><div className="cute-scene-selector"><small>場景預覽</small><span><button className={scenePreviewMode === "auto" ? "is-selected" : ""} onClick={() => setScenePreviewMode("auto")}>自動</button><button className={scenePreviewMode === "day" ? "is-selected" : ""} onClick={() => setScenePreviewMode("day")}>白天</button><button className={scenePreviewMode === "night" ? "is-selected" : ""} onClick={() => setScenePreviewMode("night")}>夜晚</button></span></div><div className="cute-banner-selector"><small>遠征隊旗</small><span><button className={bannerStyle === "verdant" ? "is-selected verdant" : "verdant"} onClick={() => setBannerStyle("verdant")} /><button className={bannerStyle === "crimson" ? "is-selected crimson" : "crimson"} onClick={() => setBannerStyle("crimson")} /><button className={bannerStyle === "moon" ? "is-selected moon" : "moon"} onClick={() => setBannerStyle("moon")} /></span></div><div className="cute-audio-toggle"><button className={progress.settings.sfxEnabled ? "is-selected" : ""} onClick={() => setSetting("sfxEnabled", !progress.settings.sfxEnabled)}><Volume2 size={15} />音效 {progress.settings.sfxEnabled ? "開啟" : "關閉"}</button><button className={progress.settings.musicEnabled ? "is-selected" : ""} onClick={() => setSetting("musicEnabled", !progress.settings.musicEnabled)}><Music2 size={15} />音樂 {progress.settings.musicEnabled ? "開啟" : "關閉"}</button></div></aside>}
-    <nav className="cute-hub-nav" aria-label="王都導覽"><button className="cute-nav-heroes" onClick={() => openScreen("team")}><span className="nav-emblem"><ShieldCheck size={20} /></span><span>英雄</span></button><button className="cute-nav-expedition" disabled={departing} onClick={launchExpedition}><span className="nav-emblem"><Swords size={21} /></span><span>{departing ? "啟程" : "遠征"}</span></button><button className="cute-nav-equipment" onClick={() => openScreen("equipment")}><span className="nav-emblem"><Hammer size={20} /></span><span>裝備</span>{actionNotice.equipment && <i />}</button></nav>
+    <nav className="cute-hub-nav" aria-label="王都導覽"><button className="cute-nav-heroes" onClick={() => openScreen("team")}><span className="nav-emblem"><img src={ASTERVOW_ICON_URLS.guide} alt="" /></span><span>英雄</span></button><button className="cute-nav-expedition" disabled={departing} onClick={launchExpedition}><span className="nav-emblem"><img src={ASTERVOW_ICON_URLS.expedition} alt="" /></span><span>{departing ? "啟程" : "遠征"}</span></button><button className="cute-nav-equipment" onClick={() => openScreen("equipment")}><span className="nav-emblem"><img src={ASTERVOW_ICON_URLS.equipment} alt="" /></span><span>裝備</span>{actionNotice.equipment && <i />}</button></nav>
     {departing && <div className="expedition-departure" role="status" aria-live="polite"><div className="departure-party">{selectedHeroes.map((heroId) => <span key={heroId} style={{ "--party-color": HEROES[heroId].color } as React.CSSProperties}>{HEROES[heroId].name.slice(0, 1)}</span>)}</div><div><small>命運骰塔</small><b>遠征隊伍，出發！</b><span>正踏上下一段命運……</span></div><i><Swords size={23} /></i></div>}
   </section>;
 }
