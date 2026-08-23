@@ -1,0 +1,23 @@
+/* Design reminder: team selection is a compact parchment roster; every hero portrait must share one visible height and foot baseline while preserving full alpha silhouettes. */
+.hero-choice-art {
+  background: linear-gradient(155deg, #f9f4de, #dcece3) !important;
+}
+
+.hero-choice-art::after {
+  z-index: 0;
+  background: linear-gradient(90deg, transparent 45%, rgba(244, 241, 222, 0.82) 100%) !important;
+}
+
+.hero-choice-art > img {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  padding: 4px 5px 1px;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  transform: none !important;
+}
+
+.hero-board-sprite .frame-hero-sprite.is-idle {
+  filter: none;
+}

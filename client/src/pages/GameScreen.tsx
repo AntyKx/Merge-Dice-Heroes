@@ -9,6 +9,7 @@ import "./simpleCuteLobby.css";
 import "./courtyardEntranceTheme.css";
 import "./courtyardSignboards.css";
 import "./courtyardHomeEmblems.css";
+import "./heroCardAlignment.css";
 import { BatteryCharging, Check, ChevronLeft, Coins, Gem, Gift, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
@@ -68,16 +69,16 @@ const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
 };
 
 const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
-  knight: "/manus-storage/knight_e04e7edb.webp",
-  fireMage: "/manus-storage/fire_mage_portrait_517c21f6.png",
-  priest: "/manus-storage/standard_leader_aligned_priest_87c184da.png",
-  assassin: "/manus-storage/standard_leader_aligned_assassin_43abfc89.png",
-  frostQueen: "/manus-storage/royal_princess_portrait_415f7dc6.png",
-  ranger: "/manus-storage/standard_leader_aligned_ranger_a8988d3a.png",
-  bard: "/manus-storage/standard_leader_aligned_bard_5c86fab4.png",
-  deathKnight: "/manus-storage/standard_leader_aligned_deathKnight_16940410.png",
-  engineer: "/manus-storage/standard_leader_aligned_engineer_1b55c3c6.png",
-  fighter: "/manus-storage/standard_leader_aligned_fighter_f8a29e61.png",
+  knight: "/manus-storage/clean_roster_knight_5f490405.png",
+  fireMage: "/manus-storage/clean_roster_fireMage_e5c91d38.png",
+  priest: "/manus-storage/clean_roster_priest_508c9320.png",
+  assassin: "/manus-storage/clean_roster_assassin_9a5b5b10.png",
+  frostQueen: "/manus-storage/clean_roster_frostQueen_1eeac3eb.png",
+  ranger: "/manus-storage/clean_roster_ranger_f86f8a0b.png",
+  bard: "/manus-storage/clean_roster_bard_bb147e2a.png",
+  deathKnight: "/manus-storage/clean_roster_deathKnight_06915998.png",
+  engineer: "/manus-storage/clean_roster_engineer_0d197992.png",
+  fighter: "/manus-storage/clean_roster_fighter_87f7f6da.png",
 };
 
 const LEADER_CARD_PORTRAITS: Partial<Record<HeroId, string>> = {
