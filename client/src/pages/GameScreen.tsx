@@ -54,7 +54,7 @@ type FrameRange = { start: number; count: number };
 type HeroFrameSheet = { source: string; totalFrames: number; actions: Record<HeroAnimationAction, FrameRange> };
 
 const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
-  fireMage: { source: "/manus-storage/fireMage_1d8ba3b5.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  fireMage: { source: "/manus-storage/fire_mage_fixed_canvas_2c551dcf.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
   knight: { source: "/manus-storage/holy_paladin_fixed_e6a98ee8.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
   priest: { source: "/manus-storage/priest_06f2f936.webp", totalFrames: 13, actions: { idle: { start: 0, count: 5 }, attack: { start: 5, count: 5 }, skill: { start: 10, count: 3 } } },
   ranger: { source: "/manus-storage/ranger_dd823f17.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
@@ -62,16 +62,16 @@ const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
   deathKnight: { source: "/manus-storage/deathKnight_b6832a48.webp", totalFrames: 13, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 4 }, skill: { start: 10, count: 3 } } },
   bard: { source: "/manus-storage/bard_6a888ed1.webp", totalFrames: 13, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 2 } } },
   fighter: { source: "/manus-storage/fighter_4f0da582.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  frostQueen: { source: "/manus-storage/frostQueen_4afc6c08.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
-  assassin: { source: "/manus-storage/assassin_5d5e75f5.webp", totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  frostQueen: { source: "/manus-storage/royal_princess_fixed_canvas_98ddc383.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
+  assassin: { source: "/manus-storage/assassin_fixed_canvas_98d02475.png", totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } },
 };
 
 const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
   knight: "/manus-storage/knight_e04e7edb.webp",
-  fireMage: "/manus-storage/fire-mage_69098bcc.webp",
+  fireMage: "/manus-storage/fire_mage_portrait_517c21f6.png",
   priest: "/manus-storage/priest_cdb9439c.webp",
-  assassin: "/manus-storage/assassin_6dc251bd.webp",
-  frostQueen: "/manus-storage/frost-queen_9e2ac060.webp",
+  assassin: "/manus-storage/assassin_portrait_d99bdab0.png",
+  frostQueen: "/manus-storage/royal_princess_portrait_415f7dc6.png",
   ranger: "/manus-storage/ranger_c3a1fc95.webp",
   bard: "/manus-storage/bard_2a50639e.webp",
   deathKnight: "/manus-storage/death-knight_8d85600c.webp",
@@ -89,7 +89,7 @@ const leaderSkill: Record<HeroId, string> = {
   deathKnight: "冥衛誓約護盾前線",
   bard: "潮音合鳴治療並加速",
   fighter: "裂地重拳震撼前排",
-  frostQueen: "霜華領域凍傷敵軍",
+  frostQueen: "王室冰晶凍傷敵軍",
   assassin: "夜幕處決最危險目標",
 };
 

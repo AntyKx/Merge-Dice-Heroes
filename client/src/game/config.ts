@@ -91,7 +91,7 @@ export const HEROES: Record<HeroId, HeroDefinition> = {
     tierNotes: { 1: "近戰連擊", 2: "重拳追擊", 3: "暴烈旋風" },
   },
   frostQueen: {
-    id: "frostQueen", name: "冰霜女王", classLabel: "霜術", color: "#5d91d5", icon: "Q", range: 0.76, attack: 14, maxHp: 61, attackInterval: 1.3, role: "area",
+    id: "frostQueen", name: "皇家公主", classLabel: "晶霜", color: "#5d91d5", icon: "Q", range: 0.76, attack: 14, maxHp: 61, attackInterval: 1.3, role: "area",
     tierNotes: { 1: "冰晶單體", 2: "寒霜擴散", 3: "凍結風暴" },
   },
   assassin: {

@@ -7,19 +7,19 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
 {
   "fireMage": {
     "idle": {
-      "scale": 2.61,
-      "shiftX": 22.8,
-      "shiftY": 58.9
+      "scale": 2,
+      "shiftX": 4,
+      "shiftY": 20
     },
     "attack": {
-      "scale": 2.61,
-      "shiftX": 22.8,
-      "shiftY": 58.9
+      "scale": 2,
+      "shiftX": 4,
+      "shiftY": 20
     },
     "skill": {
-      "scale": 1.6,
-      "shiftX": 0.7,
-      "shiftY": 27.3
+      "scale": 2,
+      "shiftX": 4,
+      "shiftY": 20
     }
   },
   "knight": {
@@ -143,36 +143,36 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
   },
   "frostQueen": {
     "idle": {
-      "scale": 2.28,
-      "shiftX": -0.5,
-      "shiftY": 34.1
+      "scale": 1.85,
+      "shiftX": 0,
+      "shiftY": 20
     },
     "attack": {
-      "scale": 2.28,
-      "shiftX": -0.5,
-      "shiftY": 34.1
+      "scale": 1.85,
+      "shiftX": 0,
+      "shiftY": 20
     },
     "skill": {
-      "scale": 1.6,
-      "shiftX": 1.7,
-      "shiftY": 17.3
+      "scale": 1.85,
+      "shiftX": 0,
+      "shiftY": 20
     }
   },
   "assassin": {
     "idle": {
-      "scale": 2.28,
-      "shiftX": 6.2,
-      "shiftY": 43.6
+      "scale": 2.1,
+      "shiftX": 4,
+      "shiftY": 20
     },
     "attack": {
-      "scale": 2.28,
-      "shiftX": 6.2,
-      "shiftY": 43.6
+      "scale": 2.1,
+      "shiftX": 4,
+      "shiftY": 20
     },
     "skill": {
-      "scale": 1.69,
-      "shiftX": 3.2,
-      "shiftY": 27.6
+      "scale": 2.1,
+      "shiftX": 4,
+      "shiftY": 20
     }
   }
 } as const;
