@@ -250,6 +250,7 @@ button { font-family: inherit; }
 .leader-stage-emblem { position:absolute; z-index:3; top:6px; left:7px; display:grid; place-items:center; width:21px; height:21px; border:1px solid color-mix(in srgb,var(--leader-glow) 80%,white); border-radius:7px; color:var(--leader-glow); background:color-mix(in srgb,var(--leader-ground) 76%,#263f53); box-shadow:0 2px 4px rgba(25,44,56,.28); font-family:"Mochiy Pop One","Noto Sans TC",sans-serif; font-size:10px; }
 .leader-stage-label { position:absolute; z-index:3; right:6px; bottom:5px; max-width:71px; overflow:hidden; color:#fffbed; font-size:7px; font-weight:900; line-height:1.2; text-align:right; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 2px rgba(16,43,55,.72); }
 .leader-hero-showcase .frame-hero-sprite { z-index:2; filter:drop-shadow(0 3px 2px rgba(18,39,55,.36)); }
+.leader-aligned-portrait { position:absolute; z-index:2; left:50%; bottom:6px; width:98px; height:98px; object-fit:contain; transform:translateX(-50%); filter:drop-shadow(0 3px 2px rgba(18,39,55,.36)); }
 .leader-static-portrait { position:absolute; z-index:2; left:50%; top:50%; display:block; transform-origin:center; }.leader-static-portrait .hero-portrait { width:69px; height:69px; }
 .leader-static-art { display:block; width:82px; height:82px; object-fit:contain; filter:drop-shadow(0 3px 2px rgba(18,39,55,.3)); }
 .leader-card-copy { position:relative; z-index:1; align-self:stretch; align-content:center; gap:3px!important; }

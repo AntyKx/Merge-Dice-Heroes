@@ -80,6 +80,19 @@ const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
   fighter: "/manus-storage/fighter_9eaee4ec.webp",
 };
 
+const LEADER_CARD_PORTRAITS: Partial<Record<HeroId, string>> = {
+  knight: "/manus-storage/leader_aligned_knight_7191b988.png",
+  fireMage: "/manus-storage/leader_aligned_fireMage_15d6dd46.png",
+  priest: "/manus-storage/leader_aligned_priest_0a3a8155.png",
+  assassin: "/manus-storage/leader_aligned_assassin_8bd3026f.png",
+  frostQueen: "/manus-storage/leader_aligned_frostQueen_e0d57e93.png",
+  ranger: "/manus-storage/leader_aligned_ranger_48fcd512.png",
+  bard: "/manus-storage/leader_aligned_bard_960db165.png",
+  deathKnight: "/manus-storage/leader_aligned_deathKnight_f304c173.png",
+  engineer: "/manus-storage/leader_aligned_engineer_6aba955e.png",
+  fighter: "/manus-storage/leader_aligned_fighter_bbc08ab3.png",
+};
+
 const leaderSkill: Record<HeroId, string> = {
   knight: "全體英雄獲得護盾",
   fireMage: "火焰隕石轟炸敵軍",
@@ -130,6 +143,8 @@ function LeaderHeroShowcase({ heroId }: { heroId: HeroId }) {
   const idleLayout = HERO_BOARD_LAYOUT[heroId]?.idle;
   const leaderLayout = idleLayout ? { ...idleLayout, scale: idleLayout.scale * profile.frameScale, shiftX: profile.shiftX, shiftY: idleLayout.shiftY + profile.shiftY } : undefined;
   const stageStyle = { borderColor: definition.color, "--leader-sky": profile.sky, "--leader-ground": profile.ground, "--leader-glow": profile.glow, "--leader-accent": profile.accent } as React.CSSProperties;
+  const alignedPortrait = LEADER_CARD_PORTRAITS[heroId];
+  if (alignedPortrait) return <span className={`leader-hero-showcase leader-stage--${heroId}`} style={stageStyle} aria-hidden="true"><i className="leader-stage-aura" /><span className="leader-stage-emblem">{profile.emblem}</span><small className="leader-stage-label">{profile.stageLabel}</small><img className="leader-aligned-portrait" src={alignedPortrait} alt="" /></span>;
   if (HERO_FRAME_SHEETS[heroId] && !profile.usePortrait) return <span className={`leader-hero-showcase leader-stage--${heroId}`} style={stageStyle} aria-hidden="true"><i className="leader-stage-aura" /><span className="leader-stage-emblem">{profile.emblem}</span><small className="leader-stage-label">{profile.stageLabel}</small><HeroFrameSprite key={`leader-${heroId}`} heroId={heroId} action="idle" boardLayout={leaderLayout} /></span>;
   return <span className={`leader-hero-showcase leader-stage--${heroId} leader-stage--static`} style={stageStyle} aria-hidden="true"><i className="leader-stage-aura" /><span className="leader-stage-emblem">{profile.emblem}</span><small className="leader-stage-label">{profile.stageLabel}</small><span className="leader-static-portrait" style={{ transform: `translate(calc(-50% + ${profile.shiftX}px), calc(-50% + ${profile.shiftY}px)) scale(${profile.frameScale})` }}>{profile.usePortrait && HERO_PORTRAITS[heroId] ? <img className="leader-static-art" src={HERO_PORTRAITS[heroId]} alt="" /> : <HeroPortrait heroId={heroId} size="large" />}</span></span>;
 }
