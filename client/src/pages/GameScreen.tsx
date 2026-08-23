@@ -126,7 +126,7 @@ function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal
 function LeaderHeroShowcase({ heroId }: { heroId: HeroId }) {
   const definition = HEROES[heroId];
   const knightIdleLayout = HERO_BOARD_LAYOUT.knight?.idle;
-  const leaderLayout = heroId === "knight" && knightIdleLayout ? { ...knightIdleLayout, shiftX: 7 } : HERO_BOARD_LAYOUT[heroId]?.idle;
+  const leaderLayout = heroId === "knight" && knightIdleLayout ? { ...knightIdleLayout, shiftX: 12 } : HERO_BOARD_LAYOUT[heroId]?.idle;
   if (HERO_FRAME_SHEETS[heroId]) return <span className={`leader-hero-showcase hero-${heroId}`} style={{ borderColor: definition.color }} aria-hidden="true"><HeroFrameSprite key={`leader-${heroId}`} heroId={heroId} action="idle" boardLayout={leaderLayout} /></span>;
   return <HeroPortrait heroId={heroId} size="large" />;
 }
