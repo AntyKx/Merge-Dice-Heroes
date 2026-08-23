@@ -1,0 +1,138 @@
+/* Design reminder: every non-battle entrance belongs to the same hand-painted castle courtyard. Use ivory parchment for surfaces, warm gold for craft detail, wood-brown depth, and teal enamel only for the player's next action. */
+
+.game-frame {
+  --court-ink:#553d2b;
+  --court-muted:#8b7356;
+  --court-paper:#fff2ca;
+  --court-paper-light:#fff9df;
+  --court-gold:#d39a3c;
+  --court-gold-light:#f5d87f;
+  --court-wood:#825239;
+  --court-wood-dark:#603926;
+  --court-teal:#218d7b;
+  --court-teal-dark:#11675f;
+  --court-moss:#7ea264;
+  --court-shadow:0 3px 0 rgba(94,57,33,.48),0 7px 14px rgba(66,43,26,.14);
+}
+
+.selection-screen,.guide-screen,.lobby-module-screen {
+  color:var(--court-ink);
+  background:radial-gradient(circle at 90% 4%,rgba(255,231,147,.55),transparent 24%),radial-gradient(circle at 5% 64%,rgba(118,165,104,.18),transparent 29%),linear-gradient(165deg,#f8dfaa 0%,#f8edc9 39%,#e0ebce 100%);
+}
+
+.back-link {
+  align-items:center;
+  gap:4px;
+  padding:6px 9px 6px 7px;
+  border:2px solid var(--court-wood);
+  border-radius:9px 7px 9px 7px;
+  color:var(--court-ink);
+  background:linear-gradient(180deg,var(--court-paper-light),#e6bd78);
+  box-shadow:inset 0 1px rgba(255,255,241,.92),0 2px 0 var(--court-wood);
+  font-size:10px;
+}
+.back-link svg { color:var(--court-teal-dark); stroke-width:3; }
+.back-link:active { transform:translateY(2px) scale(.98); box-shadow:inset 0 1px rgba(255,255,241,.75),0 1px 0 var(--court-wood); }
+
+.module-heading { position:relative; padding:3px 0 11px; }
+.module-heading:after { content:""; position:absolute; right:0; bottom:0; left:68px; height:2px; border-radius:99px; background:linear-gradient(90deg,var(--court-gold),rgba(211,154,60,.18),transparent); }
+.module-heading>i {
+  position:relative;
+  width:54px;
+  height:54px;
+  flex-basis:54px;
+  border:3px solid var(--court-wood);
+  border-radius:17px 13px 17px 13px;
+  color:var(--court-teal-dark);
+  background:linear-gradient(145deg,#fffbe3 0 22%,#f2d58a 58%,#d69a46 100%);
+  box-shadow:inset 0 0 0 2px rgba(255,255,237,.75),0 3px 0 var(--court-wood),0 6px 11px rgba(77,47,25,.16);
+  font-size:25px;
+}
+.module-heading>i:after { content:"✦"; position:absolute; right:-5px; bottom:-7px; color:var(--court-gold-light); font-size:14px; text-shadow:0 1px var(--court-wood); }
+.module-heading h2,.selection-screen h2,.guide-screen h2 { color:var(--court-ink); }
+.module-heading p:last-child,.screen-subtitle { color:#796a56; }
+.module-heading .screen-kicker,.screen-kicker,.eyebrow { color:var(--court-teal-dark); }
+
+.module-status,.equipment-bonus-strip span,.dungeon-energy,.shop-toolbar,.dungeon-launch-note,.dungeon-reward-card {
+  border:2px solid rgba(130,82,57,.52);
+  color:var(--court-ink);
+  background:linear-gradient(180deg,rgba(255,250,222,.94),rgba(238,212,156,.9));
+  box-shadow:inset 0 1px rgba(255,255,242,.9),0 2px 0 rgba(130,82,57,.28);
+}
+.module-status b,.equipment-bonus-strip span,.dungeon-energy b,.dungeon-reward-card b { color:var(--court-teal-dark); }
+.dungeon-energy span,.dungeon-launch-note,.dungeon-reward-card span { color:var(--court-muted); }
+.dungeon-energy svg,.equipment-bonus-strip svg { color:var(--court-gold); }
+
+.equipment-slot,.inventory-list article,.quest-list article,.dungeon-list article,.shop-list article,.guide-cards article,.combo-table {
+  border:2px solid rgba(130,82,57,.45);
+  color:var(--court-ink);
+  background:linear-gradient(145deg,rgba(255,253,232,.96),rgba(244,225,176,.86));
+  box-shadow:inset 0 1px rgba(255,255,242,.88),0 3px 0 rgba(112,76,47,.25),0 6px 10px rgba(75,50,29,.08);
+}
+.equipment-slot { border-style:solid; }
+.equipment-slot small,.inventory-list p,.quest-top p,.dungeon-list p,.shop-list p,.guide-cards p,.combo-table span { color:var(--court-muted); }
+.equipment-slot b,.inventory-list b,.quest-top b,.dungeon-list b,.shop-list b,.guide-cards h3,.combo-table b { color:var(--court-ink); }
+.inventory-list small,.dungeon-list small,.shop-list small { color:#9a7240; }
+.inventory-list article.is-equipped,.quest-list article.is-ready { border-color:var(--court-gold); box-shadow:inset 0 0 0 2px rgba(255,244,179,.72),0 3px 0 rgba(112,76,47,.25),0 6px 10px rgba(75,50,29,.08); }
+
+.inventory-list article>i,.shop-list article>i,.dungeon-stage-number,.guide-icon {
+  border:2px solid var(--court-wood);
+  color:var(--court-teal-dark);
+  background:linear-gradient(145deg,#fff9d8,#efd088 64%,#d79f4b);
+  box-shadow:inset 0 1px rgba(255,255,242,.86),0 2px 0 var(--court-wood);
+}
+.dungeon-stage-number { color:var(--court-wood-dark); }
+.guide-icon { color:var(--court-teal-dark); }
+.quest-top em,.module-list em {
+  border:1px solid rgba(157,110,47,.52);
+  color:#7b572a;
+  background:#fff0bd;
+}
+.quest-progress { border:1px solid rgba(130,82,57,.3); background:#decda7; }
+.quest-progress i { background:linear-gradient(90deg,var(--court-teal),#75bf9b); }
+.dungeon-rule { color:#786548; }
+
+.primary-cta,.game-button.teal,.inventory-list button:not(.dismantle-button),.quest-list button,.dungeon-list button,.shop-toolbar button,.shop-list button {
+  border:2px solid var(--court-wood);
+  color:#fffdea;
+  background:linear-gradient(180deg,#39aa91,#16766b);
+  box-shadow:inset 0 2px rgba(230,255,242,.38),0 3px 0 var(--court-wood-dark),0 6px 10px rgba(54,81,63,.18);
+  text-shadow:0 1px rgba(8,70,62,.72);
+}
+.primary-cta:active,.game-button.teal:active,.inventory-list button:not(.dismantle-button):active,.quest-list button:active,.dungeon-list button:active,.shop-toolbar button:active,.shop-list button:active { transform:translateY(2px) scale(.97); box-shadow:inset 0 2px rgba(230,255,242,.28),0 1px 0 var(--court-wood-dark); }
+.secondary-cta,.game-button.pale,.shop-confirm-actions .secondary-cta {
+  border:2px solid var(--court-wood);
+  color:var(--court-ink);
+  background:linear-gradient(180deg,var(--court-paper-light),#e7bd78);
+  box-shadow:inset 0 1px rgba(255,255,241,.9),0 3px 0 var(--court-wood);
+}
+.game-button.amber { border:2px solid var(--court-wood); color:#62421e; background:linear-gradient(180deg,#ffe29b,#e5a63a); box-shadow:inset 0 1px rgba(255,251,222,.9),0 3px 0 var(--court-wood); }
+.inventory-list button.dismantle-button { border:2px solid #9c5c45; color:#723d2f; background:linear-gradient(180deg,#ffe8d5,#eab184); box-shadow:inset 0 1px rgba(255,246,233,.9),0 2px 0 #8a4b38; }
+.inventory-list button:disabled,.quest-list button:disabled,.dungeon-list button:disabled,.shop-toolbar button:disabled,.shop-list button:disabled,.primary-cta:disabled { border-color:#a89c82; color:#857a67; background:#ded5bd; box-shadow:0 2px 0 #aaa08b; text-shadow:none; }
+
+.shop-confirm-modal {
+  border:3px solid var(--court-wood);
+  border-radius:22px 17px 22px 17px;
+  color:var(--court-ink);
+  background:linear-gradient(145deg,#fff9dc,#f2d99b);
+  box-shadow:inset 0 0 0 2px rgba(255,255,239,.74),0 6px 0 var(--court-wood-dark),0 22px 50px rgba(37,48,38,.3);
+}
+.shop-confirm-modal>i { border:3px solid var(--court-wood); color:var(--court-teal-dark); background:linear-gradient(145deg,#fff9d8,#efd088 64%,#d79f4b); box-shadow:inset 0 1px rgba(255,255,242,.86),0 3px 0 var(--court-wood); }
+.shop-confirm-modal>span,.shop-confirm-cost span,.shop-confirm-cost small { color:var(--court-muted); }
+.shop-confirm-cost { border:1px solid rgba(130,82,57,.4); background:#fff0bd; }
+.shop-confirm-cost b { color:var(--court-teal-dark); }
+
+.selection-count,.hero-choice,.leader-option {
+  border:2px solid rgba(130,82,57,.42);
+  color:var(--court-ink);
+  background:linear-gradient(145deg,rgba(255,253,232,.96),rgba(244,225,176,.86));
+  box-shadow:inset 0 1px rgba(255,255,242,.88),0 3px 0 rgba(112,76,47,.24);
+}
+.selection-count span { color:var(--court-teal-dark); }
+.hero-choice.is-selected,.leader-option.is-selected { border-color:var(--court-gold); background:#fff8dc; box-shadow:inset 0 0 0 2px rgba(255,242,167,.78),0 4px 0 rgba(112,76,47,.28),0 8px 13px rgba(77,51,28,.12); }
+.hero-choice small,.leader-option strong { color:var(--court-muted); }
+.hero-choice i,.leader-option>span { color:var(--court-teal-dark); background:#fff0bd; }
+
+@media (prefers-reduced-motion: reduce) {
+  .back-link:active,.primary-cta:active,.game-button.teal:active,.inventory-list button:active,.quest-list button:active,.dungeon-list button:active,.shop-toolbar button:active,.shop-list button:active { transform:none; }
+}

@@ -6,6 +6,7 @@ import "./lobbyCompact.css";
 import "./dailyCelebration.css";
 import "./islandLobby.css";
 import "./simpleCuteLobby.css";
+import "./courtyardEntranceTheme.css";
 import { BatteryCharging, Check, ChevronLeft, Coins, Gem, Gift, Hammer, Heart, Info, Lock, MapPinned, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
