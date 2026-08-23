@@ -75,7 +75,10 @@
 
 /* Fixed-screen lobby: no horizontal overscroll, and the action cluster is anchored directly above the compact bottom rail. */
 html:has(.cute-hub-lobby),body:has(.cute-hub-lobby),#root:has(.cute-hub-lobby),.game-frame:has(.cute-hub-lobby) { height:100dvh; min-height:100dvh; max-height:100dvh; overflow:hidden; overflow-x:hidden; overscroll-behavior:none; }
-.cute-hub-lobby { width:100%; max-width:100%; height:100dvh; min-height:100dvh; max-height:100dvh; padding-bottom:0; overflow:clip; overscroll-behavior:none; touch-action:manipulation; }
+.game-frame { position:relative; width:100%; max-width:100%; overflow-x:hidden; }
+.cute-hub-lobby { box-sizing:border-box; width:100%; max-width:100%; height:100dvh; min-height:100dvh; max-height:100dvh; padding-bottom:0; overflow:hidden; overscroll-behavior:none; touch-action:none; -webkit-user-select:none; user-select:none; contain:layout paint; }
+.cute-hub-lobby,.cute-hub-lobby *,.cute-hub-lobby *:before,.cute-hub-lobby *:after { box-sizing:border-box; }
+.cute-hub-lobby button { touch-action:manipulation; -webkit-user-select:none; user-select:none; }
 .cute-hub-standby { position:absolute; z-index:2; top:110px; right:0; bottom:calc(68px + env(safe-area-inset-bottom)); left:0; min-height:0; height:auto; padding:0 0 7px; }
 .cute-hub-nav { height:calc(68px + env(safe-area-inset-bottom)); min-height:68px; padding:3px 24px max(4px,env(safe-area-inset-bottom)); overflow:visible; }
 .cute-hub-nav button,.cute-hub-nav .nav-emblem { overflow:visible; }
