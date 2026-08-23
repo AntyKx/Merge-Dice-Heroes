@@ -75,15 +75,17 @@
 
 /* Fixed-screen lobby: the scenic page never becomes a scroll container; the bottom rail owns a measured safe area for the enlarged supplied artwork. */
 .cute-hub-lobby { height:100dvh; min-height:100dvh; max-height:100dvh; padding-bottom:0; overscroll-behavior:none; touch-action:pan-x; }
-.cute-hub-standby { min-height:0; height:calc(100dvh - 104px); padding:0 0 calc(94px + env(safe-area-inset-bottom)); }
-.cute-hub-nav { height:calc(90px + env(safe-area-inset-bottom)); min-height:90px; padding-bottom:max(9px,env(safe-area-inset-bottom)); overflow:visible; }
+.cute-hub-standby { min-height:0; height:calc(100dvh - 82px); padding:0 0 calc(72px + env(safe-area-inset-bottom)); }
+.cute-hub-nav { height:calc(68px + env(safe-area-inset-bottom)); min-height:68px; padding:3px 24px max(4px,env(safe-area-inset-bottom)); overflow:visible; }
 .cute-hub-nav button,.cute-hub-nav .nav-emblem { overflow:visible; }
-.cute-hub-nav .nav-emblem { width:46px; height:46px; }
-.cute-hub-nav .cute-nav-expedition { min-height:70px; margin-top:-14px; }
-.cute-hub-nav .cute-nav-expedition .nav-emblem { width:54px; height:54px; }
+.cute-hub-nav button { gap:0; font-size:7px; }
+.cute-hub-nav .nav-emblem { width:36px; height:36px; }
+.cute-hub-nav .cute-nav-expedition { min-height:57px; margin-top:-9px; }
+.cute-hub-nav .cute-nav-expedition .nav-emblem { width:43px; height:43px; }
 .facility-button { overflow:visible; }
-.facility-emblem { width:46px; height:46px; }
+.facility-button { min-height:70px; }
+.facility-emblem { width:52px; height:52px; }
 
 @media (max-height:730px) {
-  .cute-hub-lobby { padding-top:4px; }.cute-story-progress { min-height:31px; margin-top:5px; padding:5px 14px; }.story-scroll-end { top:-3px; height:34px; }.cute-hub-standby { height:calc(100dvh - 86px); padding-bottom:78px; }.cute-facility-row { gap:5px; margin-top:7px; }.facility-button { min-height:58px; }.facility-emblem { width:38px; height:38px; }.facility-emblem svg { width:17px; height:17px; }.cute-hub-nav { height:76px; min-height:76px; padding-bottom:7px; }.cute-hub-nav .nav-emblem { width:39px; height:39px; }.cute-hub-nav .cute-nav-expedition { min-height:61px; margin-top:-10px; }.cute-hub-nav .cute-nav-expedition .nav-emblem { width:46px; height:46px; }.cute-expedition-button i,.cute-expedition-button i img { width:38px; height:38px; }
+  .cute-hub-lobby { padding-top:4px; }.cute-story-progress { min-height:31px; margin-top:5px; padding:5px 14px; }.story-scroll-end { top:-3px; height:34px; }.cute-hub-standby { height:calc(100dvh - 76px); padding-bottom:66px; }.cute-facility-row { gap:5px; margin-top:7px; }.facility-button { min-height:64px; }.facility-emblem { width:46px; height:46px; }.facility-emblem svg { width:17px; height:17px; }.cute-hub-nav { height:62px; min-height:62px; padding-bottom:4px; }.cute-hub-nav .nav-emblem { width:32px; height:32px; }.cute-hub-nav .cute-nav-expedition { min-height:52px; margin-top:-7px; }.cute-hub-nav .cute-nav-expedition .nav-emblem { width:39px; height:39px; }.cute-expedition-button i,.cute-expedition-button i img { width:38px; height:38px; }
 }
