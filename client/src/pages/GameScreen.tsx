@@ -7,6 +7,7 @@ import "./dailyCelebration.css";
 import "./islandLobby.css";
 import "./simpleCuteLobby.css";
 import "./courtyardEntranceTheme.css";
+import "./courtyardSignboards.css";
 import { BatteryCharging, Check, ChevronLeft, Coins, Gem, Gift, Hammer, Heart, Info, Lock, MapPinned, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
@@ -183,7 +184,20 @@ function TitleScreen() {
   </section>;
 }
 
-function ModuleHeader({ moduleId }: { moduleId: LobbyModuleId }) { const { openScreen } = useGameStore(); const module = LOBBY_MODULES[moduleId]; return <><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />返回大廳</button><div className="module-heading"><i>{module.icon}</i><div><p className="screen-kicker">{module.eyebrow}</p><h2>{module.title}</h2><p>{module.summary}</p></div></div></>; }
+type CourtyardSignKind = LobbyModuleId | "guide" | "team" | "leader";
+
+const MODULE_SIGN_META: Record<LobbyModuleId, { location: string; icon: React.ReactNode }> = {
+  equipment: { location: "城堡工坊巷", icon: <Hammer size={26} /> },
+  shop: { location: "庭院市集", icon: <Coins size={26} /> },
+  daily: { location: "花園日誌亭", icon: <Gift size={26} /> },
+  dungeon: { location: "月影符文門", icon: <Swords size={26} /> },
+};
+
+function CourtyardSignboard({ kind, location, title, summary, icon }: { kind: CourtyardSignKind; location: string; title: string; summary: string; icon: React.ReactNode }) {
+  return <header className={`courtyard-signboard sign-${kind}`}><i className="sign-emblem" aria-hidden="true">{icon}</i><div className="sign-plaque"><span className="sign-nail sign-nail-left" /><span className="sign-nail sign-nail-right" /><p>{location}</p><h2>{title}</h2><small>{summary}</small></div></header>;
+}
+
+function ModuleHeader({ moduleId }: { moduleId: LobbyModuleId }) { const { openScreen } = useGameStore(); const module = LOBBY_MODULES[moduleId]; const sign = MODULE_SIGN_META[moduleId]; return <><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />返回大廳</button><CourtyardSignboard kind={moduleId} location={sign.location} title={module.title} summary={module.summary} icon={sign.icon} /></>; }
 
 const SLOT_LABELS: Record<EquipmentSlot, string> = { weapon: "武器", armor: "護甲", relic: "遺物" };
 
@@ -229,7 +243,7 @@ function TeamScreen() {
   const { openScreen, selectedHeroes, selectedDungeonId, toggleTeamHero } = useGameStore();
   return <section className="selection-screen">
     <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到舞台</button>
-    <p className="screen-kicker">第一步 · 編排隊伍</p><h2>選擇三位登場英雄</h2><p className="screen-subtitle">每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。</p>
+    <CourtyardSignboard kind="team" location="遠征旗亭 · 第一步" title="選擇三位登場英雄" summary="每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。" icon={<Swords size={26} />} />
     {selectedDungeonId && <div className="dungeon-launch-note"><ShieldCheck size={15} />即將挑戰：{DUNGEONS.find((dungeon) => dungeon.id === selectedDungeonId)?.title} · 進入命運舞台時扣除體力</div>}<div className="selection-count"><span>{selectedHeroes.length}</span>/3 已選</div>
     <div className="hero-choice-grid">{SELECTABLE_HERO_IDS.map((heroId) => {
       const definition = HEROES[heroId]; const selected = selectedHeroes.includes(heroId);
@@ -243,7 +257,7 @@ function LeaderScreen() {
   const { openScreen, selectedHeroes, leaderId, chooseLeader, startRun } = useGameStore();
   return <section className="selection-screen leader-screen">
     <button className="back-link" onClick={() => openScreen("team")}><ChevronLeft size={19} />重選隊伍</button>
-    <p className="screen-kicker">第二步 · 指定隊長</p><h2>選一位帶領本局</h2><p className="screen-subtitle">骰出四條時，隊長會立刻介入戰局；五條則由全隊合力展開必殺。</p>
+    <CourtyardSignboard kind="leader" location="城門指揮旗 · 第二步" title="選一位帶領本局" summary="骰出四條時，隊長會立刻介入戰局；五條則由全隊合力展開必殺。" icon={<ShieldCheck size={26} />} />
     <div className="leader-list">{selectedHeroes.map((heroId) => <button key={heroId} className={`leader-option ${leaderId === heroId ? "is-selected" : ""}`} style={{ "--hero-color": HEROES[heroId].color } as React.CSSProperties} onClick={() => chooseLeader(heroId)}><LeaderHeroShowcase heroId={heroId} /><div><b>{HEROES[heroId].name}</b><strong><Zap size={15} fill="currentColor" />{leaderSkill[heroId]}</strong></div><span>{leaderId === heroId ? "隊長" : "指定"}</span></button>)}</div>
     <button className="primary-cta wide-cta" onClick={startRun}><Sparkles size={18} />進入命運舞台</button>
   </section>;
@@ -399,7 +413,7 @@ function BattleScreen() {
 
 function GuideScreen() {
   const { openScreen } = useGameStore();
-  return <section className="guide-screen"><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />首頁</button><img className="guide-mark" src={LOGO_URL} alt="" /><p className="screen-kicker">策略圖鑑</p><h2>一局的勝機，從留下一顆骰子開始。</h2><div className="guide-cards"><article><span className="guide-icon dice-icon">⚄</span><h3>1. 留骰與重骰</h3><p>每波有五顆骰與兩次重骰。先點選鎖定值得保留的點數，再重骰其餘骰子。兩回合無組合後，下一回合會保證至少一對。</p></article><article><span className="guide-icon"><Sparkles size={24} /></span><h3>2. 召喚與合成</h3><p>骰型帶來召喚、隊長技或強化。三名同職、同階英雄點選後合成，T1 變 T2，T2 變 T3。棋盤滿時會轉成重整能量。</p></article><article><span className="guide-icon"><Swords size={24} /></span><h3>3. 守住十波</h3><p>英雄會自動迎敵。第 3、6、9 波後從三項天賦中選擇一項；第 10 波以雙階段 Boss 作為終幕。城堡生命歸零即失敗。</p></article></div><h3 className="dice-guide-heading">骰型一覽</h3><div className="combo-table">{Object.values(DICE_COMBINATIONS).slice().reverse().map((combo) => <div key={combo.kind}><b>{combo.label}</b><span>{combo.description}</span></div>)}</div><button className="primary-cta wide-cta" onClick={() => openScreen("team")}><Play size={17} fill="currentColor" />現在開演</button></section>;
+  return <section className="guide-screen"><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />首頁</button><CourtyardSignboard kind="guide" location="星圖檔案亭" title="一局的勝機，從留下一顆骰子開始。" summary="策略圖鑑 · 在出發前熟悉命運骰、召喚與守城規則。" icon={<img className="sign-logo-crest" src={LOGO_URL} alt="" />} /><div className="guide-cards"><article><span className="guide-icon dice-icon">⚄</span><h3>1. 留骰與重骰</h3><p>每波有五顆骰與兩次重骰。先點選鎖定值得保留的點數，再重骰其餘骰子。兩回合無組合後，下一回合會保證至少一對。</p></article><article><span className="guide-icon"><Sparkles size={24} /></span><h3>2. 召喚與合成</h3><p>骰型帶來召喚、隊長技或強化。三名同職、同階英雄點選後合成，T1 變 T2，T2 變 T3。棋盤滿時會轉成重整能量。</p></article><article><span className="guide-icon"><Swords size={24} /></span><h3>3. 守住十波</h3><p>英雄會自動迎敵。第 3、6、9 波後從三項天賦中選擇一項；第 10 波以雙階段 Boss 作為終幕。城堡生命歸零即失敗。</p></article></div><h3 className="dice-guide-heading">骰型一覽</h3><div className="combo-table">{Object.values(DICE_COMBINATIONS).slice().reverse().map((combo) => <div key={combo.kind}><b>{combo.label}</b><span>{combo.description}</span></div>)}</div><button className="primary-cta wide-cta" onClick={() => openScreen("team")}><Play size={17} fill="currentColor" />現在開演</button></section>;
 }
 
 export default function GameScreen() {
