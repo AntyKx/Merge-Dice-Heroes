@@ -13,6 +13,7 @@ import { BatteryCharging, Check, ChevronLeft, Coins, Gem, Gift, Hammer, Heart, I
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
 import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
+import { LEADER_CARD_PROFILES } from "@/game/leaderCardProfiles";
 import { useGameStore } from "@/game/store";
 import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, ShopOfferId, TalentDefinition } from "@/game/types";
 
@@ -75,7 +76,7 @@ const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
   ranger: "/manus-storage/ranger_c3a1fc95.webp",
   bard: "/manus-storage/bard_2a50639e.webp",
   deathKnight: "/manus-storage/death-knight_8d85600c.webp",
-  engineer: "/manus-storage/engineer_6fba977b.webp",
+  engineer: "/manus-storage/engineer_leader_portrait_71b3f059.png",
   fighter: "/manus-storage/fighter_9eaee4ec.webp",
 };
 
@@ -125,10 +126,12 @@ function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal
 
 function LeaderHeroShowcase({ heroId }: { heroId: HeroId }) {
   const definition = HEROES[heroId];
-  const knightIdleLayout = HERO_BOARD_LAYOUT.knight?.idle;
-  const leaderLayout = heroId === "knight" && knightIdleLayout ? { ...knightIdleLayout, shiftX: 12 } : HERO_BOARD_LAYOUT[heroId]?.idle;
-  if (HERO_FRAME_SHEETS[heroId]) return <span className={`leader-hero-showcase hero-${heroId}`} style={{ borderColor: definition.color }} aria-hidden="true"><HeroFrameSprite key={`leader-${heroId}`} heroId={heroId} action="idle" boardLayout={leaderLayout} /></span>;
-  return <HeroPortrait heroId={heroId} size="large" />;
+  const profile = LEADER_CARD_PROFILES[heroId];
+  const idleLayout = HERO_BOARD_LAYOUT[heroId]?.idle;
+  const leaderLayout = idleLayout ? { ...idleLayout, scale: idleLayout.scale * profile.frameScale, shiftX: profile.shiftX, shiftY: idleLayout.shiftY + profile.shiftY } : undefined;
+  const stageStyle = { borderColor: definition.color, "--leader-sky": profile.sky, "--leader-ground": profile.ground, "--leader-glow": profile.glow, "--leader-accent": profile.accent } as React.CSSProperties;
+  if (HERO_FRAME_SHEETS[heroId] && !profile.usePortrait) return <span className={`leader-hero-showcase leader-stage--${heroId}`} style={stageStyle} aria-hidden="true"><i className="leader-stage-aura" /><span className="leader-stage-emblem">{profile.emblem}</span><small className="leader-stage-label">{profile.stageLabel}</small><HeroFrameSprite key={`leader-${heroId}`} heroId={heroId} action="idle" boardLayout={leaderLayout} /></span>;
+  return <span className={`leader-hero-showcase leader-stage--${heroId} leader-stage--static`} style={stageStyle} aria-hidden="true"><i className="leader-stage-aura" /><span className="leader-stage-emblem">{profile.emblem}</span><small className="leader-stage-label">{profile.stageLabel}</small><span className="leader-static-portrait" style={{ transform: `translate(calc(-50% + ${profile.shiftX}px), calc(-50% + ${profile.shiftY}px)) scale(${profile.frameScale})` }}>{profile.usePortrait && HERO_PORTRAITS[heroId] ? <img className="leader-static-art" src={HERO_PORTRAITS[heroId]} alt="" /> : <HeroPortrait heroId={heroId} size="large" />}</span></span>;
 }
 
 function Header() {
@@ -275,10 +278,18 @@ function TeamScreen() {
 
 function LeaderScreen() {
   const { openScreen, selectedHeroes, leaderId, chooseLeader, startRun } = useGameStore();
+  const previewAllLeaders = new URLSearchParams(window.location.search).get("leaderPreview") === "all";
+  const leaderPreviewOffset = Math.max(0, Number.parseInt(new URLSearchParams(window.location.search).get("leaderPreviewOffset") ?? "0", 10) || 0);
+  const displayedLeaderIds = previewAllLeaders ? SELECTABLE_HERO_IDS.slice(leaderPreviewOffset, leaderPreviewOffset + 5) : selectedHeroes;
   return <section className="selection-screen leader-screen">
     <button className="back-link" onClick={() => openScreen("team")}><ChevronLeft size={19} />重選隊伍</button>
     <CourtyardSignboard kind="leader" location="城門指揮旗 · 第二步" title="選一位帶領本局" summary="骰出四條時，隊長會立刻介入戰局；五條則由全隊合力展開必殺。" icon={<ShieldCheck size={26} />} />
-    <div className="leader-list">{selectedHeroes.map((heroId) => <button key={heroId} className={`leader-option ${leaderId === heroId ? "is-selected" : ""}`} style={{ "--hero-color": HEROES[heroId].color } as React.CSSProperties} onClick={() => chooseLeader(heroId)}><LeaderHeroShowcase heroId={heroId} /><div><b>{HEROES[heroId].name}</b><strong><Zap size={15} fill="currentColor" />{leaderSkill[heroId]}</strong></div><span>{leaderId === heroId ? "隊長" : "指定"}</span></button>)}</div>
+    <div className="leader-list">{displayedLeaderIds.map((heroId) => {
+      const definition = HEROES[heroId];
+      const profile = LEADER_CARD_PROFILES[heroId];
+      const cardStyle = { "--hero-color": definition.color, "--leader-accent": profile.accent, "--leader-glow": profile.glow } as React.CSSProperties;
+      return <button key={heroId} className={`leader-option leader-card--${heroId} ${leaderId === heroId ? "is-selected" : ""}`} style={cardStyle} onClick={() => chooseLeader(heroId)}><LeaderHeroShowcase heroId={heroId} /><div className="leader-card-copy"><p className="leader-card-role"><i>{profile.emblem}</i>{profile.roleLabel}</p><b>{definition.name}</b><strong><Zap size={15} fill="currentColor" />{leaderSkill[heroId]}</strong></div><span>{leaderId === heroId ? "隊長" : "指定"}</span></button>;
+    })}</div>
     <button className="primary-cta wide-cta" onClick={startRun}><Sparkles size={18} />進入命運舞台</button>
   </section>;
 }
