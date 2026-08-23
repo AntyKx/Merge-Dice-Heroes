@@ -1,0 +1,10 @@
+{
+  "name": "Merge Dice Heroes",
+  "short_name": "Dice Heroes",
+  "description": "骰子策略、英雄合成與自動塔防的直式單局遊戲。",
+  "lang": "zh-Hant",
+  "display": "standalone",
+  "start_url": "/",
+  "background_color": "#f8f0df",
+  "theme_color": "#20A690"
+}

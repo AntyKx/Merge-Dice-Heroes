@@ -1,0 +1,8 @@
+/* 精靈骰塔劇場：每日獎勵以短暫金杏光感慶祝，維持暖色紙雕舞台的節奏且尊重減少動態偏好。 */
+.lobby-module-screen.accent-coral { position:relative; isolation:isolate; }
+.daily-celebration-flare { position:fixed; z-index:-1; inset:-30vmax; pointer-events:none; opacity:0; background:radial-gradient(circle at 50% 38%,rgba(255,241,156,.76),rgba(250,160,95,.3) 25%,transparent 58%); }
+.is-reward-celebrating .daily-celebration-flare { animation:dailyRewardFlare 1.5s var(--ease-out) both; }
+.is-reward-celebrating .quest-list { animation:rewardLift .5s .05s var(--ease-out) both; }
+@keyframes dailyRewardFlare { 0% { opacity:0; transform:scale(.55); } 18% { opacity:1; } 58% { opacity:.7; transform:scale(1.12); } 100% { opacity:0; transform:scale(1.35); } }
+@keyframes rewardLift { 0% { filter:brightness(1); transform:translateY(0); } 35% { filter:brightness(1.18); transform:translateY(-3px); } 100% { filter:brightness(1); transform:translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .is-reward-celebrating .daily-celebration-flare,.is-reward-celebrating .quest-list { animation:none; } }
