@@ -20,6 +20,7 @@ const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
+const CASTLE_WALKWAY_PARTY_URL = "/manus-storage/castle-walkway-party-transparent_1070719d.png";
 const ASTERVOW_ICON_URLS = {
   equipment: "/manus-storage/equipment_b47d9ea9.png",
   shop: "/manus-storage/shop_410470c0.png",
@@ -184,6 +185,7 @@ function TitleScreen() {
     </header>
     <section className="cute-story-progress" aria-label="主線進度"><span className="story-scroll-end story-scroll-left" aria-hidden="true" /><span className="story-scroll-end story-scroll-right" aria-hidden="true" /><div><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div><small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small><i><em style={{ width: `${storyProgress}%` }} /></i></section>
     <main className="cute-hub-standby" aria-label="王都遠征入口">
+      <img className="castle-walkway-party" src={CASTLE_WALKWAY_PARTY_URL} alt="" aria-hidden="true" />
       <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><img src={ASTERVOW_ICON_URLS.castle} alt="" /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
       <section className="cute-facility-row" aria-label="王都設施">
         <button className="facility-button facility-forge" onClick={() => openScreen("equipment")}><span className="facility-emblem"><img src={ASTERVOW_ICON_URLS.forge} alt="" /></span><span>裝備</span>{actionNotice.equipment && <i />}</button>

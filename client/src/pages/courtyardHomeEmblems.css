@@ -1,4 +1,4 @@
-/* Design reminder: user-supplied ASTERVOW badge art fills each existing courtyard button frame directly. Avoid a second nested frame; labels remain secondary to the visual emblem. */
+/* Design reminder: user-supplied badge art fills existing courtyard frames directly, while the supplied chibi party anchors the castle walkway without obscuring controls. */
 
 .cute-story-progress {
   overflow:visible;
@@ -80,6 +80,7 @@ html:has(.cute-hub-lobby),body:has(.cute-hub-lobby),#root:has(.cute-hub-lobby),.
 .cute-hub-lobby,.cute-hub-lobby *,.cute-hub-lobby *:before,.cute-hub-lobby *:after { box-sizing:border-box; }
 .cute-hub-lobby button { touch-action:manipulation; -webkit-user-select:none; user-select:none; }
 .cute-hub-standby { position:absolute; z-index:2; top:110px; right:0; bottom:calc(76px + env(safe-area-inset-bottom)); left:0; min-height:0; height:auto; padding:0 0 6px; }
+.castle-walkway-party { position:absolute; z-index:1; bottom:176px; left:50%; width:min(290px,76vw); height:auto; max-height:250px; object-fit:contain; pointer-events:none; filter:drop-shadow(0 6px 3px rgba(70,49,31,.22)); transform:translateX(-50%); transform-origin:center bottom; }
 .cute-hub-nav { height:calc(76px + env(safe-area-inset-bottom)); min-height:76px; padding:2px 22px max(3px,env(safe-area-inset-bottom)); overflow:visible; }
 .cute-hub-nav button,.cute-hub-nav .nav-emblem { overflow:visible; }
 .cute-hub-nav button { gap:0; min-height:62px; font-size:8px; }
@@ -91,5 +92,5 @@ html:has(.cute-hub-lobby),body:has(.cute-hub-lobby),#root:has(.cute-hub-lobby),.
 .facility-emblem { width:52px; height:52px; }
 
 @media (max-height:730px) {
-  .cute-hub-lobby { padding-top:4px; }.cute-story-progress { min-height:31px; margin-top:5px; padding:5px 14px; }.story-scroll-end { top:-3px; height:34px; }.cute-hub-standby { top:98px; bottom:68px; padding-bottom:4px; }.cute-facility-row { gap:5px; margin-top:7px; }.facility-button { min-height:64px; }.facility-emblem { width:46px; height:46px; }.facility-emblem svg { width:17px; height:17px; }.cute-hub-nav { height:68px; min-height:68px; padding:2px 20px 3px; }.cute-hub-nav button { min-height:56px; font-size:7px; }.cute-hub-nav .nav-emblem { width:38px; height:38px; }.cute-hub-nav .cute-nav-expedition { min-height:60px; margin-top:-9px; }.cute-hub-nav .cute-nav-expedition .nav-emblem { width:47px; height:47px; }.cute-expedition-button i,.cute-expedition-button i img { width:38px; height:38px; }
+  .cute-hub-lobby { padding-top:4px; }.cute-story-progress { min-height:31px; margin-top:5px; padding:5px 14px; }.story-scroll-end { top:-3px; height:34px; }.cute-hub-standby { top:98px; bottom:68px; padding-bottom:4px; }.castle-walkway-party { bottom:158px; width:min(255px,73vw); max-height:215px; }.cute-facility-row { gap:5px; margin-top:7px; }.facility-button { min-height:64px; }.facility-emblem { width:46px; height:46px; }.facility-emblem svg { width:17px; height:17px; }.cute-hub-nav { height:68px; min-height:68px; padding:2px 20px 3px; }.cute-hub-nav button { min-height:56px; font-size:7px; }.cute-hub-nav .nav-emblem { width:38px; height:38px; }.cute-hub-nav .cute-nav-expedition { min-height:60px; margin-top:-9px; }.cute-hub-nav .cute-nav-expedition .nav-emblem { width:47px; height:47px; }.cute-expedition-button i,.cute-expedition-button i img { width:38px; height:38px; }
 }
