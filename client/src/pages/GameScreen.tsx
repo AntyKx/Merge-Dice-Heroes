@@ -68,7 +68,15 @@ const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
   ranger: heroSheet("ranger"),
   engineer: heroSheet("engineer"),
   fighter: heroSheet("fighter"),
-  deathKnight: heroSheet("deathKnight"),
+  deathKnight: {
+    source: "/manus-storage/death_knight_new_fixed_canvas_1db47d50.png",
+    totalFrames: 20,
+    actions: {
+      idle: { start: 0, count: 6 },
+      attack: { start: 6, count: 5 },
+      skill: { start: 11, count: 3 },
+    },
+  },
 };
 
 const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
@@ -79,7 +87,7 @@ const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
   frostQueen: "/manus-storage/clean_roster_frostQueen_1eeac3eb.png",
   ranger: "/manus-storage/clean_roster_ranger_f86f8a0b.png",
   bard: "/manus-storage/clean_roster_bard_bb147e2a.png",
-  deathKnight: "/manus-storage/clean_roster_deathKnight_06915998.png",
+  deathKnight: "/manus-storage/death_knight_new_portrait_720e0d1b.png",
   engineer: "/manus-storage/clean_roster_engineer_0d197992.png",
   fighter: "/manus-storage/clean_roster_fighter_87f7f6da.png",
 };
