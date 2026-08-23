@@ -51,7 +51,7 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 20
     },
     "skill": {
-      "scale": 1.8,
+      "scale": 2.3,
       "shiftX": 2,
       "shiftY": 20
     }
@@ -68,7 +68,7 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 20
     },
     "skill": {
-      "scale": 1.65,
+      "scale": 2.3,
       "shiftX": 4,
       "shiftY": 20
     }
@@ -85,7 +85,7 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 20
     },
     "skill": {
-      "scale": 1.75,
+      "scale": 2.3,
       "shiftX": 6,
       "shiftY": 20
     }
@@ -102,7 +102,7 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 20
     },
     "skill": {
-      "scale": 1.8,
+      "scale": 2.15,
       "shiftX": 6,
       "shiftY": 20
     }
@@ -119,7 +119,7 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 20
     },
     "skill": {
-      "scale": 1.75,
+      "scale": 2,
       "shiftX": 10,
       "shiftY": 20
     }
@@ -136,7 +136,7 @@ export const HERO_BOARD_LAYOUT: Partial<Record<HeroId, Record<'idle' | 'attack' 
       "shiftY": 20
     },
     "skill": {
-      "scale": 1.8,
+      "scale": 2.15,
       "shiftX": 2,
       "shiftY": 20
     }
