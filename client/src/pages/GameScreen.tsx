@@ -123,13 +123,13 @@ function AnimatedResourceValue({ value, suffix = "" }: { value: number; suffix?:
   return <b className={isChanging ? "hud-resource-value is-changing" : "hud-resource-value"}>{displayValue}{suffix}</b>;
 }
 
-type HeroAnimationAction = "idle" | "attack" | "skill";
+type HeroAnimationAction = "idle" | "attack" | "skill" | "move";
 
 type FrameRange = { start: number; count: number };
 type HeroFrameSheet = { source: string; totalFrames: number; actions: Record<HeroAnimationAction, FrameRange> };
 
 // Locally self-hosted, foot/center-locked fixed-canvas sheets (decontaminated alpha, no manus-storage dependency).
-const heroSheet = (heroId: string): HeroFrameSheet => ({ source: `/heroes/${heroId}.png`, totalFrames: 14, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 } } });
+const heroSheet = (heroId: string): HeroFrameSheet => ({ source: `/heroes/${heroId}.png`, totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 }, move: { start: 14, count: 6 } } });
 const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
   fireMage: heroSheet("fireMage"),
   knight: heroSheet("knight"),
@@ -140,15 +140,7 @@ const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
   ranger: heroSheet("ranger"),
   engineer: heroSheet("engineer"),
   fighter: heroSheet("fighter"),
-  deathKnight: {
-    source: "/manus-storage/death_knight_new_fixed_canvas_1db47d50.png",
-    totalFrames: 20,
-    actions: {
-      idle: { start: 0, count: 6 },
-      attack: { start: 6, count: 5 },
-      skill: { start: 11, count: 3 },
-    },
-  },
+  deathKnight: heroSheet("deathKnight"),
 };
 
 const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
@@ -244,7 +236,7 @@ function TeamEditFormation({ selectedHeroes, leaderId, onEdit }: { selectedHeroe
       {slots.map((heroId, index) => {
         const hero = heroId ? HEROES[heroId] : null;
         return <span className={`team-edit-formation__marcher ${heroId ? "is-filled" : "is-empty"} marcher-${index + 1}`} key={heroId ?? `empty-${index}`} style={hero ? { "--formation-color": hero.color } as React.CSSProperties : undefined}>
-          {heroId && <HeroPortrait heroId={heroId} size="large" action="idle" animationSignal={index} />}
+          {heroId && <HeroPortrait heroId={heroId} size="large" action="move" animationSignal={index} />}
           {heroId === leaderId && <span className="team-edit-formation__leader-crown" aria-label={`${hero?.name}為目前隊長`}><img src={FORMATION_LEADER_CROWN_URL} alt="" /></span>}
           <em aria-hidden="true">{heroId ? <FormationRoleIcon heroId={heroId} /> : "＋"}</em>
         </span>;
