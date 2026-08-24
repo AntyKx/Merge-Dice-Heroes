@@ -92,13 +92,12 @@ html:has(.cute-hub-lobby),body:has(.cute-hub-lobby),#root:has(.cute-hub-lobby),.
 .cute-hub-lobby::-webkit-scrollbar { display:none; width:0; height:0; }
 .cute-hub-lobby,.cute-hub-lobby *,.cute-hub-lobby *:before,.cute-hub-lobby *:after { box-sizing:border-box; }
 .cute-hub-lobby > * { min-width:0; max-inline-size:100%; }
-.cute-story-progress--stage-frame { position:relative; z-index:4; display:block; width:min(390px,94vw); height:auto; aspect-ratio:1793 / 480; margin:1px auto -2px; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; color:#69401d; overflow:visible; }
+.cute-story-progress--stage-frame { position:relative; z-index:4; display:block; width:min(390px,94vw); height:auto; aspect-ratio:1537 / 497; margin:1px auto -2px; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; color:#69401d; overflow:visible; }
 .cute-story-progress--stage-frame .cute-story-progress__frame { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:fill; pointer-events:none; user-select:none; }
-.cute-story-progress--stage-frame .cute-story-progress__rail-cover { position:absolute; z-index:1; top:68%; left:25%; width:50%; height:20%; border-radius:999px; background:#f3d995; box-shadow:inset 0 1px rgba(255,249,220,.9),inset 0 -1px rgba(169,111,49,.3); pointer-events:none; }
-.cute-story-progress--stage-frame .cute-story-progress__copy { position:absolute; z-index:2; top:39%; left:26%; width:46%; display:grid; gap:1px; min-width:0; text-align:center; }
+.cute-story-progress--stage-frame .cute-story-progress__copy { position:absolute; z-index:1; top:36%; left:30%; width:58%; display:grid; gap:1px; min-width:0; text-align:center; }
 .cute-story-progress--stage-frame .cute-story-progress__copy span { color:#91602b; font-size:clamp(7px,1.8vw,9px); font-weight:950; letter-spacing:.04em; }
 .cute-story-progress--stage-frame .cute-story-progress__copy b { overflow:hidden; color:#6d4422; font-size:clamp(10px,2.5vw,13px); line-height:1.1; text-overflow:ellipsis; text-shadow:0 1px rgba(255,250,218,.85); white-space:nowrap; }
-.cute-story-progress--stage-frame small { position:absolute; z-index:2; top:61%; left:26%; width:46%; color:#98704d; font-size:clamp(6px,1.45vw,8px); font-weight:900; text-align:center; white-space:nowrap; }
+.cute-story-progress--stage-frame small { position:absolute; z-index:1; top:60%; left:30%; width:58%; color:#98704d; font-size:clamp(6px,1.45vw,8px); font-weight:900; text-align:center; white-space:nowrap; }
 .cute-hub-lobby button { touch-action:manipulation; -webkit-user-select:none; user-select:none; }
 .cute-hub-standby { position:absolute; z-index:2; top:100px; right:0; bottom:calc(90px + env(safe-area-inset-bottom)); left:0; min-height:0; height:auto; padding:0; }
 .castle-walkway-party { position:absolute; z-index:1; bottom:136px; left:50%; width:min(290px,76vw); height:auto; max-height:250px; object-fit:contain; pointer-events:none; filter:drop-shadow(0 6px 3px rgba(70,49,31,.22)); transform:translateX(-50%); transform-origin:center bottom; }

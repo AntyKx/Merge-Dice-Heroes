@@ -26,7 +26,7 @@ const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png"
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
 const CASTLE_WALKWAY_PARTY_URL = "/manus-storage/castle-walkway-party-transparent_1070719d.png";
-const STORY_STAGE_FRAME_URL = "/manus-storage/astervow-story-stage-frame_22a0362a.png";
+const STORY_STAGE_FRAME_URL = "/manus-storage/astervow-story-stage-frame-no-arrow_273903ec.png";
 const FORMATION_LEADER_CROWN_URL = "/manus-storage/courtyard-formation-leader-crown_530c6f3a.png";
 const FORMATION_EDIT_EMBLEM_URL = "/manus-storage/formation-edit-feather-emblem_fd598b0e.png";
 const FORMATION_ROLE_ICON_URLS: Partial<Record<HeroId, string>> = {
@@ -289,7 +289,6 @@ function TitleScreen() {
     </header>
     <section className="cute-story-progress cute-story-progress--stage-frame" aria-label="主線進度">
       <img className="cute-story-progress__frame" src={STORY_STAGE_FRAME_URL} alt="" aria-hidden="true" />
-      <span className="cute-story-progress__rail-cover" aria-hidden="true" />
       <div className="cute-story-progress__copy"><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div>
       <small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small>
     </section>
