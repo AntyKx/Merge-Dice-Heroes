@@ -168,18 +168,6 @@ body.lobby-viewport-lock #root {
   overflow: hidden;
 }
 
-/* The embedded preview may reserve scrollbar gutters before CSS layout settles. Remove the lobby frame from document flow so its fixed scene always matches the true visible preview box. */
-body.lobby-viewport-lock #root > .game-frame {
-  position: fixed;
-  inset: 0;
-  width: auto;
-  min-width: 0;
-  max-width: none;
-  height: auto;
-  max-height: none;
-  overflow: hidden;
-}
-
 @layer components {
   /**
    * Custom container utility that centers content and adds responsive padding.
