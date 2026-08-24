@@ -17,3 +17,5 @@
 
 /* HUD asset integration: preserve compact resource capsules while showing supplied resource art at a readable mobile size. */
 .cute-resource__icon { width:18px; height:18px; flex:0 0 18px; object-fit:contain; filter:drop-shadow(0 1px 0 rgba(94,54,30,.35)); }
+.hud-resource-value { display:inline-block; min-width:16px; }.hud-resource-value.is-changing { color:#a35b28; animation:hudResourceTick .36s cubic-bezier(.23,1,.32,1) both; }
+@keyframes hudResourceTick { 0% { opacity:.4; transform:translateY(5px) scale(.86); } 58% { opacity:1; transform:translateY(-2px) scale(1.1); } 100% { transform:translateY(0) scale(1); } }
