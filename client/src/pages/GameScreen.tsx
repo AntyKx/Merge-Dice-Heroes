@@ -236,7 +236,7 @@ function TeamEditFormation({ selectedHeroes, leaderId, onEdit }: { selectedHeroe
       {slots.map((heroId, index) => {
         const hero = heroId ? HEROES[heroId] : null;
         return <span className={`team-edit-formation__marcher ${heroId ? "is-filled" : "is-empty"} marcher-${index + 1}`} key={heroId ?? `empty-${index}`} style={hero ? { "--formation-color": hero.color } as React.CSSProperties : undefined}>
-          {heroId && <HeroPortrait heroId={heroId} size="large" action="move" animationSignal={index} />}
+          {heroId && <HeroPortrait heroId={heroId} size="large" action="idle" animationSignal={index} />}
           {heroId === leaderId && <span className="team-edit-formation__leader-crown" aria-label={`${hero?.name}為目前隊長`}><img src={FORMATION_LEADER_CROWN_URL} alt="" /></span>}
           <em aria-hidden="true">{heroId ? <FormationRoleIcon heroId={heroId} /> : "＋"}</em>
         </span>;
