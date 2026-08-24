@@ -9,7 +9,7 @@ export const defaultProgress: PlayerProgress = {
   wins: 0, losses: 0, bestWave: 0, crystals: 120, sigils: 12, materials: 24, stamina: 20,
   inventory: ["morningBlade", "watcherCloak", "fateDiceBox"], equipmentLevels: { morningBlade: 1, watcherCloak: 1, fateDiceBox: 1 }, equipped: { weapon: "morningBlade", armor: "watcherCloak" },
   daily: { dayKey: todayKey(), battles: 0, merges: 0, victories: 0, claimed: [] }, dungeonClears: {}, shop: defaultShop(),
-  lobbyRead: {},
+  lobbyRead: {}, heroProgress: {},
   settings: { musicEnabled: false, sfxEnabled: true, vibrationEnabled: true },
 };
 
@@ -23,7 +23,7 @@ export function loadProgress(): PlayerProgress {
     const shop = { ...defaultProgress.shop, ...parsed.shop };
     const freshShop = shop.dayKey === todayKey() ? shop : defaultShop();
     const lobbyRead = { ...defaultProgress.lobbyRead, ...parsed.lobbyRead, ...(daily.dayKey !== todayKey() ? { daily: false } : {}), ...(shop.dayKey !== todayKey() ? { shop: false } : {}) };
-    return { ...defaultProgress, ...parsed, inventory: parsed.inventory ?? defaultProgress.inventory, equipmentLevels: { ...defaultProgress.equipmentLevels, ...parsed.equipmentLevels }, equipped: { ...defaultProgress.equipped, ...parsed.equipped }, daily: freshDaily, dungeonClears: { ...defaultProgress.dungeonClears, ...parsed.dungeonClears }, shop: freshShop, lobbyRead, settings: { ...defaultProgress.settings, ...parsed.settings } };
+    return { ...defaultProgress, ...parsed, inventory: parsed.inventory ?? defaultProgress.inventory, equipmentLevels: { ...defaultProgress.equipmentLevels, ...parsed.equipmentLevels }, equipped: { ...defaultProgress.equipped, ...parsed.equipped }, daily: freshDaily, dungeonClears: { ...defaultProgress.dungeonClears, ...parsed.dungeonClears }, shop: freshShop, lobbyRead, heroProgress: { ...defaultProgress.heroProgress, ...parsed.heroProgress }, settings: { ...defaultProgress.settings, ...parsed.settings } };
   } catch { return defaultProgress; }
 }
 

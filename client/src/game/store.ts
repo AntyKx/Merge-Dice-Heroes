@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { emitAudio } from "./audio";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SHOP_OFFERS } from "./config";
+import { awardHeroExperience } from "./heroProgress";
 import { advanceCombat } from "./engine/combat";
 import {
   beginReroll,
@@ -94,6 +95,7 @@ function maybeRecord(previous: RunState | undefined, next: RunState, progress: P
     inventory: victorious && next.dungeonId && DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)?.reward.equipmentId && !progress.inventory.includes(DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)!.reward.equipmentId!) ? [...progress.inventory, DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)!.reward.equipmentId!] : progress.inventory,
     dungeonClears: victorious && next.dungeonId ? { ...progress.dungeonClears, [next.dungeonId]: (progress.dungeonClears[next.dungeonId] ?? 0) + 1 } : progress.dungeonClears,
     daily: victorious ? { ...progress.daily, victories: progress.daily.victories + 1 } : progress.daily,
+    heroProgress: victorious ? awardHeroExperience(progress.heroProgress, previous.selectedHeroes) : progress.heroProgress,
   };
   return persist(updated);
 }

@@ -16,6 +16,7 @@ import { BatteryCharging, Check, ChevronLeft, Coins, Cross, Flame, Gem, Gift, Ha
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
 import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
+import { getHeroProgress, heroXpRequirement } from "@/game/heroProgress";
 import { LEADER_CARD_PROFILES } from "@/game/leaderCardProfiles";
 import { useGameStore } from "@/game/store";
 import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, ShopOfferId, TalentDefinition } from "@/game/types";
@@ -303,8 +304,11 @@ function TitleScreen() {
             const hero = HEROES[heroId];
             const selected = selectedHeroes.includes(heroId);
             const isLeader = leaderId === heroId;
+            const heroProgress = getHeroProgress(progress.heroProgress[heroId]);
+            const requiredExperience = heroXpRequirement(heroProgress.level);
+            const experiencePercent = Math.min(100, Math.round(heroProgress.experience / requiredExperience * 100));
             return <article key={heroId} className={`lobby-team-manager__hero ${selected ? "is-selected" : ""}`} style={{ "--manager-hero-color": hero.color } as React.CSSProperties}>
-              <button className="lobby-team-manager__hero-main" onClick={() => editFormationHero(heroId)}><img src={HERO_PORTRAITS[heroId]} alt="" /><span><b>{hero.name}</b><small>{hero.classLabel}</small></span><i>{selected ? "已上陣" : selectedHeroes.length >= 3 ? "替換" : "加入"}</i></button>
+              <button className="lobby-team-manager__hero-main" onClick={() => editFormationHero(heroId)}><img src={HERO_PORTRAITS[heroId]} alt="" /><span><b>{hero.name}</b><small>{hero.classLabel}</small><strong>Lv.{heroProgress.level} · {heroProgress.experience}/{requiredExperience} EXP</strong><i className="lobby-team-manager__xp"><b style={{ width: `${experiencePercent}%` }} /></i></span><i>{selected ? "已上陣" : selectedHeroes.length >= 3 ? "替換" : "加入"}</i></button>
               {selected && <button className={`lobby-team-manager__leader-choice ${isLeader ? "is-leader" : ""}`} onClick={() => chooseLeader(heroId)} aria-label={`指定 ${hero.name} 為隊長`}><img src={FORMATION_LEADER_CROWN_URL} alt="" /></button>}
             </article>;
           })}
