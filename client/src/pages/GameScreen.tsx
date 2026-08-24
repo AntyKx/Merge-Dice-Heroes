@@ -26,6 +26,19 @@ const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
 const CASTLE_WALKWAY_PARTY_URL = "/manus-storage/castle-walkway-party-transparent_1070719d.png";
 const FORMATION_LEADER_CROWN_URL = "/manus-storage/courtyard-formation-leader-crown_530c6f3a.png";
+const FORMATION_EDIT_EMBLEM_URL = "/manus-storage/formation-edit-feather-emblem_fd598b0e.png";
+const FORMATION_ROLE_ICON_URLS: Partial<Record<HeroId, string>> = {
+  knight: "/manus-storage/knight_6d5e1a4d.png",
+  fireMage: "/manus-storage/fireMage_0825fe58.png",
+  priest: "/manus-storage/priest_3bf2b437.png",
+  assassin: "/manus-storage/assassin_b09e134b.png",
+  frostQueen: "/manus-storage/frostQueen_eae06d67.png",
+  ranger: "/manus-storage/ranger_69c948d0.png",
+  bard: "/manus-storage/bard_f354d6cb.png",
+  deathKnight: "/manus-storage/deathKnight_70c785f2.png",
+  engineer: "/manus-storage/engineer_dbf5edbb.png",
+  fighter: "/manus-storage/fighter_8b188187.png",
+};
 const ASTERVOW_ICON_URLS = {
   equipment: "/manus-storage/equipment_b47d9ea9.png",
   shop: "/manus-storage/shop_410470c0.png",
@@ -153,6 +166,8 @@ function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal
 
 /** Design reminder: the lobby team control mirrors the user's gilded three-slot formation reference while portraits remain live player data. */
 function FormationRoleIcon({ heroId }: { heroId: HeroId }) {
+  const iconUrl = FORMATION_ROLE_ICON_URLS[heroId];
+  if (iconUrl) return <img src={iconUrl} alt="" />;
   if (heroId === "knight") return <Shield size={13} fill="currentColor" />;
   if (heroId === "fireMage") return <Flame size={13} fill="currentColor" />;
   if (heroId === "priest") return <Cross size={13} />;
@@ -180,7 +195,7 @@ function TeamEditFormation({ selectedHeroes, leaderId, onEdit }: { selectedHeroe
           <em aria-hidden="true">{heroId ? <FormationRoleIcon heroId={heroId} /> : "＋"}</em>
         </span>;
       })}
-      <span className="team-edit-formation__edit" aria-hidden="true"><span className="team-edit-formation__edit-fallback"><Settings2 size={18} /></span><small>編輯</small></span>
+      <span className="team-edit-formation__edit" aria-hidden="true"><img src={FORMATION_EDIT_EMBLEM_URL} alt="" /></span>
     </span>
     <span className="team-edit-formation__copy"><small>遠征編隊</small><b>{selectedHeroes.length}/3 名英雄已就位</b></span>
   </button>;
