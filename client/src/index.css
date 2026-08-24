@@ -216,7 +216,7 @@ body.lobby-viewport-lock #root {
 html, body, #root { min-height: 100%; }
 body { margin: 0; min-width: 320px; background: #132238; font-family: "Noto Sans TC", sans-serif; overscroll-behavior: none; }
 button { font-family: inherit; }
-.game-frame { width: min(100vw, 430px); min-height: 100dvh; margin: 0 auto; position: relative; overflow: hidden; color: #17334b; background: #f8f0df; box-shadow: 0 0 0 1px rgba(255,255,255,.16), 0 18px 60px rgba(0,0,0,.35); }
+.game-frame { width: min(100%, 430px); max-width: 100%; min-height: 100dvh; margin: 0 auto; position: relative; overflow: hidden; color: #17334b; background: #f8f0df; box-shadow: 0 0 0 1px rgba(255,255,255,.16), 0 18px 60px rgba(0,0,0,.35); }
 .title-screen, .selection-screen, .guide-screen { min-height: 100dvh; padding: max(24px, env(safe-area-inset-top)) 24px max(28px, env(safe-area-inset-bottom)); position: relative; overflow: hidden; }
 .title-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:radial-gradient(circle at 82% 17%,rgba(246,191,72,.28),transparent 21%),radial-gradient(circle at 18% 64%,rgba(32,166,144,.17),transparent 25%),linear-gradient(155deg,#f9edcf 0%,#f4e6c1 47%,#d5e5da 100%); }
 .title-screen:before,.title-screen:after { content:""; position:absolute; width:260px; height:260px; border:1px solid rgba(24,50,76,.1); border-radius:50%; pointer-events:none; }.title-screen:before { top:-112px; right:-116px; }.title-screen:after { bottom:-130px; left:-135px; }.title-orbit { position:absolute; border:1px dashed rgba(24,50,76,.12); border-radius:50%; }.orbit-one { width:215px; height:215px; top:32px; right:-95px; }.orbit-two { width:180px; height:180px; bottom:58px; left:-98px; }
