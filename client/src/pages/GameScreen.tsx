@@ -12,6 +12,7 @@ import "./courtyardHomeEmblems.css";
 import "./heroCardAlignment.css";
 import "./teamEditFormation.css";
 import "./lobbyTeamManager.css";
+import "./chapterMap.css";
 import { BatteryCharging, Check, ChevronLeft, Coins, Cross, Flame, Gem, Gift, Hand, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
@@ -67,6 +68,14 @@ const LOBBY_WEATHER_META: Record<LobbyWeather, { label: string; detail: string }
   day: { label: "王都微風", detail: "雲飄與林梢輕搖" },
   night: { label: "星夜王都", detail: "塔燈守望中" },
 };
+
+const STORY_CHAPTER_STAGES = [
+  { id: "gate", label: "城門初試", wave: 1, reward: "命運碎晶 ×6", detail: "首通補給：守望素材 ×2" },
+  { id: "garden", label: "庭園伏擊", wave: 3, reward: "命運碎晶 ×8", detail: "首通補給：鍛造銅礦 ×3" },
+  { id: "tower", label: "塔樓守望", wave: 5, reward: "命運碎晶 ×10", detail: "首通補給：英雄經驗 ×20" },
+  { id: "bridge", label: "石橋決戰", wave: 7, reward: "命運碎晶 ×12", detail: "首通補給：鍛造銅礦 ×6" },
+  { id: "boss", label: "命運骰塔之門", wave: 10, reward: "命運碎晶 ×18", detail: "章節通關：王都守望印章" },
+] as const;
 
 type HeroAnimationAction = "idle" | "attack" | "skill";
 
@@ -240,6 +249,9 @@ function TitleScreen() {
   const [scenePreviewMode, setScenePreviewMode] = useState<ScenePreviewMode>("auto");
   const [formationManagerOpen, setFormationManagerOpen] = useState(() => new URLSearchParams(window.location.search).get("manageTeam") === "1");
   const [focusedFormationSlot, setFocusedFormationSlot] = useState(0);
+  const [chapterMapOpen, setChapterMapOpen] = useState(() => new URLSearchParams(window.location.search).get("chapterMap") === "1");
+  const [focusedStageId, setFocusedStageId] = useState<string | null>(null);
+  const [showChapterStamp, setShowChapterStamp] = useState(false);
   useEffect(() => {
     const syncWeather = () => setAutoWeather(getLobbyWeather(new Date()));
     syncWeather();
@@ -261,15 +273,37 @@ function TitleScreen() {
       body.classList.remove("lobby-viewport-lock");
     };
   }, []);
+  useEffect(() => {
+    if (!chapterMapOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setChapterMapOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [chapterMapOpen]);
   const claimableQuests = DAILY_QUESTS.filter((quest) => (quest.id === "battle" ? progress.daily.battles : quest.id === "merge" ? progress.daily.merges : progress.daily.victories) >= quest.target && !progress.daily.claimed.includes(quest.id)).length;
   const hasUpgradeableEquipment = progress.inventory.some((equipmentId) => { const level = progress.equipmentLevels[equipmentId] ?? 1; return level < 5 && progress.materials >= level * 8; });
   const hasDungeonAttempt = DUNGEONS.some((dungeon, index) => (dungeon.unlocked || (index > 0 && (progress.dungeonClears[DUNGEONS[index - 1].id] ?? 0) > 0)) && progress.stamina >= dungeon.energyCost);
   const playerLevel = 1 + Math.floor(progress.wins / 3);
   const levelProgress = (progress.wins % 3) + 1;
   const storyChapter = 1 + Math.floor(progress.wins / 4);
+  const chapterCompleted = progress.bestWave >= STORY_CHAPTER_STAGES.at(-1)!.wave;
+  const currentStoryStage = STORY_CHAPTER_STAGES.find((stage) => progress.bestWave < stage.wave) ?? STORY_CHAPTER_STAGES.at(-1)!;
   const weather = scenePreviewMode === "auto" ? autoWeather : scenePreviewMode;
   const weatherMeta = LOBBY_WEATHER_META[weather];
   const actionNotice: Partial<Record<LobbyModuleId, boolean>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop, daily: claimableQuests > 0 && !progress.lobbyRead.daily, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon };
+  useEffect(() => {
+    if (!chapterCompleted) return;
+    const stampKey = `merge-dice-heroes:chapter-${storyChapter}-stamp`;
+    if (window.sessionStorage.getItem(stampKey)) return;
+    window.sessionStorage.setItem(stampKey, "shown");
+    const enterTimer = window.setTimeout(() => setShowChapterStamp(true), 0);
+    const exitTimer = window.setTimeout(() => setShowChapterStamp(false), 1700);
+    return () => {
+      window.clearTimeout(enterTimer);
+      window.clearTimeout(exitTimer);
+    };
+  }, [chapterCompleted, storyChapter]);
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
   const editFormationHero = (heroId: HeroId) => {
     if (selectedHeroes[focusedFormationSlot] === heroId) {
@@ -287,11 +321,13 @@ function TitleScreen() {
       <button className="cute-resource" onClick={() => openScreen("dungeon")} aria-label={`體力 ${progress.stamina} / 20，前往副本`}><BatteryCharging size={15} /><b>{progress.stamina}/20</b></button>
       <button className="cute-menu" onClick={() => setLobbyTab(lobbyTab === "menu" ? "kingdom" : "menu")} aria-label="開啟王都選單"><Menu size={19} /></button>
     </header>
-    <section className="cute-story-progress cute-story-progress--stage-frame" aria-label="主線進度">
+    <button className="cute-story-progress cute-story-progress--stage-frame" type="button" onClick={() => setChapterMapOpen(true)} aria-label={`開啟第 ${storyChapter} 章地圖，目前 ${currentStoryStage.label}`}>
       <img className="cute-story-progress__frame" src={STORY_STAGE_FRAME_URL} alt="" aria-hidden="true" />
       <div className="cute-story-progress__copy"><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div>
       <small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small>
-    </section>
+      {showChapterStamp && <span className="cute-story-progress__completion-stamp" aria-label="第 1 章完成"><Check size={12} /><b>完成</b></span>}
+      <span className="cute-story-progress__hint" aria-hidden="true">點擊查看章節地圖</span>
+    </button>
     <main className="cute-hub-standby" aria-label="王都遠征入口">
       <img className="castle-walkway-party" src={CASTLE_WALKWAY_PARTY_URL} alt="" aria-hidden="true" />
       <TeamEditFormation selectedHeroes={selectedHeroes} leaderId={leaderId} onEdit={() => setFormationManagerOpen(true)} />
@@ -328,6 +364,25 @@ function TitleScreen() {
           })}
         </div>
         <footer className="lobby-team-manager__footer"><span><Check size={15} />目前編組 {selectedHeroes.length}/3 · 隊長：{HEROES[leaderId].name}</span><button onClick={() => setFormationManagerOpen(false)}>完成編組</button></footer>
+      </section>
+    </div>}
+    {chapterMapOpen && <div className="chapter-map-backdrop" role="dialog" aria-modal="true" aria-label={`第 ${storyChapter} 章完整地圖`}>
+      <section className="chapter-map-sheet">
+        <header className="chapter-map-sheet__header"><div><small>王都主線 · 第 {storyChapter} 章</small><h2>命運骰塔之門</h2><p>選擇節點查看首通獎勵；遠征仍由王都的「開始遠征」啟動。</p></div><button type="button" onClick={() => setChapterMapOpen(false)} aria-label="關閉章節地圖"><X size={20} /></button></header>
+        <div className="chapter-map-sheet__route" aria-label="第 1 章關卡節點">
+          {STORY_CHAPTER_STAGES.map((stage, index) => {
+            const cleared = progress.bestWave >= stage.wave;
+            const current = !cleared && stage.id === currentStoryStage.id;
+            const focused = focusedStageId === stage.id;
+            return <button key={stage.id} type="button" className={`chapter-stage ${cleared ? "is-cleared" : ""} ${current ? "is-current" : ""} ${focused ? "is-focused" : ""}`} onClick={() => setFocusedStageId(focused ? null : stage.id)} aria-label={`${stage.label}，第 ${stage.wave} 波，${cleared ? "已通關" : current ? "目前關卡" : "尚未解鎖"}，獎勵 ${stage.reward}`}>
+              {index > 0 && <span className="chapter-stage__path" aria-hidden="true" />}
+              <span className="chapter-stage__orb">{cleared ? <Check size={15} /> : current ? <Sparkles size={15} /> : <Lock size={13} />}</span>
+              <span className="chapter-stage__name">{stage.label}</span><span className="chapter-stage__wave">WAVE {String(stage.wave).padStart(2, "0")}</span>
+              <span className="chapter-stage__tooltip" role="tooltip"><b>{stage.reward}</b><small>{stage.detail}</small></span>
+            </button>;
+          })}
+        </div>
+        <footer className="chapter-map-sheet__footer"><div><Gift size={17} /><span>章節獎勵：命運碎晶 ×18</span></div>{chapterCompleted ? <span className="chapter-map__stamp" key={`stamp-${progress.bestWave}`}><Check size={21} /><b>章節完成</b></span> : <span>完成 WAVE 10 取得守望印章</span>}</footer>
       </section>
     </div>}
     {lobbyTab === "menu" && <aside className="courtyard-dropdown" aria-label="王都功能選單"><button onClick={() => setLobbyTab("inbox")}><PackageOpen size={16} /><span>收件匣</span>{claimableQuests > 0 && <i />}</button><button onClick={() => setLobbyTab("settings")}><Settings2 size={16} /><span>設定</span></button><button onClick={() => openScreen("guide")}><Sparkles size={16} /><span>圖鑑</span></button><button onClick={() => setLobbyTab("announcements")}><Info size={16} /><span>公告</span></button></aside>}
