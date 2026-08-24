@@ -152,8 +152,9 @@ function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal
 /** Design reminder: the lobby team control mirrors the user's gilded three-slot formation reference while portraits remain live player data. */
 function TeamEditFormation({ selectedHeroes, onEdit }: { selectedHeroes: HeroId[]; onEdit: () => void }) {
   const slots = Array.from({ length: 3 }, (_, index) => selectedHeroes[index] ?? null);
+  const formationClasses = selectedHeroes.map((heroId) => HEROES[heroId].classLabel).join(" · ");
   return <button className="team-edit-formation" onClick={onEdit} aria-label={`編輯遠征隊伍，目前已選 ${selectedHeroes.length} 名英雄`}>
-    <span className="team-edit-formation__crest" aria-hidden="true"><i /> <b>★</b> <i /></span>
+    <span className="team-edit-formation__heading" aria-hidden="true"><i /><small>遠征編制</small><b>{formationClasses || "尚未編組"}</b><i /></span>
     <span className="team-edit-formation__rail">
       {slots.map((heroId, index) => {
         const hero = heroId ? HEROES[heroId] : null;
