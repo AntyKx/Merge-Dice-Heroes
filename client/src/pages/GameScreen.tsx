@@ -70,12 +70,26 @@ const LOBBY_WEATHER_META: Record<LobbyWeather, { label: string; detail: string }
 };
 
 const STORY_CHAPTER_STAGES = [
-  { id: "gate", label: "城門初試", wave: 1, reward: "命運碎晶 ×6", detail: "首通補給：守望素材 ×2" },
-  { id: "garden", label: "庭園伏擊", wave: 3, reward: "命運碎晶 ×8", detail: "首通補給：鍛造銅礦 ×3" },
-  { id: "tower", label: "塔樓守望", wave: 5, reward: "命運碎晶 ×10", detail: "首通補給：英雄經驗 ×20" },
-  { id: "bridge", label: "石橋決戰", wave: 7, reward: "命運碎晶 ×12", detail: "首通補給：鍛造銅礦 ×6" },
-  { id: "boss", label: "命運骰塔之門", wave: 10, reward: "命運碎晶 ×18", detail: "章節通關：王都守望印章" },
+  { id: "gate", label: "城門初試", wave: 1, reward: "命運碎晶 ×6", detail: "首通補給：守望素材 ×2", marker: "shield" },
+  { id: "garden", label: "庭園伏擊", wave: 3, reward: "命運碎晶 ×8", detail: "首通補給：鍛造銅礦 ×3", marker: "flame" },
+  { id: "tower", label: "塔樓守望", wave: 5, reward: "命運碎晶 ×10", detail: "首通補給：英雄經驗 ×20", marker: "sparkle" },
+  { id: "bridge", label: "石橋決戰", wave: 7, reward: "命運碎晶 ×12", detail: "首通補給：鍛造銅礦 ×6", marker: "swords" },
+  { id: "boss", label: "命運骰塔之門", wave: 10, reward: "命運碎晶 ×18", detail: "章節通關：王都守望印章", marker: "crown" },
 ] as const;
+
+const CHAPTER_MAP_THEMES = [
+  { id: "courtyard", label: "王都庭園", backgroundUrl: CUTE_LOBBY_BACKGROUND_URL },
+  { id: "battlefield", label: "城外戰線", backgroundUrl: BACKDROP_URL },
+  { id: "moonlit", label: "月影城垣", backgroundUrl: CUTE_LOBBY_BACKGROUND_URL },
+] as const;
+
+function StoryStageMarker({ marker }: { marker: (typeof STORY_CHAPTER_STAGES)[number]["marker"] }) {
+  if (marker === "flame") return <Flame size={15} />;
+  if (marker === "sparkle") return <Sparkles size={15} />;
+  if (marker === "swords") return <Swords size={15} />;
+  if (marker === "crown") return <ShieldCheck size={15} />;
+  return <Shield size={15} />;
+}
 
 type HeroAnimationAction = "idle" | "attack" | "skill";
 
@@ -251,6 +265,7 @@ function TitleScreen() {
   const [focusedFormationSlot, setFocusedFormationSlot] = useState(0);
   const [chapterMapOpen, setChapterMapOpen] = useState(() => new URLSearchParams(window.location.search).get("chapterMap") === "1");
   const [focusedStageId, setFocusedStageId] = useState<string | null>(null);
+  const [rewardBurstStageId, setRewardBurstStageId] = useState<string | null>(null);
   const [showChapterStamp, setShowChapterStamp] = useState(false);
   useEffect(() => {
     const syncWeather = () => setAutoWeather(getLobbyWeather(new Date()));
@@ -289,6 +304,7 @@ function TitleScreen() {
   const storyChapter = 1 + Math.floor(progress.wins / 4);
   const chapterCompleted = progress.bestWave >= STORY_CHAPTER_STAGES.at(-1)!.wave;
   const currentStoryStage = STORY_CHAPTER_STAGES.find((stage) => progress.bestWave < stage.wave) ?? STORY_CHAPTER_STAGES.at(-1)!;
+  const chapterTheme = CHAPTER_MAP_THEMES[(storyChapter - 1) % CHAPTER_MAP_THEMES.length];
   const weather = scenePreviewMode === "auto" ? autoWeather : scenePreviewMode;
   const weatherMeta = LOBBY_WEATHER_META[weather];
   const actionNotice: Partial<Record<LobbyModuleId, boolean>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop, daily: claimableQuests > 0 && !progress.lobbyRead.daily, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon };
@@ -311,6 +327,12 @@ function TitleScreen() {
       return;
     }
     setTeamSlot(focusedFormationSlot, heroId);
+  };
+  const focusChapterStage = (stageId: string, cleared: boolean) => {
+    setFocusedStageId((active) => active === stageId ? null : stageId);
+    if (!cleared) return;
+    setRewardBurstStageId(stageId);
+    window.setTimeout(() => setRewardBurstStageId((active) => active === stageId ? null : active), 700);
   };
   return <section className={`lobby-screen cute-hub-lobby weather-${weather} banner-${bannerStyle} ${departing ? "is-departing" : ""}`}>
     <div className="cute-hub-art" style={{ backgroundImage: `url(${CUTE_LOBBY_BACKGROUND_URL})` }} aria-hidden="true" />
@@ -367,18 +389,19 @@ function TitleScreen() {
       </section>
     </div>}
     {chapterMapOpen && <div className="chapter-map-backdrop" role="dialog" aria-modal="true" aria-label={`第 ${storyChapter} 章完整地圖`}>
-      <section className="chapter-map-sheet">
-        <header className="chapter-map-sheet__header"><div><small>王都主線 · 第 {storyChapter} 章</small><h2>命運骰塔之門</h2><p>選擇節點查看首通獎勵；遠征仍由王都的「開始遠征」啟動。</p></div><button type="button" onClick={() => setChapterMapOpen(false)} aria-label="關閉章節地圖"><X size={20} /></button></header>
+      <section className={`chapter-map-sheet chapter-map-sheet--${chapterTheme.id}`} style={{ "--chapter-map-background": `url(${chapterTheme.backgroundUrl})` } as React.CSSProperties}>
+        <header className="chapter-map-sheet__header"><div><small>王都主線 · 第 {storyChapter} 章 · {chapterTheme.label}</small><h2>命運骰塔之門</h2><p>選擇節點查看首通獎勵；遠征仍由王都的「開始遠征」啟動。</p></div><button type="button" onClick={() => setChapterMapOpen(false)} aria-label="關閉章節地圖"><X size={20} /></button></header>
         <div className="chapter-map-sheet__route" aria-label="第 1 章關卡節點">
           {STORY_CHAPTER_STAGES.map((stage, index) => {
             const cleared = progress.bestWave >= stage.wave;
             const current = !cleared && stage.id === currentStoryStage.id;
             const focused = focusedStageId === stage.id;
-            return <button key={stage.id} type="button" className={`chapter-stage ${cleared ? "is-cleared" : ""} ${current ? "is-current" : ""} ${focused ? "is-focused" : ""}`} onClick={() => setFocusedStageId(focused ? null : stage.id)} aria-label={`${stage.label}，第 ${stage.wave} 波，${cleared ? "已通關" : current ? "目前關卡" : "尚未解鎖"}，獎勵 ${stage.reward}`}>
+            const openingReward = rewardBurstStageId === stage.id;
+            return <button key={stage.id} type="button" className={`chapter-stage ${cleared ? "is-cleared" : ""} ${current ? "is-current" : ""} ${focused ? "is-focused" : ""}`} onClick={() => focusChapterStage(stage.id, cleared)} aria-label={`${stage.label}，第 ${stage.wave} 波，${cleared ? "已通關" : current ? "目前關卡" : "尚未解鎖"}，獎勵 ${stage.reward}`}>
               {index > 0 && <span className="chapter-stage__path" aria-hidden="true" />}
-              <span className="chapter-stage__orb">{cleared ? <Check size={15} /> : current ? <Sparkles size={15} /> : <Lock size={13} />}</span>
+              <span className="chapter-stage__orb">{cleared ? <Check size={15} /> : current ? <StoryStageMarker marker={stage.marker} /> : <Lock size={13} />}</span>
               <span className="chapter-stage__name">{stage.label}</span><span className="chapter-stage__wave">WAVE {String(stage.wave).padStart(2, "0")}</span>
-              <span className="chapter-stage__tooltip" role="tooltip"><b>{stage.reward}</b><small>{stage.detail}</small></span>
+              <span className="chapter-stage__tooltip" role="tooltip"><span className={`chapter-stage__chest ${cleared ? "is-unlocked" : ""} ${openingReward ? "is-opening" : ""}`}><Gift size={15} /></span><span><b>{stage.reward}</b><small>{cleared ? "首通寶箱已開啟" : stage.detail}</small></span></span>
             </button>;
           })}
         </div>
