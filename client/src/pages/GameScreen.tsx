@@ -26,7 +26,6 @@ const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
-const CASTLE_WALKWAY_PARTY_URL = "/manus-storage/castle-walkway-party-transparent_1070719d.png";
 const STORY_STAGE_FRAME_URL = "/manus-storage/astervow-story-stage-frame-ultra-slim_f3d08c10.png";
 const HUD_RESOURCE_ICON_URLS = {
   coins: "/manus-storage/astervow-hud-coin_72c66ed6.png",
@@ -412,7 +411,6 @@ function TitleScreen() {
       <span className="cute-story-progress__hint" aria-hidden="true">點擊查看章節地圖</span>
     </button>
     <main className="cute-hub-standby" aria-label="王都遠征入口">
-      <img className="castle-walkway-party" src={CASTLE_WALKWAY_PARTY_URL} alt="" aria-hidden="true" />
       <TeamEditFormation selectedHeroes={selectedHeroes} leaderId={leaderId} onEdit={() => setFormationManagerOpen(true)} />
       <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><img src={ASTERVOW_ICON_URLS.castle} alt="" /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
     </main>
