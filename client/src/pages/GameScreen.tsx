@@ -273,14 +273,13 @@ function TitleScreen() {
     </main>
     {formationManagerOpen && <div className="lobby-team-manager-backdrop" role="dialog" aria-modal="true" aria-label="王都隊伍管理">
       <section className="lobby-team-manager">
-        <header className="lobby-team-manager__header"><div><small>王都編組台 · 不啟動遠征</small><h2>管理目前隊伍</h2><p>更換英雄或點選已上陣英雄指定為隊長，完成後直接回到大廳。</p></div><button onClick={() => setFormationManagerOpen(false)} aria-label="關閉隊伍管理"><X size={20} /></button></header>
+        <header className="lobby-team-manager__header"><div><small>王都編組台 · 不啟動遠征</small><h2>管理目前隊伍</h2></div><button onClick={() => setFormationManagerOpen(false)} aria-label="關閉隊伍管理"><X size={20} /></button></header>
         <div className="lobby-team-manager__formation" aria-label="目前遠征編組">
           {Array.from({ length: 3 }, (_, index) => {
             const heroId = selectedHeroes[index];
             const hero = heroId ? HEROES[heroId] : undefined;
             return <button key={heroId ?? `manager-slot-${index}`} className={`lobby-team-manager__slot ${index === focusedFormationSlot ? "is-focused" : ""} ${heroId ? "is-filled" : "is-empty"}`} onClick={() => setFocusedFormationSlot(index)}>
               {heroId && <img src={HERO_PORTRAITS[heroId]} alt="" />}
-              {heroId === leaderId && <span className="lobby-team-manager__crown"><img src={FORMATION_LEADER_CROWN_URL} alt="" /></span>}
               <small>{hero ? hero.name : "空位"}</small>
               <b>{index === focusedFormationSlot ? "替換目標" : heroId === leaderId ? "目前隊長" : "上陣中"}</b>
             </button>;
@@ -294,7 +293,7 @@ function TitleScreen() {
             const isLeader = leaderId === heroId;
             return <article key={heroId} className={`lobby-team-manager__hero ${selected ? "is-selected" : ""}`} style={{ "--manager-hero-color": hero.color } as React.CSSProperties}>
               <button className="lobby-team-manager__hero-main" onClick={() => editFormationHero(heroId)}><img src={HERO_PORTRAITS[heroId]} alt="" /><span><b>{hero.name}</b><small>{hero.classLabel}</small></span><i>{selected ? "已上陣" : selectedHeroes.length >= 3 ? "替換" : "加入"}</i></button>
-              {selected && <button className={`lobby-team-manager__leader-choice ${isLeader ? "is-leader" : ""}`} onClick={() => chooseLeader(heroId)} aria-label={`指定 ${hero.name} 為隊長`}>{isLeader ? "隊長" : "指定隊長"}</button>}
+              {selected && <button className={`lobby-team-manager__leader-choice ${isLeader ? "is-leader" : ""}`} onClick={() => chooseLeader(heroId)} aria-label={`指定 ${hero.name} 為隊長`}><img src={FORMATION_LEADER_CROWN_URL} alt="" /></button>}
             </article>;
           })}
         </div>
