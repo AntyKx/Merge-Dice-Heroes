@@ -1,0 +1,156 @@
+/* ASTERVOW UI asset pack integration: illustrated backgrounds (with the title banner already
+   baked in) for the 裝備工坊/命運商店/命運副本/英雄編隊 screens, replacing the shared flat
+   parchment gradient + CSS-drawn signboard for just these four destinations. The background is
+   scaled width-locked (background-size:100% auto) so the 1080x1920 source never distorts or gets
+   cropped; container query units (cqw) let the overlaid title text track the baked-in blank
+   banner's exact position (measured ~x=60,y=120,w=960 of the 1080-wide source) at any viewport
+   width, since cqw always resolves against this same element's own content width. */
+
+.lobby-module-screen.skin-equipment,
+.lobby-module-screen.skin-shop,
+.lobby-module-screen.skin-dungeon,
+.selection-screen.skin-team {
+  container-type: inline-size;
+  position: relative;
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: 100% auto;
+}
+.lobby-module-screen.skin-equipment { background-image: url(/ui-astervow/backgrounds/equipment.png); background-color: #f2e0b8; }
+.lobby-module-screen.skin-shop { background-image: url(/ui-astervow/backgrounds/shop.png); background-color: #f3e3bd; }
+.lobby-module-screen.skin-dungeon { background-image: url(/ui-astervow/backgrounds/dungeon.png); background-color: #efdcb8; }
+.selection-screen.skin-team { background-image: url(/ui-astervow/backgrounds/team.png); background-color: #f2e3c0; }
+
+.skin-equipment .back-link,
+.skin-shop .back-link,
+.skin-dungeon .back-link,
+.skin-team .back-link {
+  /* Absolutely positioned so it floats over the top-left corner of the artwork instead of
+     consuming flow height -- otherwise it would push .baked-banner-copy's margin-top down
+     and throw off its alignment with the banner baked into the background. */
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  left: 0;
+  padding: 6px 10px 6px 8px;
+  border: 2px solid #6f4a2c;
+  border-radius: 9px 7px 9px 7px;
+  color: #4a3420;
+  background: linear-gradient(180deg, #fffbe9, #e9c383);
+  box-shadow: inset 0 1px rgba(255, 255, 241, .92), 0 2px 0 #6f4a2c, 0 4px 8px rgba(60, 38, 20, .28);
+}
+
+.baked-banner-copy {
+  /* Negative left/right margin cancels .lobby-module-screen's own 16px padding so this box's
+     edges line up with the background image's true edges -- padding-left/right below then
+     position the text at the exact cqw fraction measured (by eye, on a gridded crop of each
+     background PNG) against the blank plaque baked into the art: left 35%, top 11%, right
+     88.5%, bottom 17.5% of the 1080x1920 source. */
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  width: calc(100% + 32px);
+  margin: 14.5cqw -16px 0;
+  padding: 0 11.5cqw 0 35cqw;
+}
+.selection-screen.skin-team .baked-banner-copy {
+  /* .selection-screen pads 24px (not .lobby-module-screen's 16px) -- cancel that instead. */
+  width: calc(100% + 48px);
+  margin: 14.5cqw -24px 0;
+  display: grid;
+  align-content: center;
+  gap: 0;
+  height: 6.5cqw;
+  overflow: visible;
+}
+.baked-banner-copy p { margin: 0 !important; color: #8a5a1f; font-size: clamp(6px, 1.1cqw, 7px) !important; font-weight: 950; letter-spacing: .06em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.baked-banner-copy h2 { margin: 0 !important; overflow: hidden; color: #55351e; font-family: "Mochiy Pop One", "Noto Sans TC", sans-serif; font-size: clamp(9px, 2.1cqw, 12px) !important; line-height: 1.1 !important; letter-spacing: -.04em; text-overflow: ellipsis; white-space: nowrap; }
+.baked-banner-copy small { display: none !important; }
+
+/* Detail-LOGO icons: 256x256 source art, already trimmed with transparent padding per the
+   asset pack's own README. Default to a small inline glyph size (matching the lucide icons
+   they replace); layout-specific spots opt into a bigger size via a second class. */
+.astervow-icon { display: inline-block; flex: none; width: 15px; height: 15px; object-fit: contain; vertical-align: -3px; }
+.equipment-slot-icon { width: 30px; height: 30px; margin-bottom: 4px; vertical-align: 0; }
+.item-row-icon { width: 24px; height: 24px; vertical-align: 0; }
+.dungeon-stage-badge { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; }
+.skin-dungeon .dungeon-stage-number { position: relative; border: 0; background: none; box-shadow: none; }
+.skin-dungeon .dungeon-stage-number span { position: relative; z-index: 1; }
+
+/* Layout objects (large-card / ability-card) reused as nine-slice frames so list rows and
+   square slot buttons can vary in width/height without stretching the painted corners. */
+.astervow-card {
+  border-style: solid !important;
+  border-width: 14px !important;
+  border-image-source: url(/ui-astervow/panels/large-card.png) !important;
+  border-image-slice: 38 fill !important;
+  border-image-width: 14px !important;
+  border-image-repeat: stretch !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+.astervow-slot {
+  border-style: solid !important;
+  border-width: 16px !important;
+  border-image-source: url(/ui-astervow/panels/ability-card.png) !important;
+  border-image-slice: 62 fill !important;
+  border-image-width: 16px !important;
+  border-image-repeat: stretch !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+.astervow-divider {
+  height: 18px;
+  margin: 10px 0;
+  background: url(/ui-astervow/panels/divider.png) center / 100% 100% no-repeat;
+}
+.astervow-badge {
+  display: inline-grid;
+  place-items: center;
+  margin-left: 6px;
+  padding: 3px 10px;
+  border-style: solid;
+  border-width: 8px;
+  border-image-source: url(/ui-astervow/panels/status-badge.png);
+  border-image-slice: 30 fill;
+  border-image-width: 8px;
+  border-image-repeat: stretch;
+  background: none;
+  color: #6d4422;
+  font-size: 9px;
+  font-weight: 950;
+}
+.astervow-chip {
+  display: inline-grid;
+  place-items: center;
+  padding: 3px 12px;
+  border-style: solid;
+  border-width: 10px;
+  border-image-source: url(/ui-astervow/panels/price-chip.png);
+  border-image-slice: 30 fill;
+  border-image-width: 10px;
+  border-image-repeat: stretch;
+  background: none;
+  color: #6d4422;
+  font-weight: 950;
+}
+
+/* Buttons: six colour-coded nine-slice frames (420x160 source, ~40px/28px slice) mapped onto
+   the existing button classes so each screen's CTA matches its own accent. */
+.astervow-btn {
+  border-style: solid !important;
+  border-width: 10px 12px !important;
+  border-image-slice: 34 44 fill !important;
+  border-image-width: 10px 12px !important;
+  border-image-repeat: stretch !important;
+  background: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+.astervow-btn.is-green { border-image-source: url(/ui-astervow/buttons/primary-green.png) !important; color: #1f4a30 !important; }
+.astervow-btn.is-teal { border-image-source: url(/ui-astervow/buttons/primary-teal.png) !important; color: #123f45 !important; }
+.astervow-btn.is-purple { border-image-source: url(/ui-astervow/buttons/primary-purple.png) !important; color: #3c2a5c !important; }
+.astervow-btn.is-cream { border-image-source: url(/ui-astervow/buttons/secondary-cream.png) !important; color: #5d3925 !important; }
+.astervow-btn.is-red { border-image-source: url(/ui-astervow/buttons/danger-red.png) !important; color: #5a2013 !important; }
+.astervow-btn.is-locked, .astervow-btn:disabled { border-image-source: url(/ui-astervow/buttons/disabled-gray.png) !important; color: #5c5650 !important; }
+.astervow-btn:active { transform: translateY(2px) scale(.98); }
