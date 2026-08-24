@@ -267,7 +267,6 @@ function TitleScreen() {
   const playerLevel = 1 + Math.floor(progress.wins / 3);
   const levelProgress = (progress.wins % 3) + 1;
   const storyChapter = 1 + Math.floor(progress.wins / 4);
-  const storyProgress = Math.max(6, Math.min(100, Math.round(progress.bestWave / 10 * 100)));
   const weather = scenePreviewMode === "auto" ? autoWeather : scenePreviewMode;
   const weatherMeta = LOBBY_WEATHER_META[weather];
   const actionNotice: Partial<Record<LobbyModuleId, boolean>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop, daily: claimableQuests > 0 && !progress.lobbyRead.daily, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon };
@@ -290,9 +289,9 @@ function TitleScreen() {
     </header>
     <section className="cute-story-progress cute-story-progress--stage-frame" aria-label="主線進度">
       <img className="cute-story-progress__frame" src={STORY_STAGE_FRAME_URL} alt="" aria-hidden="true" />
+      <span className="cute-story-progress__rail-cover" aria-hidden="true" />
       <div className="cute-story-progress__copy"><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div>
       <small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small>
-      <i><em style={{ width: `${storyProgress}%` }} /></i>
     </section>
     <main className="cute-hub-standby" aria-label="王都遠征入口">
       <img className="castle-walkway-party" src={CASTLE_WALKWAY_PARTY_URL} alt="" aria-hidden="true" />
