@@ -1,28 +1,28 @@
 /* Design reminder: the pure team-management panel is an in-lobby parchment workshop, never an expedition gate; cards should be clear, warm, compact and hero-led. */
-.lobby-team-manager-backdrop { position: absolute; inset: 0; z-index: 35; display: flex; align-items: flex-end; justify-content: center; padding: 52px 8px 10px; background: rgba(50, 31, 23, .38); backdrop-filter: blur(2px); overscroll-behavior: contain; }
-.lobby-team-manager { display: flex; width: min(100%, 410px); max-height: calc(100dvh - 62px); flex-direction: column; overflow: hidden; border: 3px solid #89522d; border-radius: 24px 24px 17px 17px; color: #5d3822; background: linear-gradient(155deg, #fffbe2 0%, #f7e4a5 100%); box-shadow: 0 8px 0 rgba(83, 43, 24, .28), inset 0 2px #fffdf0; }
-.lobby-team-manager__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 11px 13px 10px; border-bottom: 1px solid rgba(150, 91, 40, .24); background: rgba(255, 248, 214, .7); }
+.lobby-team-manager-backdrop { position: absolute; inset: 0; z-index: 35; display: flex; align-items: flex-end; justify-content: center; padding: 42px 8px 8px; overflow: hidden; background: rgba(50, 31, 23, .38); backdrop-filter: blur(2px); overscroll-behavior: contain; }
+.lobby-team-manager { display: flex; width: min(100%, 410px); max-height: calc(100dvh - 50px); flex-direction: column; overflow: hidden; border: 3px solid #89522d; border-radius: 22px 22px 16px 16px; color: #5d3822; background: linear-gradient(155deg, #fffbe2 0%, #f7e4a5 100%); box-shadow: 0 8px 0 rgba(83, 43, 24, .28), inset 0 2px #fffdf0; }
+.lobby-team-manager__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 8px 11px 7px; border-bottom: 1px solid rgba(150, 91, 40, .24); background: rgba(255, 248, 214, .7); }
 .lobby-team-manager__header small { display: block; margin-bottom: 2px; color: #a96b31; font-size: 9px; font-weight: 900; letter-spacing: .08em; }
-.lobby-team-manager__header h2 { margin: 0; color: #6f4224; font-size: 17px; line-height: 1.1; }
-.lobby-team-manager__header > button { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border: 2px solid #a66a36; border-radius: 50%; color: #8c5429; background: #fff7ce; box-shadow: inset 0 1px #fffdf0; }
-.lobby-team-manager__formation { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 13px 12px 7px; }
-.lobby-team-manager__slot { position: relative; min-width: 0; min-height: 102px; overflow: hidden; border: 2px solid #d2aa59; border-radius: 14px; color: #89542d; background: radial-gradient(circle at 34% 21%, #fffce8 0%, #f5dda0 100%); box-shadow: inset 0 1px #fffdf3; }
+.lobby-team-manager__header h2 { margin: 0; color: #6f4224; font-size: 16px; line-height: 1.1; }
+.lobby-team-manager__header > button { display: grid; width: 28px; height: 28px; flex: 0 0 auto; place-items: center; border: 2px solid #a66a36; border-radius: 50%; color: #8c5429; background: #fff7ce; box-shadow: inset 0 1px #fffdf0; }
+.lobby-team-manager__formation { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px 10px 5px; }
+.lobby-team-manager__slot { position: relative; min-width: 0; min-height: 92px; overflow: hidden; border: 2px solid #d2aa59; border-radius: 13px; color: #89542d; background: radial-gradient(circle at 34% 21%, #fffce8 0%, #f5dda0 100%); box-shadow: inset 0 1px #fffdf3; }
 .lobby-team-manager__slot.is-focused { border-color: #d77536; box-shadow: 0 0 0 2px rgba(242, 155, 67, .3), inset 0 1px #fffdf3; }
-.lobby-team-manager__slot > img { position: absolute; left: 50%; bottom: 27px; width: 72px; height: 72px; object-fit: contain; transform: translateX(-50%); }
-.lobby-team-manager__slot.is-empty::before { content: "＋"; position: absolute; inset: 7px 0 34px; display: grid; place-items: center; color: #d1a262; font-size: 24px; }
+.lobby-team-manager__slot > img { position: absolute; left: 50%; bottom: 25px; width: 64px; height: 64px; object-fit: contain; transform: translateX(-50%); }
+.lobby-team-manager__slot.is-empty::before { content: "＋"; position: absolute; inset: 6px 0 31px; display: grid; place-items: center; color: #d1a262; font-size: 22px; }
 .lobby-team-manager__slot small, .lobby-team-manager__slot b { position: absolute; left: 3px; right: 3px; z-index: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lobby-team-manager__slot small { bottom: 15px; font-size: 9px; font-weight: 900; }
-.lobby-team-manager__slot b { bottom: 3px; color: #a96a35; font-size: 8px; }
+.lobby-team-manager__slot small { bottom: 14px; font-size: 8px; font-weight: 900; }
+.lobby-team-manager__slot b { bottom: 3px; color: #a96a35; font-size: 7px; }
 .lobby-team-manager__crown { position: absolute; top: 2px; left: 2px; z-index: 4; width: 23px; height: 23px; }
 .lobby-team-manager__crown img { position: static; width: 23px; height: 23px; object-fit: contain; transform: none; }
-.lobby-team-manager__tip { display: flex; align-items: center; gap: 5px; margin: 0 12px 7px; padding: 6px 7px; border: 1px dashed rgba(157, 98, 47, .35); border-radius: 9px; color: #946a42; background: rgba(255, 251, 224, .58); font-size: 9px; line-height: 1.25; }
-.lobby-team-manager__roster { display: grid; min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; overflow-y: auto; padding: 0 12px 8px; overscroll-behavior: contain; }
-.lobby-team-manager__hero { position: relative; display: grid; height: 66px; min-height: 66px; grid-template-columns: minmax(0, 1fr); overflow: hidden; border: 2px solid color-mix(in srgb, var(--manager-hero-color) 62%, #d7a759); border-radius: 12px; background: rgba(255, 252, 230, .86); box-shadow: inset 0 1px #fff; }
+.lobby-team-manager__tip { display: flex; align-items: center; gap: 4px; margin: 0 10px 5px; padding: 4px 6px; border: 1px dashed rgba(157, 98, 47, .35); border-radius: 8px; color: #946a42; background: rgba(255, 251, 224, .58); font-size: 8px; line-height: 1.2; }
+.lobby-team-manager__roster { display: grid; min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; overflow-x: hidden; overflow-y: auto; padding: 0 10px 6px; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.lobby-team-manager__hero { position: relative; display: grid; height: 60px; min-height: 60px; grid-template-columns: minmax(0, 1fr); overflow: hidden; border: 2px solid color-mix(in srgb, var(--manager-hero-color) 62%, #d7a759); border-radius: 11px; background: rgba(255, 252, 230, .86); box-shadow: inset 0 1px #fff; }
 .lobby-team-manager__hero.is-selected { background: color-mix(in srgb, var(--manager-hero-color) 12%, #fff9db); }
 .lobby-team-manager__hero-main { display: flex; min-width: 0; height: 100%; align-items: center; gap: 5px; padding: 5px; color: #654022; text-align: left; }
-.lobby-team-manager__hero-main img { width: 42px; height: 42px; flex: 0 0 auto; object-fit: contain; }
+.lobby-team-manager__hero-main img { width: 38px; height: 38px; flex: 0 0 auto; object-fit: contain; }
 .lobby-team-manager__hero-main span { display: grid; min-width: 0; gap: 1px; padding-right: 2px; }
-.lobby-team-manager__hero-main b { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.lobby-team-manager__hero-main b { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .lobby-team-manager__hero-main small { color: #9a724d; font-size: 8px; }
 .lobby-team-manager__hero-main strong { overflow: hidden; color: #7f5a35; font-size: 7px; font-weight: 900; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
 .lobby-team-manager__hero-main > i { margin-left: auto; color: #a36631; font-size: 8px; font-style: normal; font-weight: 900; }
@@ -31,7 +31,7 @@
 .lobby-team-manager__leader-choice { position: absolute; top: 3px; right: 3px; z-index: 2; display: grid; width: 18px; height: 18px; place-items: center; border: 0; padding: 0; background: transparent; opacity: .55; }
 .lobby-team-manager__leader-choice img { width: 18px; height: 18px; object-fit: contain; }
 .lobby-team-manager__leader-choice.is-leader { opacity: 1; filter: saturate(1.12) drop-shadow(0 1px 0 rgba(113, 61, 23, .25)); }
-.lobby-team-manager__footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-top: 1px solid rgba(145, 84, 37, .25); background: #f0ce77; color: #744524; font-size: 10px; font-weight: 900; }
+.lobby-team-manager__footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-top: 1px solid rgba(145, 84, 37, .25); background: #f0ce77; color: #744524; font-size: 9px; font-weight: 900; }
 .lobby-team-manager__footer span { display: flex; min-width: 0; align-items: center; gap: 4px; }
-.lobby-team-manager__footer button { flex: 0 0 auto; border: 2px solid #8d5129; border-radius: 10px; padding: 6px 9px; color: #fff8d7; background: linear-gradient(#d86c38, #ad4e2b); box-shadow: inset 0 1px rgba(255,255,255,.4); font-size: 10px; font-weight: 900; }
-@media (max-height: 700px) { .lobby-team-manager-backdrop { padding-top: 38px; } .lobby-team-manager__formation { padding-top: 9px; } .lobby-team-manager__slot { min-height: 90px; } .lobby-team-manager__slot > img { bottom: 25px; width: 64px; height: 64px; } }
+.lobby-team-manager__footer button { flex: 0 0 auto; border: 2px solid #8d5129; border-radius: 9px; padding: 5px 8px; color: #fff8d7; background: linear-gradient(#d86c38, #ad4e2b); box-shadow: inset 0 1px rgba(255,255,255,.4); font-size: 9px; font-weight: 900; }
+@media (max-height: 700px) { .lobby-team-manager-backdrop { padding-top: 28px; } .lobby-team-manager { max-height: calc(100dvh - 36px); } .lobby-team-manager__formation { padding-top: 7px; } .lobby-team-manager__slot { min-height: 82px; } .lobby-team-manager__slot > img { bottom: 23px; width: 59px; height: 59px; } }

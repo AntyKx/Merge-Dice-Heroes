@@ -308,7 +308,7 @@ function TitleScreen() {
             const requiredExperience = heroXpRequirement(heroProgress.level);
             const experiencePercent = Math.min(100, Math.round(heroProgress.experience / requiredExperience * 100));
             return <article key={heroId} className={`lobby-team-manager__hero ${selected ? "is-selected" : ""}`} style={{ "--manager-hero-color": hero.color } as React.CSSProperties}>
-              <button className="lobby-team-manager__hero-main" onClick={() => editFormationHero(heroId)}><img src={HERO_PORTRAITS[heroId]} alt="" /><span><b>{hero.name}</b><small>{hero.classLabel}</small><strong>Lv.{heroProgress.level} · {heroProgress.experience}/{requiredExperience} EXP</strong><i className="lobby-team-manager__xp"><b style={{ width: `${experiencePercent}%` }} /></i></span><i>{selected ? "已上陣" : selectedHeroes.length >= 3 ? "替換" : "加入"}</i></button>
+              <button className="lobby-team-manager__hero-main" onClick={() => editFormationHero(heroId)}><img src={HERO_PORTRAITS[heroId]} alt="" /><span><b>{hero.name}</b><small>{hero.classLabel}</small><strong>Lv.{heroProgress.level} · {heroProgress.experience}/{requiredExperience}</strong><i className="lobby-team-manager__xp"><b style={{ width: `${experiencePercent}%` }} /></i></span><i>{selected ? "已選" : selectedHeroes.length >= 3 ? "替換" : "加入"}</i></button>
               {selected && <button className={`lobby-team-manager__leader-choice ${isLeader ? "is-leader" : ""}`} onClick={() => chooseLeader(heroId)} aria-label={`指定 ${hero.name} 為隊長`}><img src={FORMATION_LEADER_CROWN_URL} alt="" /></button>}
             </article>;
           })}
