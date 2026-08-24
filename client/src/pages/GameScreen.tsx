@@ -301,6 +301,7 @@ function TitleScreen() {
   const [previewChapterIndex, setPreviewChapterIndex] = useState(() => Math.min(CHAPTER_MAP_THEMES.length - 1, Math.floor(progress.wins / 4)));
   const [showChapterStamp, setShowChapterStamp] = useState(false);
   const [lockedChapterMessage, setLockedChapterMessage] = useState<string | null>(null);
+  const [unlockingChapterIndex, setUnlockingChapterIndex] = useState<number | null>(null);
   useEffect(() => {
     const syncWeather = () => setAutoWeather(getLobbyWeather(new Date()));
     syncWeather();
@@ -380,6 +381,28 @@ function TitleScreen() {
     setRewardBurstStageId(stageId);
     window.setTimeout(() => setRewardBurstStageId((active) => active === stageId ? null : active), 700);
   };
+  const selectChapterPreview = (index: number) => {
+    const unlockWins = index * 4;
+    if (index >= unlockedChapterCount) {
+      setLockedChapterMessage(`需累積 ${unlockWins} 場勝利後解鎖第 ${index + 1} 章`);
+      return;
+    }
+    setLockedChapterMessage(null);
+    const celebrationKey = `merge-dice-heroes:chapter-${index + 1}-unlocked`;
+    const shouldCelebrate = index > 0 && !window.sessionStorage.getItem(celebrationKey);
+    if (!shouldCelebrate) {
+      setPreviewChapterIndex(index);
+      setFocusedStageId(null);
+      return;
+    }
+    window.sessionStorage.setItem(celebrationKey, "shown");
+    setUnlockingChapterIndex(index);
+    window.setTimeout(() => {
+      setPreviewChapterIndex(index);
+      setFocusedStageId(null);
+    }, 280);
+    window.setTimeout(() => setUnlockingChapterIndex(null), 760);
+  };
   return <section className={`lobby-screen cute-hub-lobby weather-${weather} banner-${bannerStyle} ${departing ? "is-departing" : ""}`}>
     <div className="cute-hub-art" style={{ backgroundImage: `url(${CUTE_LOBBY_BACKGROUND_URL})` }} aria-hidden="true" />
     <header className="cute-hub-hud" aria-label="玩家資源">
@@ -441,10 +464,8 @@ function TitleScreen() {
           {CHAPTER_MAP_THEMES.map((theme, index) => {
             const locked = index >= unlockedChapterCount;
             const unlockWins = index * 4;
-            return <button key={theme.id} type="button" className={`${previewChapterIndex === index ? "is-selected " : ""}${locked ? "is-locked" : ""}`} style={{ "--chapter-thumbnail": `url(${theme.backgroundUrl})` } as React.CSSProperties} onClick={() => {
-              if (locked) { setLockedChapterMessage(`需累積 ${unlockWins} 場勝利後解鎖第 ${index + 1} 章`); return; }
-              setLockedChapterMessage(null); setPreviewChapterIndex(index); setFocusedStageId(null);
-            }}><i aria-hidden="true" />{locked && <em aria-hidden="true"><Lock size={10} /></em>}<span>第 {index + 1} 章</span><small>{locked ? `勝利 ${unlockWins} 場解鎖` : theme.label}</small></button>;
+            const unlocking = unlockingChapterIndex === index;
+            return <button key={theme.id} type="button" className={`${previewChapterIndex === index ? "is-selected " : ""}${locked ? "is-locked " : ""}${unlocking ? "is-unlocking" : ""}`} style={{ "--chapter-thumbnail": `url(${theme.backgroundUrl})` } as React.CSSProperties} onClick={() => selectChapterPreview(index)}><i aria-hidden="true" />{(locked || unlocking) && <em aria-hidden="true"><Lock size={10} /></em>}<span>第 {index + 1} 章</span><small>{locked ? `勝利 ${unlockWins} 場解鎖` : unlocking ? "章節解鎖！" : theme.label}</small></button>;
           })}
         </div>
         {lockedChapterMessage && <p className="chapter-map-lock-notice" role="status"><Lock size={12} />{lockedChapterMessage}</p>}
