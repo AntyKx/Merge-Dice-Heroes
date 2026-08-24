@@ -250,6 +250,16 @@ function TitleScreen() {
     window.addEventListener("touchmove", stopLobbyPan, { passive: false });
     return () => window.removeEventListener("touchmove", stopLobbyPan);
   }, []);
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    root.classList.add("lobby-viewport-lock");
+    body.classList.add("lobby-viewport-lock");
+    return () => {
+      root.classList.remove("lobby-viewport-lock");
+      body.classList.remove("lobby-viewport-lock");
+    };
+  }, []);
   const claimableQuests = DAILY_QUESTS.filter((quest) => (quest.id === "battle" ? progress.daily.battles : quest.id === "merge" ? progress.daily.merges : progress.daily.victories) >= quest.target && !progress.daily.claimed.includes(quest.id)).length;
   const hasUpgradeableEquipment = progress.inventory.some((equipmentId) => { const level = progress.equipmentLevels[equipmentId] ?? 1; return level < 5 && progress.materials >= level * 8; });
   const hasDungeonAttempt = DUNGEONS.some((dungeon, index) => (dungeon.unlocked || (index > 0 && (progress.dungeonClears[DUNGEONS[index - 1].id] ?? 0) > 0)) && progress.stamina >= dungeon.energyCost);

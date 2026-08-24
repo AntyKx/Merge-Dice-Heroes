@@ -145,6 +145,29 @@ html, body, #root {
   overflow-x: clip;
 }
 
+/* TitleScreen applies this class directly instead of relying on :has(), which makes the fixed portrait lobby robust inside framed previews. */
+html.lobby-viewport-lock,
+body.lobby-viewport-lock {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  scrollbar-gutter: auto;
+}
+
+body.lobby-viewport-lock #root {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
 @layer components {
   /**
    * Custom container utility that centers content and adds responsive padding.
