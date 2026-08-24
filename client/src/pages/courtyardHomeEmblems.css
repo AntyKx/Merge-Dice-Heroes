@@ -86,10 +86,11 @@
 @keyframes courtyardDropdownIn { from { opacity:0; transform:translateY(-5px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
 
 /* Fixed-screen lobby: no horizontal overscroll, and the action cluster is anchored directly above the compact bottom rail. */
-html:has(.cute-hub-lobby),body:has(.cute-hub-lobby),#root:has(.cute-hub-lobby),.game-frame:has(.cute-hub-lobby) { height:100dvh; min-height:100dvh; max-height:100dvh; overflow:hidden; overflow-x:hidden; overscroll-behavior:none; }
-.game-frame { position:relative; width:100%; max-width:100%; overflow-x:hidden; }
-.cute-hub-lobby { box-sizing:border-box; width:100%; max-width:100%; height:100dvh; min-height:100dvh; max-height:100dvh; padding-bottom:0; overflow:hidden; overscroll-behavior:none; touch-action:none; -webkit-user-select:none; user-select:none; contain:layout paint; }
+html:has(.cute-hub-lobby),body:has(.cute-hub-lobby),#root:has(.cute-hub-lobby),.game-frame:has(.cute-hub-lobby) { height:100dvh; min-height:100dvh; max-height:100dvh; overflow:hidden; overflow-x:hidden; overflow-x:clip; overscroll-behavior:none; }
+.game-frame { position:relative; width:100%; max-width:100%; min-width:0; overflow-x:hidden; overflow-x:clip; }
+.cute-hub-lobby { box-sizing:border-box; width:100%; max-width:100%; min-width:0; height:100dvh; min-height:100dvh; max-height:100dvh; padding-bottom:0; overflow:hidden; overflow-x:clip; overscroll-behavior:none; touch-action:none; -webkit-user-select:none; user-select:none; contain:layout paint; }
 .cute-hub-lobby,.cute-hub-lobby *,.cute-hub-lobby *:before,.cute-hub-lobby *:after { box-sizing:border-box; }
+.cute-hub-lobby > * { min-width:0; max-inline-size:100%; }
 .cute-hub-lobby button { touch-action:manipulation; -webkit-user-select:none; user-select:none; }
 .cute-hub-standby { position:absolute; z-index:2; top:110px; right:0; bottom:calc(76px + env(safe-area-inset-bottom)); left:0; min-height:0; height:auto; padding:0 0 6px; }
 .castle-walkway-party { position:absolute; z-index:1; bottom:136px; left:50%; width:min(290px,76vw); height:auto; max-height:250px; object-fit:contain; pointer-events:none; filter:drop-shadow(0 6px 3px rgba(70,49,31,.22)); transform:translateX(-50%); transform-origin:center bottom; }

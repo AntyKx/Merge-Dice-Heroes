@@ -137,11 +137,12 @@
   }
 }
 
-/* The portrait game never exposes a horizontal document scrollbar. */
-html, #root {
+/* The portrait game never exposes a horizontal document scrollbar. Use clip as the outer hard-stop while older engines retain hidden. */
+html, body, #root {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 @layer components {
