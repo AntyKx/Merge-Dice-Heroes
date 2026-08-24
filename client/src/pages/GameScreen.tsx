@@ -221,7 +221,7 @@ function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal
   return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId}`} style={{ backgroundImage: `url(${HEROES_URL})`, backgroundPosition: classOffset[heroId], borderColor: definition.color }} aria-hidden="true"><span className="hero-sigil"><HeroMark size={size === "large" ? 24 : 16} strokeWidth={2.7} /></span></span>;
 }
 
-/** Design reminder: the lobby team control mirrors the user's gilded three-slot formation reference while portraits remain live player data. */
+/** Design reminder: the lobby team control is a frameless, living march tableau; live player data drives the three heroes and leader state. */
 function FormationRoleIcon({ heroId }: { heroId: HeroId }) {
   const iconUrl = FORMATION_ROLE_ICON_URLS[heroId];
   if (iconUrl) return <img src={iconUrl} alt="" />;
@@ -239,12 +239,12 @@ function FormationRoleIcon({ heroId }: { heroId: HeroId }) {
 
 function TeamEditFormation({ selectedHeroes, leaderId, onEdit }: { selectedHeroes: HeroId[]; leaderId: HeroId; onEdit: () => void }) {
   const slots = Array.from({ length: 3 }, (_, index) => selectedHeroes[index] ?? null);
-  return <button className="team-edit-formation" onClick={onEdit} aria-label={`編輯遠征隊伍，目前已選 ${selectedHeroes.length} 名英雄`}>
-    <span className="team-edit-formation__rail">
+  return <button className="team-edit-formation team-edit-formation--march" onClick={onEdit} aria-label={`編輯遠征隊伍，目前已選 ${selectedHeroes.length} 名英雄`}>
+    <span className="team-edit-formation__marchers">
       {slots.map((heroId, index) => {
         const hero = heroId ? HEROES[heroId] : null;
-        return <span className={`team-edit-formation__slot ${heroId ? "is-filled" : "is-empty"}`} key={heroId ?? `empty-${index}`} style={hero ? { "--formation-color": hero.color } as React.CSSProperties : undefined}>
-          {heroId && <img src={HERO_PORTRAITS[heroId]} alt="" />}
+        return <span className={`team-edit-formation__marcher ${heroId ? "is-filled" : "is-empty"} marcher-${index + 1}`} key={heroId ?? `empty-${index}`} style={hero ? { "--formation-color": hero.color } as React.CSSProperties : undefined}>
+          {heroId && <HeroPortrait heroId={heroId} size="large" action="idle" animationSignal={index} />}
           {heroId === leaderId && <span className="team-edit-formation__leader-crown" aria-label={`${hero?.name}為目前隊長`}><img src={FORMATION_LEADER_CROWN_URL} alt="" /></span>}
           <em aria-hidden="true">{heroId ? <FormationRoleIcon heroId={heroId} /> : "＋"}</em>
         </span>;
