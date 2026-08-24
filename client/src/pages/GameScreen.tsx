@@ -280,6 +280,7 @@ function TitleScreen() {
             const hero = heroId ? HEROES[heroId] : undefined;
             return <button key={heroId ?? `manager-slot-${index}`} className={`lobby-team-manager__slot ${index === focusedFormationSlot ? "is-focused" : ""} ${heroId ? "is-filled" : "is-empty"}`} onClick={() => setFocusedFormationSlot(index)}>
               {heroId && <img src={HERO_PORTRAITS[heroId]} alt="" />}
+              {heroId === leaderId && <span className="lobby-team-manager__crown" aria-label={`${hero?.name}為目前隊長`}><img src={FORMATION_LEADER_CROWN_URL} alt="" /></span>}
               <small>{hero ? hero.name : "空位"}</small>
               <b>{index === focusedFormationSlot ? "替換目標" : heroId === leaderId ? "目前隊長" : "上陣中"}</b>
             </button>;
