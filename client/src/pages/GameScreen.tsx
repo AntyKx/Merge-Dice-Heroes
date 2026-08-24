@@ -24,8 +24,7 @@ const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png"
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
 const CASTLE_WALKWAY_PARTY_URL = "/manus-storage/castle-walkway-party-transparent_1070719d.png";
-const FORMATION_LEADER_CROWN_URL = "/manus-storage/formation-leader-crown_4d99b8db.png";
-const FORMATION_EDIT_EMBLEM_URL = "/manus-storage/formation-edit-emblem_33b082f4.png";
+const FORMATION_LEADER_CROWN_URL = "/manus-storage/courtyard-formation-leader-crown_530c6f3a.png";
 const ASTERVOW_ICON_URLS = {
   equipment: "/manus-storage/equipment_b47d9ea9.png",
   shop: "/manus-storage/shop_410470c0.png",
@@ -180,7 +179,7 @@ function TeamEditFormation({ selectedHeroes, leaderId, onEdit }: { selectedHeroe
           <em aria-hidden="true">{heroId ? <FormationRoleIcon heroId={heroId} /> : "＋"}</em>
         </span>;
       })}
-      <span className="team-edit-formation__edit" aria-hidden="true"><img src={FORMATION_EDIT_EMBLEM_URL} alt="" /><small>編輯</small></span>
+      <span className="team-edit-formation__edit" aria-hidden="true"><span className="team-edit-formation__edit-fallback"><Settings2 size={18} /></span><small>編輯</small></span>
     </span>
     <span className="team-edit-formation__copy"><small>遠征編隊</small><b>{selectedHeroes.length}/3 名英雄已就位</b></span>
   </button>;
