@@ -11,7 +11,7 @@ import "./courtyardSignboards.css";
 import "./courtyardHomeEmblems.css";
 import "./heroCardAlignment.css";
 import "./teamEditFormation.css";
-import { BatteryCharging, Check, ChevronLeft, Coins, Crown, Gem, Gift, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
+import { BatteryCharging, Check, ChevronLeft, Coins, Cross, Flame, Gem, Gift, Hand, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
 import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
@@ -24,6 +24,8 @@ const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png"
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
 const CASTLE_WALKWAY_PARTY_URL = "/manus-storage/castle-walkway-party-transparent_1070719d.png";
+const FORMATION_LEADER_CROWN_URL = "/manus-storage/formation-leader-crown_4d99b8db.png";
+const FORMATION_EDIT_EMBLEM_URL = "/manus-storage/formation-edit-emblem_33b082f4.png";
 const ASTERVOW_ICON_URLS = {
   equipment: "/manus-storage/equipment_b47d9ea9.png",
   shop: "/manus-storage/shop_410470c0.png",
@@ -150,23 +152,35 @@ function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal
 }
 
 /** Design reminder: the lobby team control mirrors the user's gilded three-slot formation reference while portraits remain live player data. */
+function FormationRoleIcon({ heroId }: { heroId: HeroId }) {
+  if (heroId === "knight") return <Shield size={13} fill="currentColor" />;
+  if (heroId === "fireMage") return <Flame size={13} fill="currentColor" />;
+  if (heroId === "priest") return <Cross size={13} />;
+  if (heroId === "assassin") return <Swords size={13} />;
+  if (heroId === "frostQueen") return <Snowflake size={13} />;
+  if (heroId === "ranger") return <Target size={13} />;
+  if (heroId === "bard") return <Music2 size={13} />;
+  if (heroId === "deathKnight") return <Skull size={13} />;
+  if (heroId === "engineer") return <Settings2 size={13} />;
+  return <Hand size={13} fill="currentColor" />;
+}
+
 function TeamEditFormation({ selectedHeroes, leaderId, onEdit }: { selectedHeroes: HeroId[]; leaderId: HeroId; onEdit: () => void }) {
   const slots = Array.from({ length: 3 }, (_, index) => selectedHeroes[index] ?? null);
   const formationClasses = selectedHeroes.map((heroId) => HEROES[heroId].classLabel).join(" · ");
   const leader = HEROES[leaderId];
   return <button className="team-edit-formation" onClick={onEdit} aria-label={`編輯遠征隊伍，目前已選 ${selectedHeroes.length} 名英雄`}>
-    <span className="team-edit-formation__heading"><i /><span className="team-edit-formation__leader"><Crown size={12} fill="currentColor" /><small>隊長</small><b>{leader.name}</b></span><span className="team-edit-formation__classes">{formationClasses || "尚未編組"}</span><i /></span>
+    <span className="team-edit-formation__heading"><i /><span className="team-edit-formation__leader"><img src={FORMATION_LEADER_CROWN_URL} alt="" /><small>隊長</small><b>{leader.name}</b></span><span className="team-edit-formation__classes">{formationClasses || "尚未編組"}</span><i /></span>
     <span className="team-edit-formation__rail">
       {slots.map((heroId, index) => {
         const hero = heroId ? HEROES[heroId] : null;
-        const profile = heroId ? LEADER_CARD_PROFILES[heroId] : null;
         return <span className={`team-edit-formation__slot ${heroId ? "is-filled" : "is-empty"}`} key={heroId ?? `empty-${index}`} style={hero ? { "--formation-color": hero.color } as React.CSSProperties : undefined}>
           {heroId && <img src={HERO_PORTRAITS[heroId]} alt="" />}
-          {heroId === leaderId && <span className="team-edit-formation__leader-crown" aria-label={`${hero?.name}為目前隊長`}><Crown size={13} fill="currentColor" /></span>}
-          <em aria-hidden="true">{profile?.emblem ?? "＋"}</em>
+          {heroId === leaderId && <span className="team-edit-formation__leader-crown" aria-label={`${hero?.name}為目前隊長`}><img src={FORMATION_LEADER_CROWN_URL} alt="" /></span>}
+          <em aria-hidden="true">{heroId ? <FormationRoleIcon heroId={heroId} /> : "＋"}</em>
         </span>;
       })}
-      <span className="team-edit-formation__edit" aria-hidden="true"><Sparkles size={20} /><small>編輯</small></span>
+      <span className="team-edit-formation__edit" aria-hidden="true"><img src={FORMATION_EDIT_EMBLEM_URL} alt="" /><small>編輯</small></span>
     </span>
     <span className="team-edit-formation__copy"><small>遠征編隊</small><b>{selectedHeroes.length}/3 名英雄已就位</b></span>
   </button>;
