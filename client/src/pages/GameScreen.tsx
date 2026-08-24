@@ -182,10 +182,7 @@ function FormationRoleIcon({ heroId }: { heroId: HeroId }) {
 
 function TeamEditFormation({ selectedHeroes, leaderId, onEdit }: { selectedHeroes: HeroId[]; leaderId: HeroId; onEdit: () => void }) {
   const slots = Array.from({ length: 3 }, (_, index) => selectedHeroes[index] ?? null);
-  const formationClasses = selectedHeroes.map((heroId) => HEROES[heroId].classLabel).join(" · ");
-  const leader = HEROES[leaderId];
   return <button className="team-edit-formation" onClick={onEdit} aria-label={`編輯遠征隊伍，目前已選 ${selectedHeroes.length} 名英雄`}>
-    <span className="team-edit-formation__heading"><i /><span className="team-edit-formation__leader"><img src={FORMATION_LEADER_CROWN_URL} alt="" /><small>隊長</small><b>{leader.name}</b></span><span className="team-edit-formation__classes">{formationClasses || "尚未編組"}</span><i /></span>
     <span className="team-edit-formation__rail">
       {slots.map((heroId, index) => {
         const hero = heroId ? HEROES[heroId] : null;
@@ -197,7 +194,6 @@ function TeamEditFormation({ selectedHeroes, leaderId, onEdit }: { selectedHeroe
       })}
       <span className="team-edit-formation__edit" aria-hidden="true"><img src={FORMATION_EDIT_EMBLEM_URL} alt="" /></span>
     </span>
-    <span className="team-edit-formation__copy"><small>遠征編隊</small><b>{selectedHeroes.length}/3 名英雄已就位</b></span>
   </button>;
 }
 
