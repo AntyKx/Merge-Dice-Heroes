@@ -1,54 +1,23 @@
-/* Design reminder: a compact gilded expedition rail, inspired by the user-provided three-portrait composition; hero art is always live from selectedHeroes. */
-.team-edit-formation {
-  position: relative;
-  z-index: 3;
-  display: grid;
-  justify-items: center;
-  width: min(314px, 87vw);
-  margin: 0 0 11px;
-  padding: 4px 6px;
-  border: 3px solid #6e4327;
-  border-radius: 27px 27px 24px 24px;
-  color: #5d3925;
-  background:
-    repeating-linear-gradient(90deg, rgba(150, 94, 40, .08) 0 1px, transparent 1px 13px),
-    linear-gradient(180deg, #fff9db, #efd697 58%, #c68a4d);
-  box-shadow: inset 0 2px rgba(255, 251, 217, .92), inset 0 -3px rgba(97, 48, 25, .3), 0 3px 0 #704127, 0 6px 10px rgba(67, 38, 20, .2);
-  isolation: isolate;
-  text-align: center;
-}
-.team-edit-formation:before,
-.team-edit-formation:after {
-  position: absolute;
-  z-index: -1;
-  top: 19px;
-  width: 13px;
-  height: 28px;
-  border: 2px solid #714125;
-  border-radius: 50%;
-  background: #f4cf72;
-  box-shadow: inset 0 2px #fff6b7;
-  content: "";
-}
-.team-edit-formation:before { left: -8px; }
-.team-edit-formation:after { right: -8px; }
-.team-edit-formation__rail { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 38px; align-items: stretch; width: 100%; min-height: 78px; padding: 3px; overflow: hidden; border: 2px solid rgba(103, 59, 29, .68); border-radius: 20px; background: #683d29; box-shadow: inset 0 2px rgba(255, 255, 255, .8); }
-.team-edit-formation__slot { position: relative; display: grid; place-items: end center; min-width: 0; height: 78px; overflow: hidden; border-right: 2px solid rgba(101, 55, 30, .72); background: radial-gradient(ellipse at 50% 20%, #a9dded, #2672a5 68%, #123e68); box-shadow: inset 0 2px rgba(255,255,255,.55), inset 0 -6px 12px rgba(29, 60, 89, .35); }
-.team-edit-formation__slot:first-child { border-radius: 15px 0 0 15px; }.team-edit-formation__slot:nth-child(2) { background: radial-gradient(ellipse at 50% 20%, #ffe4ab, #df7858 62%, #a33c2c); }.team-edit-formation__slot:nth-child(3) { border-right: 0; border-radius: 0 15px 15px 0; background: radial-gradient(ellipse at 50% 20%, #e0b7ff, #7f4aa8 62%, #452060); }
-.team-edit-formation__slot.is-empty { background: repeating-linear-gradient(135deg, #fff1c0 0 7px, #d9ab63 7px 14px); opacity: .72; }
-.team-edit-formation__slot img { width: 94%; height: 94%; max-width: none; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 3px 2px rgba(54, 31, 18, .32)); }
-.team-edit-formation__leader-crown { position: absolute; z-index: 3; top: 2px; left: 4px; display: grid; width: 23px; height: 20px; place-items: center; }
-.team-edit-formation__leader-crown img { width: 100%; height: 100%; object-fit: contain; }
-.team-edit-formation__slot em { position: absolute; z-index: 4; right: 3px; bottom: 3px; display: grid; width: 21px; height: 21px; place-items: center; border: 0; border-radius: 50%; color: #ffe9a2; background: rgba(65, 37, 27, .18); box-shadow: 0 2px 0 rgba(104, 58, 26, .48); font-size: 10px; font-style: normal; font-weight: 950; }
-.team-edit-formation__slot em img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 1px 0 rgba(255, 248, 205, .6)); }
-.team-edit-formation__slot em svg { stroke-width: 2.15; }
-.team-edit-formation__edit { position: static; z-index: 6; display: grid; width: 36px; height: 36px; place-items: center; align-self: center; justify-self: center; background: transparent; filter: drop-shadow(0 2px 0 rgba(104, 58, 26, .48)); }
-.team-edit-formation__edit img { width: 100%; height: 100%; object-fit: contain; }
-.team-edit-formation:active { transform: translateY(2px) scale(.985); box-shadow: inset 0 2px rgba(255, 251, 217, .92), inset 0 -3px rgba(97, 48, 25, .3), 0 1px 0 #704127; }
-
-@media (max-height: 730px) {
-  .team-edit-formation { width: min(290px, 85vw); margin-bottom: 8px; padding: 3px 5px; }
-  .team-edit-formation__rail { grid-template-columns: repeat(3, minmax(0, 1fr)) 34px; }
-  .team-edit-formation__rail,.team-edit-formation__slot { min-height: 68px; height: 68px; }
-  .team-edit-formation__edit { width: 32px; height: 32px; }
-}
+/* Design reminder: frameless three-hero march tableau on the castle approach. Heroes remain whole, animated, and never obscured by controls. */
+.team-edit-formation { position:relative; z-index:3; display:grid; width:min(286px,80vw); min-height:91px; margin:0 0 12px; padding:0; border:0; color:#5d3925; background:transparent; box-shadow:none; isolation:isolate; text-align:center; }
+.team-edit-formation__marchers { position:relative; display:flex; align-items:end; justify-content:center; width:100%; height:91px; padding-right:34px; }
+.team-edit-formation__marcher { position:relative; display:grid; place-items:end center; width:76px; height:86px; margin:0 -7px; filter:drop-shadow(0 4px 2px rgba(62,46,33,.3)); transform-origin:center bottom; }
+.team-edit-formation__marcher.marcher-2 { z-index:2; width:85px; height:92px; margin-bottom:2px; }
+.team-edit-formation__marcher.marcher-1 { z-index:1; animation:formationMarchLeft 1.55s ease-in-out infinite alternate; }.team-edit-formation__marcher.marcher-2 { animation:formationMarchCenter 1.38s ease-in-out .16s infinite alternate; }.team-edit-formation__marcher.marcher-3 { z-index:1; animation:formationMarchRight 1.62s ease-in-out .28s infinite alternate; }
+.team-edit-formation__marcher .hero-portrait { width:100%; height:100%; overflow:visible; border:0 !important; border-radius:0 !important; background:transparent !important; box-shadow:none; }
+.team-edit-formation__marcher .hero-portrait:after { display:none; }
+.team-edit-formation__marcher .hero-portrait .frame-hero-sprite { transform:scale(1.22) translateY(2%) !important; transform-origin:center bottom; filter:drop-shadow(0 2px 1px rgba(54,31,18,.24)); }
+.team-edit-formation__marcher.is-empty { display:grid; width:57px; height:64px; margin-bottom:5px; place-items:center; border:2px dashed rgba(111,73,42,.63); border-radius:50%; color:#fff4c6; background:rgba(114,77,47,.26); box-shadow:inset 0 1px rgba(255,255,221,.5); }
+.team-edit-formation__marcher.is-empty:before { content:"編組"; font-size:7px; font-weight:950; text-shadow:0 1px #805137; }
+.team-edit-formation__leader-crown { position:absolute; z-index:5; top:0; left:50%; display:grid; width:24px; height:21px; place-items:center; transform:translateX(-50%); filter:drop-shadow(0 1px 0 rgba(103,58,26,.45)); }
+.team-edit-formation__leader-crown img { width:100%; height:100%; object-fit:contain; }
+.team-edit-formation__marcher em { position:absolute; z-index:4; right:4px; bottom:3px; display:grid; width:20px; height:20px; place-items:center; border-radius:50%; color:#ffe9a2; background:rgba(73,46,30,.46); box-shadow:0 2px 0 rgba(104,58,26,.48); font-size:10px; font-style:normal; font-weight:950; }
+.team-edit-formation__marcher em img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 1px 0 rgba(255,248,205,.6)); }
+.team-edit-formation__edit { position:absolute; z-index:6; top:50%; right:0; display:grid; width:34px; height:34px; place-items:center; transform:translateY(-50%); filter:drop-shadow(0 2px 0 rgba(104,58,26,.48)); }
+.team-edit-formation__edit img { width:100%; height:100%; object-fit:contain; }
+.team-edit-formation:active { transform:translateY(2px) scale(.985); }
+@keyframes formationMarchLeft { from { transform:translate(-2px,1px) rotate(-1.5deg); } to { transform:translate(2px,-2px) rotate(1deg); } }
+@keyframes formationMarchCenter { from { transform:translateY(1px) scale(1); } to { transform:translateY(-3px) scale(1.015); } }
+@keyframes formationMarchRight { from { transform:translate(2px,1px) rotate(1.5deg); } to { transform:translate(-2px,-2px) rotate(-1deg); } }
+@media (prefers-reduced-motion:reduce) { .team-edit-formation__marcher { animation:none !important; } }
+@media (max-height:730px) { .team-edit-formation { width:min(266px,78vw); min-height:77px; margin-bottom:8px; }.team-edit-formation__marchers { height:77px; padding-right:31px; }.team-edit-formation__marcher { width:66px; height:74px; margin:0 -7px; }.team-edit-formation__marcher.marcher-2 { width:74px; height:78px; }.team-edit-formation__edit { width:31px; height:31px; }.team-edit-formation__leader-crown { width:21px; height:18px; } }
