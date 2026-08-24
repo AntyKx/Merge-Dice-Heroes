@@ -87,7 +87,7 @@ const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
   frostQueen: "/manus-storage/clean_roster_frostQueen_1eeac3eb.png",
   ranger: "/manus-storage/clean_roster_ranger_f86f8a0b.png",
   bard: "/manus-storage/clean_roster_bard_bb147e2a.png",
-  deathKnight: "/manus-storage/death_knight_new_portrait_720e0d1b.png",
+  deathKnight: "/manus-storage/death_knight_roster_portrait_ed6525af.png",
   engineer: "/manus-storage/clean_roster_engineer_0d197992.png",
   fighter: "/manus-storage/clean_roster_fighter_87f7f6da.png",
 };
@@ -311,11 +311,14 @@ function LobbyModuleScreen({ moduleId }: { moduleId: LobbyModuleId }) {
 
 function TeamScreen() {
   const { openScreen, selectedHeroes, selectedDungeonId, toggleTeamHero } = useGameStore();
+  const rosterPreviewParam = new URLSearchParams(window.location.search).get("rosterPreview");
+  const rosterPreviewHero = SELECTABLE_HERO_IDS.find((heroId) => heroId === rosterPreviewParam);
+  const displayedHeroIds = rosterPreviewHero ? [rosterPreviewHero] : SELECTABLE_HERO_IDS;
   return <section className="selection-screen">
     <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到舞台</button>
     <CourtyardSignboard kind="team" location="遠征旗亭 · 第一步" title="選擇三位登場英雄" summary="每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。" icon={<Swords size={26} />} />
     {selectedDungeonId && <div className="dungeon-launch-note"><ShieldCheck size={15} />即將挑戰：{DUNGEONS.find((dungeon) => dungeon.id === selectedDungeonId)?.title} · 進入命運舞台時扣除體力</div>}<div className="selection-count"><span>{selectedHeroes.length}</span>/3 已選</div>
-    <div className="hero-choice-grid">{SELECTABLE_HERO_IDS.map((heroId) => {
+    <div className="hero-choice-grid">{displayedHeroIds.map((heroId) => {
       const definition = HEROES[heroId]; const selected = selectedHeroes.includes(heroId);
       return <button key={heroId} className={`hero-choice ${selected ? "is-selected" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} onClick={() => toggleTeamHero(heroId)}><span className="hero-choice-art"><img src={HERO_PORTRAITS[heroId]} alt="" /><em>{definition.classLabel}</em></span><div><b>{definition.name}</b><small>{definition.tierNotes[1]}</small></div><i>{selected ? "已選" : "選擇"}</i></button>;
     })}</div>
