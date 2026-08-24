@@ -11,6 +11,7 @@ import "./courtyardSignboards.css";
 import "./courtyardHomeEmblems.css";
 import "./heroCardAlignment.css";
 import "./teamEditFormation.css";
+import "./lobbyTeamManager.css";
 import { BatteryCharging, Check, ChevronLeft, Coins, Cross, Flame, Gem, Gift, Hand, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
@@ -218,12 +219,14 @@ const LOBBY_MODULES: Record<LobbyModuleId, { label: string; title: string; eyebr
 };
 
 function TitleScreen() {
-  const { openScreen, progress, setSetting, selectedHeroes, leaderId } = useGameStore();
+  const { openScreen, progress, setSetting, selectedHeroes, leaderId, setTeamSlot, chooseLeader } = useGameStore();
   const [departing, setDeparting] = useState(false);
   const [lobbyTab, setLobbyTab] = useState<LobbyTab>("kingdom");
   const [bannerStyle, setBannerStyle] = useState<ExpeditionBannerStyle>("verdant");
   const [autoWeather, setAutoWeather] = useState<LobbyWeather>(() => getLobbyWeather(new Date()));
   const [scenePreviewMode, setScenePreviewMode] = useState<ScenePreviewMode>("auto");
+  const [formationManagerOpen, setFormationManagerOpen] = useState(() => new URLSearchParams(window.location.search).get("manageTeam") === "1");
+  const [focusedFormationSlot, setFocusedFormationSlot] = useState(0);
   useEffect(() => {
     const syncWeather = () => setAutoWeather(getLobbyWeather(new Date()));
     syncWeather();
@@ -246,6 +249,13 @@ function TitleScreen() {
   const weatherMeta = LOBBY_WEATHER_META[weather];
   const actionNotice: Partial<Record<LobbyModuleId, boolean>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop, daily: claimableQuests > 0 && !progress.lobbyRead.daily, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon };
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
+  const editFormationHero = (heroId: HeroId) => {
+    if (selectedHeroes[focusedFormationSlot] === heroId) {
+      setTeamSlot(focusedFormationSlot);
+      return;
+    }
+    setTeamSlot(focusedFormationSlot, heroId);
+  };
   return <section className={`lobby-screen cute-hub-lobby weather-${weather} banner-${bannerStyle} ${departing ? "is-departing" : ""}`}>
     <div className="cute-hub-art" style={{ backgroundImage: `url(${CUTE_LOBBY_BACKGROUND_URL})` }} aria-hidden="true" />
     <header className="cute-hub-hud" aria-label="玩家資源">
@@ -258,9 +268,39 @@ function TitleScreen() {
     <section className="cute-story-progress" aria-label="主線進度"><span className="story-scroll-end story-scroll-left" aria-hidden="true" /><span className="story-scroll-end story-scroll-right" aria-hidden="true" /><div><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div><small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small><i><em style={{ width: `${storyProgress}%` }} /></i></section>
     <main className="cute-hub-standby" aria-label="王都遠征入口">
       <img className="castle-walkway-party" src={CASTLE_WALKWAY_PARTY_URL} alt="" aria-hidden="true" />
-      <TeamEditFormation selectedHeroes={selectedHeroes} leaderId={leaderId} onEdit={() => openScreen("team")} />
+      <TeamEditFormation selectedHeroes={selectedHeroes} leaderId={leaderId} onEdit={() => setFormationManagerOpen(true)} />
       <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><img src={ASTERVOW_ICON_URLS.castle} alt="" /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
     </main>
+    {formationManagerOpen && <div className="lobby-team-manager-backdrop" role="dialog" aria-modal="true" aria-label="王都隊伍管理">
+      <section className="lobby-team-manager">
+        <header className="lobby-team-manager__header"><div><small>王都編組台 · 不啟動遠征</small><h2>管理目前隊伍</h2><p>更換英雄或點選已上陣英雄指定為隊長，完成後直接回到大廳。</p></div><button onClick={() => setFormationManagerOpen(false)} aria-label="關閉隊伍管理"><X size={20} /></button></header>
+        <div className="lobby-team-manager__formation" aria-label="目前遠征編組">
+          {Array.from({ length: 3 }, (_, index) => {
+            const heroId = selectedHeroes[index];
+            const hero = heroId ? HEROES[heroId] : undefined;
+            return <button key={heroId ?? `manager-slot-${index}`} className={`lobby-team-manager__slot ${index === focusedFormationSlot ? "is-focused" : ""} ${heroId ? "is-filled" : "is-empty"}`} onClick={() => setFocusedFormationSlot(index)}>
+              {heroId && <img src={HERO_PORTRAITS[heroId]} alt="" />}
+              {heroId === leaderId && <span className="lobby-team-manager__crown"><img src={FORMATION_LEADER_CROWN_URL} alt="" /></span>}
+              <small>{hero ? hero.name : "空位"}</small>
+              <b>{index === focusedFormationSlot ? "替換目標" : heroId === leaderId ? "目前隊長" : "上陣中"}</b>
+            </button>;
+          })}
+        </div>
+        <div className="lobby-team-manager__tip"><Target size={14} />選取上方位置後，點擊下方英雄即可替換；已上陣英雄可換位，點選目前位置可移除。</div>
+        <div className="lobby-team-manager__roster" aria-label="已擁有英雄">
+          {SELECTABLE_HERO_IDS.map((heroId) => {
+            const hero = HEROES[heroId];
+            const selected = selectedHeroes.includes(heroId);
+            const isLeader = leaderId === heroId;
+            return <article key={heroId} className={`lobby-team-manager__hero ${selected ? "is-selected" : ""}`} style={{ "--manager-hero-color": hero.color } as React.CSSProperties}>
+              <button className="lobby-team-manager__hero-main" onClick={() => editFormationHero(heroId)}><img src={HERO_PORTRAITS[heroId]} alt="" /><span><b>{hero.name}</b><small>{hero.classLabel}</small></span><i>{selected ? "已上陣" : selectedHeroes.length >= 3 ? "替換" : "加入"}</i></button>
+              {selected && <button className={`lobby-team-manager__leader-choice ${isLeader ? "is-leader" : ""}`} onClick={() => chooseLeader(heroId)} aria-label={`指定 ${hero.name} 為隊長`}>{isLeader ? "隊長" : "指定隊長"}</button>}
+            </article>;
+          })}
+        </div>
+        <footer className="lobby-team-manager__footer"><span><Check size={15} />目前編組 {selectedHeroes.length}/3 · 隊長：{HEROES[leaderId].name}</span><button onClick={() => setFormationManagerOpen(false)}>完成編組</button></footer>
+      </section>
+    </div>}
     {lobbyTab === "menu" && <aside className="courtyard-dropdown" aria-label="王都功能選單"><button onClick={() => setLobbyTab("inbox")}><PackageOpen size={16} /><span>收件匣</span>{claimableQuests > 0 && <i />}</button><button onClick={() => setLobbyTab("settings")}><Settings2 size={16} /><span>設定</span></button><button onClick={() => openScreen("guide")}><Sparkles size={16} /><span>圖鑑</span></button><button onClick={() => setLobbyTab("announcements")}><Info size={16} /><span>公告</span></button></aside>}
     {lobbyTab === "inbox" && <aside className="cute-hub-sheet courtyard-info-sheet" aria-label="收件匣"><header><span><PackageOpen size={15} />收件匣</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><article><b>每日任務進度</b><p>目前有 <strong>{claimableQuests}</strong> 項每日獎勵可領取。</p><button onClick={() => openScreen("daily")}>前往每日任務</button></article><article><b>命運商店</b><p>{progress.shop.freeRefreshAvailable ? "今日免費刷新可使用。" : "商店商品已準備完成。"}</p><button onClick={() => openScreen("shop")}>查看商店</button></article></aside>}
     {lobbyTab === "announcements" && <aside className="cute-hub-sheet courtyard-info-sheet" aria-label="公告"><header><span><Info size={15} />王都公告</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><article><b>王都導覽更新</b><p>英雄、裝備、商店與副本已收整為底部四項導覽。</p></article><article><b>遠征隊集結</b><p>城堡前走道已成為冒險隊的出發集合點。</p></article></aside>}

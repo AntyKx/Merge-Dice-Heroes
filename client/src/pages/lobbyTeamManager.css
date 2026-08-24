@@ -1,0 +1,34 @@
+/* Design reminder: the pure team-management panel is an in-lobby parchment workshop, never an expedition gate; cards should be clear, warm, compact and hero-led. */
+.lobby-team-manager-backdrop { position: absolute; inset: 0; z-index: 35; display: flex; align-items: flex-end; justify-content: center; padding: 52px 8px 10px; background: rgba(50, 31, 23, .38); backdrop-filter: blur(2px); overscroll-behavior: contain; }
+.lobby-team-manager { display: flex; width: min(100%, 410px); max-height: calc(100dvh - 62px); flex-direction: column; overflow: hidden; border: 3px solid #89522d; border-radius: 24px 24px 17px 17px; color: #5d3822; background: linear-gradient(155deg, #fffbe2 0%, #f7e4a5 100%); box-shadow: 0 8px 0 rgba(83, 43, 24, .28), inset 0 2px #fffdf0; }
+.lobby-team-manager__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 12px 13px 8px; border-bottom: 1px solid rgba(150, 91, 40, .24); background: rgba(255, 248, 214, .7); }
+.lobby-team-manager__header small { display: block; margin-bottom: 2px; color: #a96b31; font-size: 9px; font-weight: 900; letter-spacing: .08em; }
+.lobby-team-manager__header h2 { margin: 0; color: #6f4224; font-size: 17px; line-height: 1.1; }
+.lobby-team-manager__header p { max-width: 276px; margin: 4px 0 0; color: #94704e; font-size: 10px; line-height: 1.25; }
+.lobby-team-manager__header > button { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border: 2px solid #a66a36; border-radius: 50%; color: #8c5429; background: #fff7ce; box-shadow: inset 0 1px #fffdf0; }
+.lobby-team-manager__formation { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 9px 12px 6px; }
+.lobby-team-manager__slot { position: relative; min-width: 0; min-height: 70px; overflow: hidden; border: 2px solid #d2aa59; border-radius: 14px; color: #89542d; background: radial-gradient(circle at 34% 21%, #fffce8 0%, #f5dda0 100%); box-shadow: inset 0 1px #fffdf3; }
+.lobby-team-manager__slot.is-focused { border-color: #d77536; box-shadow: 0 0 0 2px rgba(242, 155, 67, .3), inset 0 1px #fffdf3; }
+.lobby-team-manager__slot img { position: absolute; left: 50%; bottom: 12px; width: 58px; height: 58px; object-fit: contain; transform: translateX(-50%); }
+.lobby-team-manager__slot.is-empty::before { content: "＋"; position: absolute; inset: 7px 0 22px; display: grid; place-items: center; color: #d1a262; font-size: 22px; }
+.lobby-team-manager__slot small, .lobby-team-manager__slot b { position: absolute; left: 3px; right: 3px; z-index: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lobby-team-manager__slot small { bottom: 13px; font-size: 9px; font-weight: 900; }
+.lobby-team-manager__slot b { bottom: 2px; color: #a96a35; font-size: 8px; }
+.lobby-team-manager__crown { position: absolute; top: 1px; left: 50%; z-index: 3; width: 24px; height: 24px; transform: translateX(-50%); }
+.lobby-team-manager__crown img { position: static; width: 24px; height: 24px; transform: none; }
+.lobby-team-manager__tip { display: flex; align-items: center; gap: 5px; margin: 0 12px 7px; padding: 6px 7px; border: 1px dashed rgba(157, 98, 47, .35); border-radius: 9px; color: #946a42; background: rgba(255, 251, 224, .58); font-size: 9px; line-height: 1.25; }
+.lobby-team-manager__roster { display: grid; min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; overflow-y: auto; padding: 0 12px 8px; overscroll-behavior: contain; }
+.lobby-team-manager__hero { display: grid; grid-template-columns: minmax(0, 1fr); overflow: hidden; border: 2px solid color-mix(in srgb, var(--manager-hero-color) 62%, #d7a759); border-radius: 12px; background: rgba(255, 252, 230, .86); box-shadow: inset 0 1px #fff; }
+.lobby-team-manager__hero.is-selected { background: color-mix(in srgb, var(--manager-hero-color) 12%, #fff9db); }
+.lobby-team-manager__hero-main { display: flex; min-width: 0; align-items: center; gap: 5px; padding: 5px; color: #654022; text-align: left; }
+.lobby-team-manager__hero-main img { width: 37px; height: 37px; flex: 0 0 auto; object-fit: contain; }
+.lobby-team-manager__hero-main span { display: grid; min-width: 0; gap: 1px; }
+.lobby-team-manager__hero-main b { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.lobby-team-manager__hero-main small { color: #9a724d; font-size: 8px; }
+.lobby-team-manager__hero-main i { margin-left: auto; color: #a36631; font-size: 8px; font-style: normal; font-weight: 900; }
+.lobby-team-manager__leader-choice { border-top: 1px solid rgba(152, 92, 41, .2); padding: 4px; color: #98602f; background: rgba(250, 224, 136, .38); font-size: 9px; font-weight: 900; }
+.lobby-team-manager__leader-choice.is-leader { color: #7d4a23; background: rgba(242, 180, 65, .58); }
+.lobby-team-manager__footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-top: 1px solid rgba(145, 84, 37, .25); background: #f0ce77; color: #744524; font-size: 10px; font-weight: 900; }
+.lobby-team-manager__footer span { display: flex; min-width: 0; align-items: center; gap: 4px; }
+.lobby-team-manager__footer button { flex: 0 0 auto; border: 2px solid #8d5129; border-radius: 10px; padding: 6px 9px; color: #fff8d7; background: linear-gradient(#d86c38, #ad4e2b); box-shadow: inset 0 1px rgba(255,255,255,.4); font-size: 10px; font-weight: 900; }
+@media (max-height: 700px) { .lobby-team-manager-backdrop { padding-top: 38px; } .lobby-team-manager__header p { display: none; } .lobby-team-manager__formation { padding-top: 6px; } .lobby-team-manager__slot { min-height: 61px; } .lobby-team-manager__slot img { width: 50px; height: 50px; } }
