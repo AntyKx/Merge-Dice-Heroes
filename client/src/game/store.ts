@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { emitAudio } from "./audio";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SHOP_OFFERS } from "./config";
+import { awardHeroExperience } from "./heroProgress";
 import { advanceCombat } from "./engine/combat";
 import {
   beginReroll,
@@ -38,6 +39,7 @@ interface GameStore {
   showDebug: boolean;
   openScreen: (screen: GameScreen) => void;
   toggleTeamHero: (heroId: HeroId) => void;
+  setTeamSlot: (slotIndex: number, heroId?: HeroId) => void;
   chooseLeader: (heroId: HeroId) => void;
   startRun: () => void;
   selectDungeon: (dungeonId: DungeonId) => void;
@@ -93,6 +95,7 @@ function maybeRecord(previous: RunState | undefined, next: RunState, progress: P
     inventory: victorious && next.dungeonId && DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)?.reward.equipmentId && !progress.inventory.includes(DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)!.reward.equipmentId!) ? [...progress.inventory, DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)!.reward.equipmentId!] : progress.inventory,
     dungeonClears: victorious && next.dungeonId ? { ...progress.dungeonClears, [next.dungeonId]: (progress.dungeonClears[next.dungeonId] ?? 0) + 1 } : progress.dungeonClears,
     daily: victorious ? { ...progress.daily, victories: progress.daily.victories + 1 } : progress.daily,
+    heroProgress: victorious ? awardHeroExperience(progress.heroProgress, previous.selectedHeroes) : progress.heroProgress,
   };
   return persist(updated);
 }
@@ -122,7 +125,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const leaderId = selectedHeroes.includes(state.leaderId) ? state.leaderId : selectedHeroes[0] ?? "knight";
     return { selectedHeroes, leaderId };
   }),
-  chooseLeader: (leaderId) => set({ leaderId }),
+  setTeamSlot: (slotIndex, heroId) => set((state) => {
+    if (slotIndex < 0 || slotIndex > 2) return state;
+    const selectedHeroes = [...state.selectedHeroes];
+    if (!heroId) {
+      selectedHeroes.splice(slotIndex, 1);
+    } else {
+      const currentIndex = selectedHeroes.indexOf(heroId);
+      if (currentIndex >= 0) {
+        if (currentIndex !== slotIndex) {
+          const slotHero = selectedHeroes[slotIndex];
+          selectedHeroes[slotIndex] = heroId;
+          if (slotHero) selectedHeroes[currentIndex] = slotHero;
+          else selectedHeroes.splice(currentIndex, 1);
+        }
+      } else if (slotIndex < selectedHeroes.length) {
+        selectedHeroes[slotIndex] = heroId;
+      } else if (selectedHeroes.length < 3) {
+        selectedHeroes.push(heroId);
+      }
+    }
+    const leaderId = selectedHeroes.includes(state.leaderId) ? state.leaderId : selectedHeroes[0] ?? "knight";
+    return { selectedHeroes, leaderId };
+  }),
+  chooseLeader: (leaderId) => set((state) => state.selectedHeroes.includes(leaderId) ? { leaderId } : state),
   startRun: () => {
     const { selectedHeroes, leaderId, selectedDungeonId, progress } = get();
     if (selectedHeroes.length !== 3) return;

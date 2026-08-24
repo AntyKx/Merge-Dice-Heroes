@@ -5,7 +5,7 @@ import { useGameStore } from "./store";
 const freshProgress = () => ({ ...defaultProgress, inventory: [...defaultProgress.inventory], equipmentLevels: { ...defaultProgress.equipmentLevels }, equipped: {}, daily: { ...defaultProgress.daily, claimed: [] }, dungeonClears: {}, shop: { ...defaultProgress.shop, offers: [...defaultProgress.shop.offers], purchased: [] }, lobbyRead: {} });
 
 beforeEach(() => {
-  useGameStore.setState({ screen: "title", selectedDungeonId: undefined, progress: freshProgress() });
+  useGameStore.setState({ screen: "title", selectedHeroes: ["knight", "fireMage", "ranger"], leaderId: "knight", selectedDungeonId: undefined, run: undefined, progress: freshProgress() });
 });
 
 describe("persistent lobby progression", () => {
@@ -60,5 +60,19 @@ describe("persistent lobby progression", () => {
     useGameStore.setState({ progress: { ...progress, daily: { ...progress.daily, battles: 3 } } });
     useGameStore.getState().claimDailyReward("battle");
     expect(useGameStore.getState().progress.lobbyRead.daily).toBe(true);
+  });
+
+  it("edits a formation slot in the lobby without opening an expedition or creating a run", () => {
+    useGameStore.getState().setTeamSlot(1, "bard");
+    expect(useGameStore.getState().selectedHeroes).toEqual(["knight", "bard", "ranger"]);
+    expect(useGameStore.getState().screen).toBe("title");
+    expect(useGameStore.getState().run).toBeUndefined();
+  });
+
+  it("keeps leader selection within the currently active formation", () => {
+    useGameStore.getState().chooseLeader("ranger");
+    expect(useGameStore.getState().leaderId).toBe("ranger");
+    useGameStore.getState().chooseLeader("bard");
+    expect(useGameStore.getState().leaderId).toBe("ranger");
   });
 });

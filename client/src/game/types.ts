@@ -222,6 +222,11 @@ export interface DailyQuestState {
   claimed: DailyQuestId[];
 }
 
+export interface HeroProgress {
+  level: number;
+  experience: number;
+}
+
 export type LobbyNoticeId = "equipment" | "shop" | "daily" | "dungeon";
 
 export interface DungeonDefinition {
@@ -251,6 +256,7 @@ export interface PlayerProgress {
   dungeonClears: Partial<Record<DungeonId, number>>;
   shop: ShopState;
   lobbyRead: Partial<Record<LobbyNoticeId, boolean>>;
+  heroProgress: Partial<Record<HeroId, HeroProgress>>;
   settings: {
     musicEnabled: boolean;
     sfxEnabled: boolean;

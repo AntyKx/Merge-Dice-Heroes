@@ -10,10 +10,14 @@ import "./courtyardEntranceTheme.css";
 import "./courtyardSignboards.css";
 import "./courtyardHomeEmblems.css";
 import "./heroCardAlignment.css";
-import { BatteryCharging, Check, ChevronLeft, Coins, Gem, Gift, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Sparkles, Swords, Trash2, Volume2, X, Zap } from "lucide-react";
+import "./teamEditFormation.css";
+import "./lobbyTeamManager.css";
+import "./chapterMap.css";
+import { AlertTriangle, BatteryCharging, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
 import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
+import { getHeroProgress, heroXpRequirement } from "@/game/heroProgress";
 import { LEADER_CARD_PROFILES } from "@/game/leaderCardProfiles";
 import { useGameStore } from "@/game/store";
 import type { DailyQuestId, EquipmentSlot, HeroId, HeroInstance, ShopOfferId, TalentDefinition } from "@/game/types";
@@ -23,6 +27,26 @@ const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png"
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
 const CASTLE_WALKWAY_PARTY_URL = "/manus-storage/castle-walkway-party-transparent_1070719d.png";
+const STORY_STAGE_FRAME_URL = "/manus-storage/astervow-story-stage-frame-ultra-slim_f3d08c10.png";
+const HUD_RESOURCE_ICON_URLS = {
+  coins: "/manus-storage/astervow-hud-coin_72c66ed6.png",
+  crystals: "/manus-storage/astervow-hud-crystal_395f9588.png",
+  stamina: "/manus-storage/astervow-hud-stamina_1f9b3f77.png",
+} as const;
+const FORMATION_LEADER_CROWN_URL = "/manus-storage/courtyard-formation-leader-crown_530c6f3a.png";
+const FORMATION_EDIT_EMBLEM_URL = "/manus-storage/formation-edit-feather-emblem_fd598b0e.png";
+const FORMATION_ROLE_ICON_URLS: Partial<Record<HeroId, string>> = {
+  knight: "/manus-storage/knight_6d5e1a4d.png",
+  fireMage: "/manus-storage/fireMage_0825fe58.png",
+  priest: "/manus-storage/priest_3bf2b437.png",
+  assassin: "/manus-storage/assassin_b09e134b.png",
+  frostQueen: "/manus-storage/frostQueen_eae06d67.png",
+  ranger: "/manus-storage/ranger_69c948d0.png",
+  bard: "/manus-storage/bard_f354d6cb.png",
+  deathKnight: "/manus-storage/deathKnight_70c785f2.png",
+  engineer: "/manus-storage/engineer_dbf5edbb.png",
+  fighter: "/manus-storage/fighter_8b188187.png",
+};
 const ASTERVOW_ICON_URLS = {
   equipment: "/manus-storage/equipment_b47d9ea9.png",
   shop: "/manus-storage/shop_410470c0.png",
@@ -50,6 +74,55 @@ const LOBBY_WEATHER_META: Record<LobbyWeather, { label: string; detail: string }
   night: { label: "星夜王都", detail: "塔燈守望中" },
 };
 
+const STORY_CHAPTER_STAGES = [
+  { id: "gate", label: "城門初試", wave: 1, power: 80, reward: "命運碎晶 ×6", detail: "首通補給：守望素材 ×2", enemy: "史萊姆斥候與木盾哥布林", rule: "熟悉骰子合成與第一列防守節奏。", marker: "shield" },
+  { id: "garden", label: "庭園伏擊", wave: 3, power: 120, reward: "命運碎晶 ×8", detail: "首通補給：鍛造銅礦 ×3", enemy: "疾行狼群與投石小妖", rule: "敵軍速度提高；留意遠程優先目標。", marker: "flame" },
+  { id: "tower", label: "塔樓守望", wave: 5, power: 170, reward: "命運碎晶 ×10", detail: "首通補給：英雄經驗 ×20", enemy: "飛翼守衛與裝甲傀儡", rule: "每回合會出現一名高護甲敵人。", marker: "sparkle" },
+  { id: "bridge", label: "石橋決戰", wave: 7, power: 220, reward: "命運碎晶 ×12", detail: "首通補給：鍛造銅礦 ×6", enemy: "雙刃盜賊與重甲衛兵", rule: "敵人分兩路逼近，建議維持範圍輸出。", marker: "swords" },
+  { id: "boss", label: "命運骰塔之門", wave: 10, power: 300, reward: "命運碎晶 ×18", detail: "章節通關：王都守望印章", enemy: "骰塔守門巨像", rule: "Boss 會在半血時強化衝鋒；保留技能骰。", marker: "crown" },
+] as const;
+
+const CHAPTER_MAP_THEMES = [
+  { id: "courtyard", label: "王都庭園", title: "命運骰塔之門", backgroundUrl: CUTE_LOBBY_BACKGROUND_URL },
+  { id: "battlefield", label: "城外戰線", title: "霧谷前線", backgroundUrl: BACKDROP_URL },
+  { id: "moonlit", label: "月影城垣", title: "銀月守望", backgroundUrl: CUTE_LOBBY_BACKGROUND_URL },
+] as const;
+
+function StoryStageMarker({ marker }: { marker: (typeof STORY_CHAPTER_STAGES)[number]["marker"] }) {
+  if (marker === "flame") return <Flame size={15} />;
+  if (marker === "sparkle") return <Sparkles size={15} />;
+  if (marker === "swords") return <Swords size={15} />;
+  if (marker === "crown") return <ShieldCheck size={15} />;
+  return <Shield size={15} />;
+}
+
+function AnimatedResourceValue({ value, suffix = "" }: { value: number; suffix?: string }) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const [isChanging, setIsChanging] = useState(false);
+  const previousValue = useRef(value);
+  useEffect(() => {
+    if (previousValue.current === value) return;
+    const startValue = previousValue.current;
+    const delta = value - startValue;
+    const startedAt = performance.now();
+    let animationFrame = 0;
+    setIsChanging(true);
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / 360);
+      const eased = 1 - (1 - progress) ** 3;
+      setDisplayValue(Math.round(startValue + delta * eased));
+      if (progress < 1) animationFrame = window.requestAnimationFrame(tick);
+      else {
+        previousValue.current = value;
+        window.setTimeout(() => setIsChanging(false), 140);
+      }
+    };
+    animationFrame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [value]);
+  return <b className={isChanging ? "hud-resource-value is-changing" : "hud-resource-value"}>{displayValue}{suffix}</b>;
+}
+
 type HeroAnimationAction = "idle" | "attack" | "skill";
 
 type FrameRange = { start: number; count: number };
@@ -67,7 +140,15 @@ const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
   ranger: heroSheet("ranger"),
   engineer: heroSheet("engineer"),
   fighter: heroSheet("fighter"),
-  deathKnight: heroSheet("deathKnight"),
+  deathKnight: {
+    source: "/manus-storage/death_knight_new_fixed_canvas_1db47d50.png",
+    totalFrames: 20,
+    actions: {
+      idle: { start: 0, count: 6 },
+      attack: { start: 6, count: 5 },
+      skill: { start: 11, count: 3 },
+    },
+  },
 };
 
 const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
@@ -78,7 +159,7 @@ const HERO_PORTRAITS: Partial<Record<HeroId, string>> = {
   frostQueen: "/manus-storage/clean_roster_frostQueen_1eeac3eb.png",
   ranger: "/manus-storage/clean_roster_ranger_f86f8a0b.png",
   bard: "/manus-storage/clean_roster_bard_bb147e2a.png",
-  deathKnight: "/manus-storage/clean_roster_deathKnight_06915998.png",
+  deathKnight: "/manus-storage/death_knight_roster_portrait_ed6525af.png",
   engineer: "/manus-storage/clean_roster_engineer_0d197992.png",
   fighter: "/manus-storage/clean_roster_fighter_87f7f6da.png",
 };
@@ -140,6 +221,39 @@ function HeroPortrait({ heroId, size = "small", action = "idle", animationSignal
   return <span className={`hero-portrait hero-portrait--${size} hero-portrait--${heroId}`} style={{ backgroundImage: `url(${HEROES_URL})`, backgroundPosition: classOffset[heroId], borderColor: definition.color }} aria-hidden="true"><span className="hero-sigil"><HeroMark size={size === "large" ? 24 : 16} strokeWidth={2.7} /></span></span>;
 }
 
+/** Design reminder: the lobby team control mirrors the user's gilded three-slot formation reference while portraits remain live player data. */
+function FormationRoleIcon({ heroId }: { heroId: HeroId }) {
+  const iconUrl = FORMATION_ROLE_ICON_URLS[heroId];
+  if (iconUrl) return <img src={iconUrl} alt="" />;
+  if (heroId === "knight") return <Shield size={13} fill="currentColor" />;
+  if (heroId === "fireMage") return <Flame size={13} fill="currentColor" />;
+  if (heroId === "priest") return <Cross size={13} />;
+  if (heroId === "assassin") return <Swords size={13} />;
+  if (heroId === "frostQueen") return <Snowflake size={13} />;
+  if (heroId === "ranger") return <Target size={13} />;
+  if (heroId === "bard") return <Music2 size={13} />;
+  if (heroId === "deathKnight") return <Skull size={13} />;
+  if (heroId === "engineer") return <Settings2 size={13} />;
+  return <Hand size={13} fill="currentColor" />;
+}
+
+function TeamEditFormation({ selectedHeroes, leaderId, onEdit }: { selectedHeroes: HeroId[]; leaderId: HeroId; onEdit: () => void }) {
+  const slots = Array.from({ length: 3 }, (_, index) => selectedHeroes[index] ?? null);
+  return <button className="team-edit-formation" onClick={onEdit} aria-label={`編輯遠征隊伍，目前已選 ${selectedHeroes.length} 名英雄`}>
+    <span className="team-edit-formation__rail">
+      {slots.map((heroId, index) => {
+        const hero = heroId ? HEROES[heroId] : null;
+        return <span className={`team-edit-formation__slot ${heroId ? "is-filled" : "is-empty"}`} key={heroId ?? `empty-${index}`} style={hero ? { "--formation-color": hero.color } as React.CSSProperties : undefined}>
+          {heroId && <img src={HERO_PORTRAITS[heroId]} alt="" />}
+          {heroId === leaderId && <span className="team-edit-formation__leader-crown" aria-label={`${hero?.name}為目前隊長`}><img src={FORMATION_LEADER_CROWN_URL} alt="" /></span>}
+          <em aria-hidden="true">{heroId ? <FormationRoleIcon heroId={heroId} /> : "＋"}</em>
+        </span>;
+      })}
+      <span className="team-edit-formation__edit" aria-hidden="true"><img src={FORMATION_EDIT_EMBLEM_URL} alt="" /></span>
+    </span>
+  </button>;
+}
+
 function LeaderHeroShowcase({ heroId }: { heroId: HeroId }) {
   const definition = HEROES[heroId];
   const profile = LEADER_CARD_PROFILES[heroId];
@@ -173,12 +287,21 @@ const LOBBY_MODULES: Record<LobbyModuleId, { label: string; title: string; eyebr
 };
 
 function TitleScreen() {
-  const { openScreen, progress, setSetting, selectedHeroes } = useGameStore();
+  const { openScreen, progress, setSetting, selectedHeroes, leaderId, setTeamSlot, chooseLeader } = useGameStore();
   const [departing, setDeparting] = useState(false);
   const [lobbyTab, setLobbyTab] = useState<LobbyTab>("kingdom");
   const [bannerStyle, setBannerStyle] = useState<ExpeditionBannerStyle>("verdant");
   const [autoWeather, setAutoWeather] = useState<LobbyWeather>(() => getLobbyWeather(new Date()));
   const [scenePreviewMode, setScenePreviewMode] = useState<ScenePreviewMode>("auto");
+  const [formationManagerOpen, setFormationManagerOpen] = useState(() => new URLSearchParams(window.location.search).get("manageTeam") === "1");
+  const [focusedFormationSlot, setFocusedFormationSlot] = useState(0);
+  const [chapterMapOpen, setChapterMapOpen] = useState(() => new URLSearchParams(window.location.search).get("chapterMap") === "1");
+  const [focusedStageId, setFocusedStageId] = useState<string | null>(null);
+  const [rewardBurstStageId, setRewardBurstStageId] = useState<string | null>(null);
+  const [previewChapterIndex, setPreviewChapterIndex] = useState(() => Math.min(CHAPTER_MAP_THEMES.length - 1, Math.floor(progress.wins / 4)));
+  const [showChapterStamp, setShowChapterStamp] = useState(false);
+  const [lockedChapterMessage, setLockedChapterMessage] = useState<string | null>(null);
+  const [unlockingChapterIndex, setUnlockingChapterIndex] = useState<number | null>(null);
   useEffect(() => {
     const syncWeather = () => setAutoWeather(getLobbyWeather(new Date()));
     syncWeather();
@@ -190,32 +313,180 @@ function TitleScreen() {
     window.addEventListener("touchmove", stopLobbyPan, { passive: false });
     return () => window.removeEventListener("touchmove", stopLobbyPan);
   }, []);
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    root.classList.add("lobby-viewport-lock");
+    body.classList.add("lobby-viewport-lock");
+    return () => {
+      root.classList.remove("lobby-viewport-lock");
+      body.classList.remove("lobby-viewport-lock");
+    };
+  }, []);
+  useEffect(() => {
+    if (!chapterMapOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setChapterMapOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [chapterMapOpen]);
   const claimableQuests = DAILY_QUESTS.filter((quest) => (quest.id === "battle" ? progress.daily.battles : quest.id === "merge" ? progress.daily.merges : progress.daily.victories) >= quest.target && !progress.daily.claimed.includes(quest.id)).length;
   const hasUpgradeableEquipment = progress.inventory.some((equipmentId) => { const level = progress.equipmentLevels[equipmentId] ?? 1; return level < 5 && progress.materials >= level * 8; });
   const hasDungeonAttempt = DUNGEONS.some((dungeon, index) => (dungeon.unlocked || (index > 0 && (progress.dungeonClears[DUNGEONS[index - 1].id] ?? 0) > 0)) && progress.stamina >= dungeon.energyCost);
   const playerLevel = 1 + Math.floor(progress.wins / 3);
   const levelProgress = (progress.wins % 3) + 1;
   const storyChapter = 1 + Math.floor(progress.wins / 4);
-  const storyProgress = Math.max(6, Math.min(100, Math.round(progress.bestWave / 10 * 100)));
+  const unlockedChapterCount = Math.max(1, Math.min(CHAPTER_MAP_THEMES.length, storyChapter));
+  const activeChapterIndex = unlockedChapterCount - 1;
+  const previewChapter = previewChapterIndex + 1;
+  const chapterCompleted = progress.bestWave >= STORY_CHAPTER_STAGES.at(-1)!.wave;
+  const currentStoryStage = STORY_CHAPTER_STAGES.find((stage) => progress.bestWave < stage.wave) ?? STORY_CHAPTER_STAGES.at(-1)!;
+  const chapterTheme = CHAPTER_MAP_THEMES[previewChapterIndex];
+  const previewingActiveChapter = previewChapterIndex === activeChapterIndex;
+  const selectedStoryStage = STORY_CHAPTER_STAGES.find((stage) => stage.id === focusedStageId) ?? currentStoryStage;
+  const selectedStageCleared = previewChapterIndex < activeChapterIndex || (previewingActiveChapter && progress.bestWave >= selectedStoryStage.wave);
+  const teamPower = selectedHeroes.reduce((total, heroId) => {
+    const hero = HEROES[heroId];
+    const heroProgress = getHeroProgress(progress.heroProgress[heroId]);
+    return total + Math.round((hero.attack * 6 + hero.maxHp * 0.18) * (1 + (heroProgress.level - 1) * 0.1));
+  }, 0);
+  const isUnderpowered = teamPower < selectedStoryStage.power;
   const weather = scenePreviewMode === "auto" ? autoWeather : scenePreviewMode;
   const weatherMeta = LOBBY_WEATHER_META[weather];
   const actionNotice: Partial<Record<LobbyModuleId, boolean>> = { equipment: hasUpgradeableEquipment && !progress.lobbyRead.equipment, shop: progress.shop.freeRefreshAvailable && !progress.lobbyRead.shop, daily: claimableQuests > 0 && !progress.lobbyRead.daily, dungeon: hasDungeonAttempt && !progress.lobbyRead.dungeon };
+  useEffect(() => {
+    if (!chapterCompleted) return;
+    const stampKey = `merge-dice-heroes:chapter-${storyChapter}-stamp`;
+    if (window.sessionStorage.getItem(stampKey)) return;
+    window.sessionStorage.setItem(stampKey, "shown");
+    const enterTimer = window.setTimeout(() => setShowChapterStamp(true), 0);
+    const exitTimer = window.setTimeout(() => setShowChapterStamp(false), 1700);
+    return () => {
+      window.clearTimeout(enterTimer);
+      window.clearTimeout(exitTimer);
+    };
+  }, [chapterCompleted, storyChapter]);
   const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
+  const editFormationHero = (heroId: HeroId) => {
+    if (selectedHeroes[focusedFormationSlot] === heroId) {
+      setTeamSlot(focusedFormationSlot);
+      return;
+    }
+    setTeamSlot(focusedFormationSlot, heroId);
+  };
+  const focusChapterStage = (stageId: string, cleared: boolean) => {
+    setFocusedStageId(stageId);
+    if (!cleared) return;
+    setRewardBurstStageId(stageId);
+    window.setTimeout(() => setRewardBurstStageId((active) => active === stageId ? null : active), 700);
+  };
+  const selectChapterPreview = (index: number) => {
+    const unlockWins = index * 4;
+    if (index >= unlockedChapterCount) {
+      setLockedChapterMessage(`需累積 ${unlockWins} 場勝利後解鎖第 ${index + 1} 章`);
+      return;
+    }
+    setLockedChapterMessage(null);
+    const celebrationKey = `merge-dice-heroes:chapter-${index + 1}-unlocked`;
+    const shouldCelebrate = index > 0 && !window.sessionStorage.getItem(celebrationKey);
+    if (!shouldCelebrate) {
+      setPreviewChapterIndex(index);
+      setFocusedStageId(null);
+      return;
+    }
+    window.sessionStorage.setItem(celebrationKey, "shown");
+    setUnlockingChapterIndex(index);
+    window.setTimeout(() => {
+      setPreviewChapterIndex(index);
+      setFocusedStageId(null);
+    }, 280);
+    window.setTimeout(() => setUnlockingChapterIndex(null), 760);
+  };
   return <section className={`lobby-screen cute-hub-lobby weather-${weather} banner-${bannerStyle} ${departing ? "is-departing" : ""}`}>
     <div className="cute-hub-art" style={{ backgroundImage: `url(${CUTE_LOBBY_BACKGROUND_URL})` }} aria-hidden="true" />
     <header className="cute-hub-hud" aria-label="玩家資源">
       <button className="cute-level" onClick={() => openScreen("team")} aria-label={`玩家等級 ${playerLevel}，查看隊伍`}><span>LV.</span><b>{String(playerLevel).padStart(2, "0")}</b><i><em style={{ width: `${levelProgress / 3 * 100}%` }} /></i></button>
-      <button className="cute-resource" onClick={() => openScreen("shop")} aria-label={`金幣 ${progress.sigils}，前往商店`}><Coins size={14} /><b>{progress.sigils}</b></button>
-      <button className="cute-resource" onClick={() => openScreen("daily")} aria-label={`鑽石 ${progress.crystals}，前往每日任務`}><Gem size={14} /><b>{progress.crystals}</b></button>
-      <button className="cute-resource" onClick={() => openScreen("dungeon")} aria-label={`體力 ${progress.stamina} / 20，前往副本`}><BatteryCharging size={15} /><b>{progress.stamina}/20</b></button>
+      <button className="cute-resource" onClick={() => openScreen("shop")} aria-label={`金幣 ${progress.sigils}，前往商店`}><img className="cute-resource__icon" src={HUD_RESOURCE_ICON_URLS.coins} alt="" /><AnimatedResourceValue value={progress.sigils} /></button>
+      <button className="cute-resource" onClick={() => openScreen("daily")} aria-label={`鑽石 ${progress.crystals}，前往每日任務`}><img className="cute-resource__icon" src={HUD_RESOURCE_ICON_URLS.crystals} alt="" /><AnimatedResourceValue value={progress.crystals} /></button>
+      <button className="cute-resource" onClick={() => openScreen("dungeon")} aria-label={`體力 ${progress.stamina} / 20，前往副本`}><img className="cute-resource__icon" src={HUD_RESOURCE_ICON_URLS.stamina} alt="" /><AnimatedResourceValue value={progress.stamina} suffix="/20" /></button>
       <button className="cute-menu" onClick={() => setLobbyTab(lobbyTab === "menu" ? "kingdom" : "menu")} aria-label="開啟王都選單"><Menu size={19} /></button>
     </header>
-    <section className="cute-story-progress" aria-label="主線進度"><span className="story-scroll-end story-scroll-left" aria-hidden="true" /><span className="story-scroll-end story-scroll-right" aria-hidden="true" /><div><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div><small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small><i><em style={{ width: `${storyProgress}%` }} /></i></section>
+    <button className="cute-story-progress cute-story-progress--stage-frame" type="button" onClick={() => { setPreviewChapterIndex(activeChapterIndex); setFocusedStageId(null); setChapterMapOpen(true); }} aria-label={`開啟第 ${storyChapter} 章地圖，目前 ${currentStoryStage.label}`}>
+      <img className="cute-story-progress__frame" src={STORY_STAGE_FRAME_URL} alt="" aria-hidden="true" />
+      <div className="cute-story-progress__copy"><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div>
+      <small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small>
+      {showChapterStamp && <span className="cute-story-progress__completion-stamp" aria-label="第 1 章完成"><Check size={12} /><b>完成</b></span>}
+      <span className="cute-story-progress__hint" aria-hidden="true">點擊查看章節地圖</span>
+    </button>
     <main className="cute-hub-standby" aria-label="王都遠征入口">
       <img className="castle-walkway-party" src={CASTLE_WALKWAY_PARTY_URL} alt="" aria-hidden="true" />
-      <button className="party-edit-button" onClick={() => openScreen("team")} aria-label="編輯遠征隊伍"><span className="party-edit-roster">{selectedHeroes.map((heroId) => <i key={heroId} style={{ "--roster-color": HEROES[heroId].color } as React.CSSProperties}>{HEROES[heroId].name.slice(0, 1)}</i>)}</span><span><small>已選 {selectedHeroes.length}/3 名英雄</small><b>隊伍編輯</b></span><Sparkles size={17} /></button>
+      <TeamEditFormation selectedHeroes={selectedHeroes} leaderId={leaderId} onEdit={() => setFormationManagerOpen(true)} />
       <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><img src={ASTERVOW_ICON_URLS.castle} alt="" /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
     </main>
+    {formationManagerOpen && <div className="lobby-team-manager-backdrop" role="dialog" aria-modal="true" aria-label="王都隊伍管理">
+      <section className="lobby-team-manager">
+        <header className="lobby-team-manager__header"><div><small>王都編組台 · 不啟動遠征</small><h2>管理目前隊伍</h2></div><button onClick={() => setFormationManagerOpen(false)} aria-label="關閉隊伍管理"><X size={20} /></button></header>
+        <div className="lobby-team-manager__formation" aria-label="目前遠征編組">
+          {Array.from({ length: 3 }, (_, index) => {
+            const heroId = selectedHeroes[index];
+            const hero = heroId ? HEROES[heroId] : undefined;
+            return <button key={heroId ?? `manager-slot-${index}`} className={`lobby-team-manager__slot ${index === focusedFormationSlot ? "is-focused" : ""} ${heroId ? "is-filled" : "is-empty"}`} onClick={() => setFocusedFormationSlot(index)}>
+              {heroId && <img src={HERO_PORTRAITS[heroId]} alt="" />}
+              {heroId === leaderId && <span className="lobby-team-manager__crown" aria-label={`${hero?.name}為目前隊長`}><img src={FORMATION_LEADER_CROWN_URL} alt="" /></span>}
+              <small>{hero ? hero.name : "空位"}</small>
+              <b>{index === focusedFormationSlot ? "替換目標" : heroId === leaderId ? "目前隊長" : "上陣中"}</b>
+            </button>;
+          })}
+        </div>
+        <div className="lobby-team-manager__tip"><Target size={14} />選取上方位置後，點擊下方英雄即可替換；已上陣英雄可換位，點選目前位置可移除。</div>
+        <div className="lobby-team-manager__roster" aria-label="已擁有英雄">
+          {SELECTABLE_HERO_IDS.map((heroId) => {
+            const hero = HEROES[heroId];
+            const selected = selectedHeroes.includes(heroId);
+            const isLeader = leaderId === heroId;
+            const heroProgress = getHeroProgress(progress.heroProgress[heroId]);
+            const requiredExperience = heroXpRequirement(heroProgress.level);
+            const experiencePercent = Math.min(100, Math.round(heroProgress.experience / requiredExperience * 100));
+            return <article key={heroId} className={`lobby-team-manager__hero ${selected ? "is-selected" : ""}`} style={{ "--manager-hero-color": hero.color } as React.CSSProperties}>
+              <button className="lobby-team-manager__hero-main" onClick={() => editFormationHero(heroId)}><img src={HERO_PORTRAITS[heroId]} alt="" /><span><b>{hero.name}</b><small>{hero.classLabel}</small><strong>Lv.{heroProgress.level} · {heroProgress.experience}/{requiredExperience}</strong><i className="lobby-team-manager__xp"><b style={{ width: `${experiencePercent}%` }} /></i></span><i>{selected ? "已選" : selectedHeroes.length >= 3 ? "替換" : "加入"}</i></button>
+              {selected && <button className={`lobby-team-manager__leader-choice ${isLeader ? "is-leader" : ""}`} onClick={() => chooseLeader(heroId)} aria-label={`指定 ${hero.name} 為隊長`}><img src={FORMATION_LEADER_CROWN_URL} alt="" /></button>}
+            </article>;
+          })}
+        </div>
+        <footer className="lobby-team-manager__footer"><span><Check size={15} />目前編組 {selectedHeroes.length}/3 · 隊長：{HEROES[leaderId].name}</span><button onClick={() => setFormationManagerOpen(false)}>完成編組</button></footer>
+      </section>
+    </div>}
+    {chapterMapOpen && <div className="chapter-map-backdrop" role="dialog" aria-modal="true" aria-label={`第 ${previewChapter} 章完整地圖`}>
+      <section className={`chapter-map-sheet chapter-map-sheet--${chapterTheme.id}`} style={{ "--chapter-map-background": `url(${chapterTheme.backgroundUrl})` } as React.CSSProperties}>
+        <header className="chapter-map-sheet__header"><div><div className="chapter-map-sheet__chapter-nav"><button type="button" disabled={previewChapterIndex === 0} onClick={() => { setPreviewChapterIndex((index) => index - 1); setFocusedStageId(null); }} aria-label="查看上一章"><ChevronLeft size={17} /></button><small>王都主線 · 第 {previewChapter} / {unlockedChapterCount} 章 · {chapterTheme.label}</small><button type="button" disabled={previewChapterIndex >= unlockedChapterCount - 1} onClick={() => { setPreviewChapterIndex((index) => index + 1); setFocusedStageId(null); }} aria-label="查看下一章"><ChevronRight size={17} /></button></div><h2>{chapterTheme.title}</h2><p>點擊節點查看完整情報；遠征仍由王都的「開始遠征」啟動。</p></div><button type="button" onClick={() => setChapterMapOpen(false)} aria-label="關閉章節地圖"><X size={20} /></button></header>
+        <div className="chapter-map-thumbnails" aria-label="章節快速跳轉">
+          {CHAPTER_MAP_THEMES.map((theme, index) => {
+            const locked = index >= unlockedChapterCount;
+            const unlockWins = index * 4;
+            const unlocking = unlockingChapterIndex === index;
+            return <button key={theme.id} type="button" className={`${previewChapterIndex === index ? "is-selected " : ""}${locked ? "is-locked " : ""}${unlocking ? "is-unlocking" : ""}`} style={{ "--chapter-thumbnail": `url(${theme.backgroundUrl})` } as React.CSSProperties} onClick={() => selectChapterPreview(index)}><i aria-hidden="true" />{(locked || unlocking) && <em aria-hidden="true"><Lock size={10} /></em>}<span>第 {index + 1} 章</span><small>{locked ? `勝利 ${unlockWins} 場解鎖` : unlocking ? "章節解鎖！" : theme.label}</small></button>;
+          })}
+        </div>
+        {lockedChapterMessage && <p className="chapter-map-lock-notice" role="status"><Lock size={12} />{lockedChapterMessage}</p>}
+        <div className="chapter-map-sheet__route" aria-label={`第 ${previewChapter} 章關卡節點`}>
+          {STORY_CHAPTER_STAGES.map((stage, index) => {
+            const cleared = previewChapterIndex < activeChapterIndex || (previewingActiveChapter && progress.bestWave >= stage.wave);
+            const current = previewingActiveChapter && !cleared && stage.id === currentStoryStage.id;
+            const focused = focusedStageId === stage.id;
+            const openingReward = rewardBurstStageId === stage.id;
+            return <button key={stage.id} type="button" className={`chapter-stage ${cleared ? "is-cleared" : ""} ${current ? "is-current" : ""} ${focused ? "is-focused" : ""}`} onClick={() => focusChapterStage(stage.id, cleared)} aria-label={`${stage.label}，第 ${stage.wave} 波，${cleared ? "已通關" : current ? "目前關卡" : "尚未解鎖"}，獎勵 ${stage.reward}`}>
+              {index > 0 && <span className="chapter-stage__path" aria-hidden="true" />}
+              <span className="chapter-stage__orb">{cleared ? <span className="chapter-stage__marker-with-check"><StoryStageMarker marker={stage.marker} /><Check size={10} /></span> : current ? <StoryStageMarker marker={stage.marker} /> : <Lock size={13} />}</span>
+              <span className="chapter-stage__name">{stage.label}</span><span className="chapter-stage__wave">WAVE {String(stage.wave).padStart(2, "0")}</span><span className="chapter-stage__power">戰力 {stage.power}</span>
+              <span className="chapter-stage__tooltip" role="tooltip"><span className={`chapter-stage__chest ${cleared ? "is-unlocked" : ""} ${openingReward ? "is-opening" : ""}`}><Gift size={15} /></span><span><b>{stage.reward}</b><small>{cleared ? "首通寶箱已開啟" : stage.detail}</small></span></span>
+            </button>;
+          })}
+        </div>
+        <section className="chapter-stage-detail" aria-live="polite"><span className="chapter-stage-detail__icon"><StoryStageMarker marker={selectedStoryStage.marker} /></span><div><small>WAVE {String(selectedStoryStage.wave).padStart(2, "0")} · {selectedStageCleared ? "已通關" : previewingActiveChapter ? "目前可挑戰" : "章節紀錄"}</small><h3>{selectedStoryStage.label}</h3><p>{selectedStoryStage.enemy}</p><em>{selectedStoryStage.rule}</em></div><aside className={isUnderpowered ? "is-underpowered" : ""}><span>推薦戰力</span><b>{isUnderpowered && <AlertTriangle size={11} />}{selectedStoryStage.power}</b><small>隊伍戰力 {teamPower}<br />首通獎勵 {selectedStoryStage.reward}</small></aside></section>
+        <footer className="chapter-map-sheet__footer"><div><Gift size={17} /><span>章節獎勵：命運碎晶 ×18</span></div>{previewingActiveChapter && chapterCompleted ? <span className="chapter-map__stamp" key={`stamp-${progress.bestWave}`}><Check size={21} /><b>章節完成</b></span> : <span>{previewingActiveChapter ? "完成 WAVE 10 取得守望印章" : "已完成章節紀錄"}</span>}</footer>
+      </section>
+    </div>}
     {lobbyTab === "menu" && <aside className="courtyard-dropdown" aria-label="王都功能選單"><button onClick={() => setLobbyTab("inbox")}><PackageOpen size={16} /><span>收件匣</span>{claimableQuests > 0 && <i />}</button><button onClick={() => setLobbyTab("settings")}><Settings2 size={16} /><span>設定</span></button><button onClick={() => openScreen("guide")}><Sparkles size={16} /><span>圖鑑</span></button><button onClick={() => setLobbyTab("announcements")}><Info size={16} /><span>公告</span></button></aside>}
     {lobbyTab === "inbox" && <aside className="cute-hub-sheet courtyard-info-sheet" aria-label="收件匣"><header><span><PackageOpen size={15} />收件匣</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><article><b>每日任務進度</b><p>目前有 <strong>{claimableQuests}</strong> 項每日獎勵可領取。</p><button onClick={() => openScreen("daily")}>前往每日任務</button></article><article><b>命運商店</b><p>{progress.shop.freeRefreshAvailable ? "今日免費刷新可使用。" : "商店商品已準備完成。"}</p><button onClick={() => openScreen("shop")}>查看商店</button></article></aside>}
     {lobbyTab === "announcements" && <aside className="cute-hub-sheet courtyard-info-sheet" aria-label="公告"><header><span><Info size={15} />王都公告</span><button onClick={() => setLobbyTab("kingdom")}>收起</button></header><article><b>王都導覽更新</b><p>英雄、裝備、商店與副本已收整為底部四項導覽。</p></article><article><b>遠征隊集結</b><p>城堡前走道已成為冒險隊的出發集合點。</p></article></aside>}
@@ -282,11 +553,14 @@ function LobbyModuleScreen({ moduleId }: { moduleId: LobbyModuleId }) {
 
 function TeamScreen() {
   const { openScreen, selectedHeroes, selectedDungeonId, toggleTeamHero } = useGameStore();
+  const rosterPreviewParam = new URLSearchParams(window.location.search).get("rosterPreview");
+  const rosterPreviewHero = SELECTABLE_HERO_IDS.find((heroId) => heroId === rosterPreviewParam);
+  const displayedHeroIds = rosterPreviewHero ? [rosterPreviewHero] : SELECTABLE_HERO_IDS;
   return <section className="selection-screen">
     <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到舞台</button>
     <CourtyardSignboard kind="team" location="遠征旗亭 · 第一步" title="選擇三位登場英雄" summary="每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。" icon={<Swords size={26} />} />
     {selectedDungeonId && <div className="dungeon-launch-note"><ShieldCheck size={15} />即將挑戰：{DUNGEONS.find((dungeon) => dungeon.id === selectedDungeonId)?.title} · 進入命運舞台時扣除體力</div>}<div className="selection-count"><span>{selectedHeroes.length}</span>/3 已選</div>
-    <div className="hero-choice-grid">{SELECTABLE_HERO_IDS.map((heroId) => {
+    <div className="hero-choice-grid">{displayedHeroIds.map((heroId) => {
       const definition = HEROES[heroId]; const selected = selectedHeroes.includes(heroId);
       return <button key={heroId} className={`hero-choice ${selected ? "is-selected" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} onClick={() => toggleTeamHero(heroId)}><span className="hero-choice-art"><img src={HERO_PORTRAITS[heroId]} alt="" /><em>{definition.classLabel}</em></span><div><b>{definition.name}</b><small>{definition.tierNotes[1]}</small></div><i>{selected ? "已選" : "選擇"}</i></button>;
     })}</div>
