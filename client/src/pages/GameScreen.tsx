@@ -13,7 +13,7 @@ import "./heroCardAlignment.css";
 import "./teamEditFormation.css";
 import "./lobbyTeamManager.css";
 import "./chapterMap.css";
-import { BatteryCharging, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gem, Gift, Hand, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, Volume2, X, Zap } from "lucide-react";
+import { BatteryCharging, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
 import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
@@ -28,6 +28,11 @@ const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
 const CASTLE_WALKWAY_PARTY_URL = "/manus-storage/castle-walkway-party-transparent_1070719d.png";
 const STORY_STAGE_FRAME_URL = "/manus-storage/astervow-story-stage-frame-ultra-slim_f3d08c10.png";
+const HUD_RESOURCE_ICON_URLS = {
+  coins: "/manus-storage/astervow-hud-coin_72c66ed6.png",
+  crystals: "/manus-storage/astervow-hud-crystal_395f9588.png",
+  stamina: "/manus-storage/astervow-hud-stamina_1f9b3f77.png",
+} as const;
 const FORMATION_LEADER_CROWN_URL = "/manus-storage/courtyard-formation-leader-crown_530c6f3a.png";
 const FORMATION_EDIT_EMBLEM_URL = "/manus-storage/formation-edit-feather-emblem_fd598b0e.png";
 const FORMATION_ROLE_ICON_URLS: Partial<Record<HeroId, string>> = {
@@ -70,11 +75,11 @@ const LOBBY_WEATHER_META: Record<LobbyWeather, { label: string; detail: string }
 };
 
 const STORY_CHAPTER_STAGES = [
-  { id: "gate", label: "城門初試", wave: 1, reward: "命運碎晶 ×6", detail: "首通補給：守望素材 ×2", enemy: "史萊姆斥候與木盾哥布林", rule: "熟悉骰子合成與第一列防守節奏。", marker: "shield" },
-  { id: "garden", label: "庭園伏擊", wave: 3, reward: "命運碎晶 ×8", detail: "首通補給：鍛造銅礦 ×3", enemy: "疾行狼群與投石小妖", rule: "敵軍速度提高；留意遠程優先目標。", marker: "flame" },
-  { id: "tower", label: "塔樓守望", wave: 5, reward: "命運碎晶 ×10", detail: "首通補給：英雄經驗 ×20", enemy: "飛翼守衛與裝甲傀儡", rule: "每回合會出現一名高護甲敵人。", marker: "sparkle" },
-  { id: "bridge", label: "石橋決戰", wave: 7, reward: "命運碎晶 ×12", detail: "首通補給：鍛造銅礦 ×6", enemy: "雙刃盜賊與重甲衛兵", rule: "敵人分兩路逼近，建議維持範圍輸出。", marker: "swords" },
-  { id: "boss", label: "命運骰塔之門", wave: 10, reward: "命運碎晶 ×18", detail: "章節通關：王都守望印章", enemy: "骰塔守門巨像", rule: "Boss 會在半血時強化衝鋒；保留技能骰。", marker: "crown" },
+  { id: "gate", label: "城門初試", wave: 1, power: 80, reward: "命運碎晶 ×6", detail: "首通補給：守望素材 ×2", enemy: "史萊姆斥候與木盾哥布林", rule: "熟悉骰子合成與第一列防守節奏。", marker: "shield" },
+  { id: "garden", label: "庭園伏擊", wave: 3, power: 120, reward: "命運碎晶 ×8", detail: "首通補給：鍛造銅礦 ×3", enemy: "疾行狼群與投石小妖", rule: "敵軍速度提高；留意遠程優先目標。", marker: "flame" },
+  { id: "tower", label: "塔樓守望", wave: 5, power: 170, reward: "命運碎晶 ×10", detail: "首通補給：英雄經驗 ×20", enemy: "飛翼守衛與裝甲傀儡", rule: "每回合會出現一名高護甲敵人。", marker: "sparkle" },
+  { id: "bridge", label: "石橋決戰", wave: 7, power: 220, reward: "命運碎晶 ×12", detail: "首通補給：鍛造銅礦 ×6", enemy: "雙刃盜賊與重甲衛兵", rule: "敵人分兩路逼近，建議維持範圍輸出。", marker: "swords" },
+  { id: "boss", label: "命運骰塔之門", wave: 10, power: 300, reward: "命運碎晶 ×18", detail: "章節通關：王都守望印章", enemy: "骰塔守門巨像", rule: "Boss 會在半血時強化衝鋒；保留技能骰。", marker: "crown" },
 ] as const;
 
 const CHAPTER_MAP_THEMES = [
@@ -345,9 +350,9 @@ function TitleScreen() {
     <div className="cute-hub-art" style={{ backgroundImage: `url(${CUTE_LOBBY_BACKGROUND_URL})` }} aria-hidden="true" />
     <header className="cute-hub-hud" aria-label="玩家資源">
       <button className="cute-level" onClick={() => openScreen("team")} aria-label={`玩家等級 ${playerLevel}，查看隊伍`}><span>LV.</span><b>{String(playerLevel).padStart(2, "0")}</b><i><em style={{ width: `${levelProgress / 3 * 100}%` }} /></i></button>
-      <button className="cute-resource" onClick={() => openScreen("shop")} aria-label={`金幣 ${progress.sigils}，前往商店`}><Coins size={14} /><b>{progress.sigils}</b></button>
-      <button className="cute-resource" onClick={() => openScreen("daily")} aria-label={`鑽石 ${progress.crystals}，前往每日任務`}><Gem size={14} /><b>{progress.crystals}</b></button>
-      <button className="cute-resource" onClick={() => openScreen("dungeon")} aria-label={`體力 ${progress.stamina} / 20，前往副本`}><BatteryCharging size={15} /><b>{progress.stamina}/20</b></button>
+      <button className="cute-resource" onClick={() => openScreen("shop")} aria-label={`金幣 ${progress.sigils}，前往商店`}><img className="cute-resource__icon" src={HUD_RESOURCE_ICON_URLS.coins} alt="" /><b>{progress.sigils}</b></button>
+      <button className="cute-resource" onClick={() => openScreen("daily")} aria-label={`鑽石 ${progress.crystals}，前往每日任務`}><img className="cute-resource__icon" src={HUD_RESOURCE_ICON_URLS.crystals} alt="" /><b>{progress.crystals}</b></button>
+      <button className="cute-resource" onClick={() => openScreen("dungeon")} aria-label={`體力 ${progress.stamina} / 20，前往副本`}><img className="cute-resource__icon" src={HUD_RESOURCE_ICON_URLS.stamina} alt="" /><b>{progress.stamina}/20</b></button>
       <button className="cute-menu" onClick={() => setLobbyTab(lobbyTab === "menu" ? "kingdom" : "menu")} aria-label="開啟王都選單"><Menu size={19} /></button>
     </header>
     <button className="cute-story-progress cute-story-progress--stage-frame" type="button" onClick={() => { setPreviewChapterIndex(activeChapterIndex); setFocusedStageId(null); setChapterMapOpen(true); }} aria-label={`開啟第 ${storyChapter} 章地圖，目前 ${currentStoryStage.label}`}>
@@ -398,6 +403,9 @@ function TitleScreen() {
     {chapterMapOpen && <div className="chapter-map-backdrop" role="dialog" aria-modal="true" aria-label={`第 ${previewChapter} 章完整地圖`}>
       <section className={`chapter-map-sheet chapter-map-sheet--${chapterTheme.id}`} style={{ "--chapter-map-background": `url(${chapterTheme.backgroundUrl})` } as React.CSSProperties}>
         <header className="chapter-map-sheet__header"><div><div className="chapter-map-sheet__chapter-nav"><button type="button" disabled={previewChapterIndex === 0} onClick={() => { setPreviewChapterIndex((index) => index - 1); setFocusedStageId(null); }} aria-label="查看上一章"><ChevronLeft size={17} /></button><small>王都主線 · 第 {previewChapter} / {unlockedChapterCount} 章 · {chapterTheme.label}</small><button type="button" disabled={previewChapterIndex >= unlockedChapterCount - 1} onClick={() => { setPreviewChapterIndex((index) => index + 1); setFocusedStageId(null); }} aria-label="查看下一章"><ChevronRight size={17} /></button></div><h2>{chapterTheme.title}</h2><p>點擊節點查看完整情報；遠征仍由王都的「開始遠征」啟動。</p></div><button type="button" onClick={() => setChapterMapOpen(false)} aria-label="關閉章節地圖"><X size={20} /></button></header>
+        <div className="chapter-map-thumbnails" aria-label="已解鎖章節快速跳轉">
+          {CHAPTER_MAP_THEMES.slice(0, unlockedChapterCount).map((theme, index) => <button key={theme.id} type="button" className={previewChapterIndex === index ? "is-selected" : ""} style={{ "--chapter-thumbnail": `url(${theme.backgroundUrl})` } as React.CSSProperties} onClick={() => { setPreviewChapterIndex(index); setFocusedStageId(null); }}><i aria-hidden="true" /><span>第 {index + 1} 章</span><small>{theme.label}</small></button>)}
+        </div>
         <div className="chapter-map-sheet__route" aria-label={`第 ${previewChapter} 章關卡節點`}>
           {STORY_CHAPTER_STAGES.map((stage, index) => {
             const cleared = previewChapterIndex < activeChapterIndex || (previewingActiveChapter && progress.bestWave >= stage.wave);
@@ -407,12 +415,12 @@ function TitleScreen() {
             return <button key={stage.id} type="button" className={`chapter-stage ${cleared ? "is-cleared" : ""} ${current ? "is-current" : ""} ${focused ? "is-focused" : ""}`} onClick={() => focusChapterStage(stage.id, cleared)} aria-label={`${stage.label}，第 ${stage.wave} 波，${cleared ? "已通關" : current ? "目前關卡" : "尚未解鎖"}，獎勵 ${stage.reward}`}>
               {index > 0 && <span className="chapter-stage__path" aria-hidden="true" />}
               <span className="chapter-stage__orb">{cleared ? <span className="chapter-stage__marker-with-check"><StoryStageMarker marker={stage.marker} /><Check size={10} /></span> : current ? <StoryStageMarker marker={stage.marker} /> : <Lock size={13} />}</span>
-              <span className="chapter-stage__name">{stage.label}</span><span className="chapter-stage__wave">WAVE {String(stage.wave).padStart(2, "0")}</span>
+              <span className="chapter-stage__name">{stage.label}</span><span className="chapter-stage__wave">WAVE {String(stage.wave).padStart(2, "0")}</span><span className="chapter-stage__power">戰力 {stage.power}</span>
               <span className="chapter-stage__tooltip" role="tooltip"><span className={`chapter-stage__chest ${cleared ? "is-unlocked" : ""} ${openingReward ? "is-opening" : ""}`}><Gift size={15} /></span><span><b>{stage.reward}</b><small>{cleared ? "首通寶箱已開啟" : stage.detail}</small></span></span>
             </button>;
           })}
         </div>
-        <section className="chapter-stage-detail" aria-live="polite"><span className="chapter-stage-detail__icon"><StoryStageMarker marker={selectedStoryStage.marker} /></span><div><small>WAVE {String(selectedStoryStage.wave).padStart(2, "0")} · {selectedStageCleared ? "已通關" : previewingActiveChapter ? "目前可挑戰" : "章節紀錄"}</small><h3>{selectedStoryStage.label}</h3><p>{selectedStoryStage.enemy}</p><em>{selectedStoryStage.rule}</em></div><aside><span>首通獎勵</span><b>{selectedStoryStage.reward}</b><small>{selectedStoryStage.detail}</small></aside></section>
+        <section className="chapter-stage-detail" aria-live="polite"><span className="chapter-stage-detail__icon"><StoryStageMarker marker={selectedStoryStage.marker} /></span><div><small>WAVE {String(selectedStoryStage.wave).padStart(2, "0")} · {selectedStageCleared ? "已通關" : previewingActiveChapter ? "目前可挑戰" : "章節紀錄"}</small><h3>{selectedStoryStage.label}</h3><p>{selectedStoryStage.enemy}</p><em>{selectedStoryStage.rule}</em></div><aside><span>推薦戰力</span><b>{selectedStoryStage.power}</b><small>首通獎勵<br />{selectedStoryStage.reward}</small></aside></section>
         <footer className="chapter-map-sheet__footer"><div><Gift size={17} /><span>章節獎勵：命運碎晶 ×18</span></div>{previewingActiveChapter && chapterCompleted ? <span className="chapter-map__stamp" key={`stamp-${progress.bestWave}`}><Check size={21} /><b>章節完成</b></span> : <span>{previewingActiveChapter ? "完成 WAVE 10 取得守望印章" : "已完成章節紀錄"}</span>}</footer>
       </section>
     </div>}
