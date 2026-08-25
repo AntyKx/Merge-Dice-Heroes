@@ -24,8 +24,8 @@ describe("Leader Burst resolvers act on the whole battlefield, not per-coverage"
     const context = {
       allyPool: [],
       enemyPool: [
-        { instanceId: "far", defId: "slime", hp: 10, maxHp: 10, occupiedRoutes: [1 as const], pathProgress: 0.3 },
-        { instanceId: "near", defId: "slime", hp: 10, maxHp: 10, occupiedRoutes: [1 as const], pathProgress: 0.9 },
+        { instanceId: "far", defId: "slime", hp: 10, maxHp: 10, occupiedRoutes: [1 as const], pathProgress: 0.3, debuffs: [] },
+        { instanceId: "near", defId: "slime", hp: 10, maxHp: 10, occupiedRoutes: [1 as const], pathProgress: 0.9, debuffs: [] },
       ],
       random: () => 0.5,
     };

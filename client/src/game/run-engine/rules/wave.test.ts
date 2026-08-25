@@ -44,7 +44,7 @@ describe("createEnemyInstance", () => {
 
 describe("updateEnemyMovement", () => {
   function makeEnemy(instanceId: string, pathProgress: number): EnemyInstance {
-    return { instanceId, defId: "slime", hp: 10, maxHp: 10, occupiedRoutes: [1], pathProgress };
+    return { instanceId, defId: "slime", hp: 10, maxHp: 10, occupiedRoutes: [1], pathProgress, debuffs: [] };
   }
 
   it("未被阻擋的敵人依速度前進", () => {
@@ -68,7 +68,7 @@ describe("updateEnemyMovement", () => {
 
 describe("partitionReachedCastle", () => {
   function makeEnemy(instanceId: string, pathProgress: number): EnemyInstance {
-    return { instanceId, defId: "slime", hp: 10, maxHp: 10, occupiedRoutes: [1], pathProgress };
+    return { instanceId, defId: "slime", hp: 10, maxHp: 10, occupiedRoutes: [1], pathProgress, debuffs: [] };
   }
 
   it("抵達終點的敵人被移出 Route，且永遠不會出現在棋盤（無 cell 概念）", () => {

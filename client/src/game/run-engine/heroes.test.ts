@@ -20,7 +20,7 @@ function makeHero(heroId: keyof typeof HERO_DEFINITIONS, tier: 1 | 2 | 3): HeroI
 }
 
 function makeEnemy(instanceId: string, pathProgress: number): EnemyInstance {
-  return { instanceId, defId: "slime", hp: 30, maxHp: 30, occupiedRoutes: [1], pathProgress };
+  return { instanceId, defId: "slime", hp: 30, maxHp: 30, occupiedRoutes: [1], pathProgress, debuffs: [] };
 }
 
 describe("HERO_DEFINITIONS covers all 10 selectable heroes", () => {

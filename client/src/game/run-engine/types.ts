@@ -224,6 +224,14 @@ export interface EnemyInstance {
   pathProgress: number;
   /** HeroInstance.instanceId currently blocking this enemy, if any. */
   blockedBy?: string;
+  /** Slow/Burning/etc from CombatEffectResult.debuffToEnemies -- same
+   * ActiveStatusEffect shape and stacking rules (rules/status.ts) as
+   * HeroInstance.buffs. */
+  debuffs: ActiveStatusEffect[];
+  /** Only relevant while blockedBy is set -- "被 Block 的怪：停止前進 -> 攻擊阻擋
+   * 他的英雄 -> 英雄正常與其戰鬥" (八). Defaults to 0 at spawn (ready to swing the
+   * instant it's blocked). */
+  attackCooldownRemainingSeconds: number;
 }
 
 export interface RouteState {

@@ -4,7 +4,7 @@ import { boardCellKey } from "../types";
 import { getAttackCoverage, getEnemyTargetPool, getSupportTargets } from "./targeting";
 
 function makeEnemy(instanceId: string, occupiedRoutes: EnemyInstance["occupiedRoutes"], pathProgress: number): EnemyInstance {
-  return { instanceId, defId: "slime", hp: 10, maxHp: 10, occupiedRoutes, pathProgress };
+  return { instanceId, defId: "slime", hp: 10, maxHp: 10, occupiedRoutes, pathProgress, debuffs: [] };
 }
 
 function makeHero(instanceId: string): HeroInstance {

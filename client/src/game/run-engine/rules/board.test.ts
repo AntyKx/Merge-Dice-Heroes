@@ -58,7 +58,7 @@ describe("怪物永遠不會走進 4x4 棋盤 (compile-time guarantee)", () => {
   it("BoardState.cells 的型別只接受 HeroInstance，EnemyInstance 無法賦值", () => {
     const board: BoardState = { cells: {} };
     const key = boardCellKey({ zone: 1, row: "front" });
-    const enemy: EnemyInstance = { instanceId: "e1", defId: "slime", hp: 10, maxHp: 10, occupiedRoutes: [1], pathProgress: 0 };
+    const enemy: EnemyInstance = { instanceId: "e1", defId: "slime", hp: 10, maxHp: 10, occupiedRoutes: [1], pathProgress: 0, debuffs: [] };
     // @ts-expect-error EnemyInstance is not a HeroInstance -- this MUST fail to typecheck.
     board.cells[key] = enemy;
     expect(true).toBe(true);
