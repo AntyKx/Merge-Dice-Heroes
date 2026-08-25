@@ -11,9 +11,19 @@
  */
 import type { BlockRule, BoardCell, DefenseZone } from "../types";
 import { ALL_DEFENSE_ZONES } from "../types";
+import { zonesWithinSpan } from "./board";
 
 export function getEffectiveBlockCapacity(cell: BoardCell, blockRule: BlockRule): number {
   return blockRule.baseCapacity * (blockRule.rowCapacityMultiplier[cell.row] ?? 0);
+}
+
+/** Zones a hero at `cell` can Block, symmetric with targeting.ts's
+ * getAttackCoverage(). Zero capacity still returns the zone list (e.g. an
+ * assassin's own zone) -- callers should skip building a BlockProvider at all
+ * when getEffectiveBlockCapacity() is 0, this function only answers "which
+ * zones", not "how much". */
+export function getBlockZones(cell: BoardCell, blockRule: BlockRule): DefenseZone[] {
+  return zonesWithinSpan(cell.zone, blockRule.zoneSpan);
 }
 
 export interface BlockProvider {

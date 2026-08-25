@@ -63,6 +63,10 @@ export interface AttackCoverageRule {
 export interface BlockRule {
   baseCapacity: number;
   rowCapacityMultiplier: Partial<Record<BoardRow, number>>;
+  /** How many DefenseZones this hero's Block reaches, symmetric with
+   * AttackCoverageRule.maxZoneSpan (1 = own zone only). T3 Knight's "可以有限
+   * 協防相鄰 DefenseZone" (十二) is the prototypical zoneSpan:2 case. */
+  zoneSpan: number;
 }
 
 /** Three trigger kinds allowed for Auto Skills (十四、Hero Auto Skill). */
@@ -95,8 +99,11 @@ export interface TierBehaviorPatch {
 }
 
 export interface HeroTierConfig {
-  /** Tentative balance value (see Config below) -- NOT a finalized rule. */
-  statMultiplier: number;
+  /** Overrides the Config default tier multiplier (1.0/1.6/2.4, tentative -- see
+   * RUN_ENGINE_CONFIG.tierStatMultiplier) for this specific hero+tier, if a hero's
+   * design needs to deviate from the global baseline. Leave unset to just use the
+   * global default, which is the common case. */
+  statMultiplierOverride?: number;
   behavior: TierBehaviorPatch;
 }
 

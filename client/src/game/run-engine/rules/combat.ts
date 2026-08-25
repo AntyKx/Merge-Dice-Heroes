@@ -17,12 +17,17 @@ import { RUN_ENGINE_CONFIG } from "../config";
 // Basic Attack
 // ---------------------------------------------------------------------------
 
-/** Base damage is the hero's baseAttack, scaled by the Config tier multiplier
- * (十一's 1.0/1.6/2.4, tentative) and any external combat modifiers (Talent/
- * Blessing/Equipment aggregate -- Phase 7/8 territory, kept as a plain multiplier
- * here so this function doesn't need to know where it came from). */
+export function getTierStatMultiplier(definition: HeroDefinition, tier: HeroTier): number {
+  return definition.tiers[tier].statMultiplierOverride ?? RUN_ENGINE_CONFIG.tierStatMultiplier[tier];
+}
+
+/** Base damage is the hero's baseAttack, scaled by the tier multiplier (十一's
+ * 1.0/1.6/2.4, tentative -- per-hero overridable, see HeroTierConfig) and any
+ * external combat modifiers (Talent/Blessing/Equipment aggregate -- Phase 7/8
+ * territory, kept as a plain multiplier here so this function doesn't need to
+ * know where it came from). */
 export function getBasicAttackDamage(definition: HeroDefinition, tier: HeroTier, externalDamageMultiplier = 1): number {
-  return definition.baseAttack * RUN_ENGINE_CONFIG.tierStatMultiplier[tier] * externalDamageMultiplier;
+  return definition.baseAttack * getTierStatMultiplier(definition, tier) * externalDamageMultiplier;
 }
 
 export function getEffectiveAttackInterval(definition: HeroDefinition, externalSpeedMultiplier = 1): number {

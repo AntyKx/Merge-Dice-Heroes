@@ -1,14 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { computeBlockAssignments, getEffectiveBlockCapacity } from "./block";
+import { computeBlockAssignments, getBlockZones, getEffectiveBlockCapacity } from "./block";
 
 describe("getEffectiveBlockCapacity", () => {
-  const blockRule = { baseCapacity: 2, rowCapacityMultiplier: { front: 1, midFront: 0.5 } };
+  const blockRule = { baseCapacity: 2, rowCapacityMultiplier: { front: 1, midFront: 0.5 }, zoneSpan: 1 };
 
   it("前線拿到完整 Block", () => expect(getEffectiveBlockCapacity({ zone: 1, row: "front" }, blockRule)).toBe(2));
   it("中前只拿到有限 Block", () => expect(getEffectiveBlockCapacity({ zone: 1, row: "midFront" }, blockRule)).toBe(1));
   it("中後/後方沒有 Block（未列於 rowCapacityMultiplier）", () => {
     expect(getEffectiveBlockCapacity({ zone: 1, row: "midBack" }, blockRule)).toBe(0);
     expect(getEffectiveBlockCapacity({ zone: 1, row: "back" }, blockRule)).toBe(0);
+  });
+});
+
+describe("getBlockZones", () => {
+  it("zoneSpan 1 只涵蓋自己防區", () => {
+    expect(getBlockZones({ zone: 2, row: "front" }, { baseCapacity: 1, rowCapacityMultiplier: {}, zoneSpan: 1 })).toEqual([2]);
+  });
+  it("zoneSpan 2（如騎士 T3）涵蓋自己與相鄰防區", () => {
+    expect(getBlockZones({ zone: 2, row: "front" }, { baseCapacity: 1, rowCapacityMultiplier: {}, zoneSpan: 2 }).sort()).toEqual([1, 2, 3]);
   });
 });
 
