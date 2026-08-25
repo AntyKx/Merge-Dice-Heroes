@@ -465,7 +465,7 @@
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);
   gap: 4px 10px;
-  margin-top: clamp(22px, 5cqw, 28px);
+  margin-top: clamp(30px, 6.8cqw, 34px);
   padding: 10px 14px 9px;
   background: linear-gradient(135deg, color-mix(in srgb, var(--codex-color) 14%, #fffbed), rgba(255, 249, 225, .88));
 }
@@ -529,7 +529,7 @@
   display: block;
   font-size: clamp(16px, 4cqw, 20px) !important;
   text-align: center;
-  transform: translateY(17px);
+  transform: translate(8px, 17px);
 }
 
 @media (max-width: 360px) {
