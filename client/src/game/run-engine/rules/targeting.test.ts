@@ -15,9 +15,11 @@ function makeHero(instanceId: string): HeroInstance {
     hp: 100,
     maxHp: 100,
     cell: null,
+    shield: 0,
     status: "active",
     buffs: [],
     skill: { attackCountSinceWaveStart: 0, cooldownRemainingSeconds: 0, initialOffsetSeconds: 0 },
+    attackCooldownRemainingSeconds: 0,
   };
 }
 

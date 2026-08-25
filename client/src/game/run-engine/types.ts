@@ -161,11 +161,15 @@ export interface HeroInstance {
   tier: HeroTier;
   hp: number;
   maxHp: number;
+  shield: number;
   /** null while sitting in the Pending Zone (see PendingZoneState). */
   cell: BoardCell | null;
   status: "active" | "downed";
   buffs: ActiveStatusEffect[];
   skill: AutoSkillRuntimeState;
+  /** Basic Attack timer -- separate from `skill` (Auto Skill has its own trigger/
+   * cooldown per 十四). Support heroes (auraOnly coverage) never consume this. */
+  attackCooldownRemainingSeconds: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -203,7 +207,7 @@ export interface EnemyDefinition {
   castleDamage: number;
   /** Only Siege enemies may damage the castle before reaching the end of a Route. */
   siege: boolean;
-  tags: Array<"elite" | "healer" | "ranged" | "siege">;
+  tags: Array<"elite" | "healer" | "ranged" | "siege" | "boss">;
   baseHp: number;
   baseAttack: number;
   attackIntervalSeconds: number;
@@ -501,4 +505,22 @@ export interface RunState {
   talents: RunTalentState[];
   blessings: string[];
   equipment: EquipmentLoadout;
+
+  // ---- Phase 9 orchestration bookkeeping (mirrors the old game/types.ts
+  // RunState's pendingHeroChoice/pendingFreeMerge/talentChoices/message fields,
+  // per 玩法核心.txt 一's "請依現有程式風格整合") ----
+  /** Set after DICE_RESOLVE (getEligibleComboEffects) until the player picks one --
+   * 二十八's "多 Combo 選擇", never auto-resolved to "the highest". */
+  pendingComboChoices: DiceComboDefinition[];
+  /** THREE_KIND: player must name which of the 3 selected heroes to summon. */
+  pendingHeroChoice: boolean;
+  /** FULL_HOUSE: the next Merge this Preparation may use 2 instead of 3. */
+  pendingFreeMerge: boolean;
+  /** FIVE_KIND: player must name a board T1/T2 hero to instantly tier up. */
+  pendingJackpotTierUp: boolean;
+  /** SMALL_STRAIGHT/LARGE_STRAIGHT combat buff, active for this Wave's combat only. */
+  waveCombatBuff: { attackSpeedMultiplier: number; damageMultiplier: number };
+  talentChoices: TalentDefinition[];
+  blessingChoices: BlessingDefinition[];
+  message: string;
 }
