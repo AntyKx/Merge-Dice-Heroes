@@ -154,8 +154,22 @@ type HeroAnimationAction = "idle" | "attack" | "skill" | "move";
 type FrameRange = { start: number; count: number };
 type HeroFrameSheet = { source: string; totalFrames: number; actions: Record<HeroAnimationAction, FrameRange> };
 
-// Locally self-hosted, foot/center-locked fixed-canvas sheets (decontaminated alpha, no manus-storage dependency).
-const heroSheet = (heroId: string): HeroFrameSheet => ({ source: `/heroes/${heroId}.png`, totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 }, move: { start: 14, count: 6 } } });
+// Design reminder: use external runtime storage for fixed-canvas sheets. The mapping preserves
+// every existing pixel and frame order while keeping large binary assets out of the web project.
+type ExternalHeroSheetId = Exclude<HeroId, "archer">;
+const EXTERNAL_HERO_SHEET_URLS: Record<ExternalHeroSheetId, string> = {
+  assassin: "/manus-storage/assassin_020ca6c9.png",
+  bard: "/manus-storage/bard_d78e3593.png",
+  deathKnight: "/manus-storage/deathKnight_3c0ba74a.png",
+  engineer: "/manus-storage/engineer_e624c9a1.png",
+  fighter: "/manus-storage/fighter_9e99530a.png",
+  fireMage: "/manus-storage/fireMage_11182d92.png",
+  frostQueen: "/manus-storage/frostQueen_7f5dbd67.png",
+  knight: "/manus-storage/knight_65aa4eb9.png",
+  priest: "/manus-storage/priest_b0aeef78.png",
+  ranger: "/manus-storage/ranger_45a7f2ce.png",
+};
+const heroSheet = (heroId: ExternalHeroSheetId): HeroFrameSheet => ({ source: EXTERNAL_HERO_SHEET_URLS[heroId], totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 }, move: { start: 14, count: 6 } } });
 const HERO_FRAME_SHEETS: Partial<Record<HeroId, HeroFrameSheet>> = {
   fireMage: heroSheet("fireMage"),
   knight: heroSheet("knight"),

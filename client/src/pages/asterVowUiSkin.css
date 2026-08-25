@@ -16,10 +16,10 @@
   background-position: top center;
   background-size: 100% auto;
 }
-.lobby-module-screen.skin-equipment { background-image: url(/ui-astervow/backgrounds/equipment.png); background-color: #f2e0b8; }
-.lobby-module-screen.skin-shop { background-image: url(/ui-astervow/backgrounds/shop.png); background-color: #f3e3bd; }
-.lobby-module-screen.skin-dungeon { background-image: url(/ui-astervow/backgrounds/dungeon.png); background-color: #efdcb8; }
-.selection-screen.skin-team { background-image: url(/ui-astervow/backgrounds/team.png); background-color: #f2e3c0; }
+.lobby-module-screen.skin-equipment { background-image: url(/manus-storage/equipment_e86359e9.png); background-color: #f2e0b8; }
+.lobby-module-screen.skin-shop { background-image: url(/manus-storage/shop_2a7c3e2f.png); background-color: #f3e3bd; }
+.lobby-module-screen.skin-dungeon { background-image: url(/manus-storage/dungeon_37ed44a2.png); background-color: #efdcb8; }
+.selection-screen.skin-team { background-image: url(/manus-storage/team_6bf20124.png); background-color: #f2e3c0; }
 
 .skin-equipment .back-link,
 .skin-shop .back-link,
@@ -154,3 +154,273 @@
 .astervow-btn.is-red { border-image-source: url(/ui-astervow/buttons/danger-red.png) !important; color: #5a2013 !important; }
 .astervow-btn.is-locked, .astervow-btn:disabled { border-image-source: url(/ui-astervow/buttons/disabled-gray.png) !important; color: #5c5650 !important; }
 .astervow-btn:active { transform: translateY(2px) scale(.98); }
+
+/* Design reminder: these four destination screens are a single illustrated parchment system.
+   Keep all live controls inside the empty central paper field below the baked title plaque;
+   use the supplied nine-slice panels/buttons instead of reintroducing flat courtyard cards. */
+.lobby-module-screen.skin-equipment,
+.lobby-module-screen.skin-shop,
+.lobby-module-screen.skin-dungeon,
+.selection-screen.skin-team {
+  min-height: 100dvh;
+  padding: 0 14px max(26px, env(safe-area-inset-bottom));
+  overflow-x: clip;
+}
+
+.skin-equipment .baked-banner-copy,
+.skin-shop .baked-banner-copy,
+.skin-dungeon .baked-banner-copy,
+.selection-screen.skin-team .baked-banner-copy {
+  display: grid;
+  align-content: center;
+  min-height: 11.5cqw;
+  margin-top: 12.6cqw;
+  margin-bottom: 7px;
+}
+
+.skin-equipment .baked-banner-copy h2,
+.skin-shop .baked-banner-copy h2,
+.skin-dungeon .baked-banner-copy h2,
+.selection-screen.skin-team .baked-banner-copy h2 {
+  font-size: clamp(10px, 2.35cqw, 14px) !important;
+}
+
+.skin-equipment .equipment-bonus-strip,
+.skin-shop .shop-toolbar,
+.skin-dungeon .dungeon-energy,
+.selection-screen.skin-team .selection-count {
+  position: relative;
+  z-index: 1;
+  margin-top: 10px;
+}
+
+.skin-equipment .equipment-bonus-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.skin-equipment .equipment-bonus-strip span,
+.skin-dungeon .dungeon-energy,
+.skin-shop .shop-toolbar,
+.selection-screen.skin-team .selection-count {
+  border: 0;
+  background: rgba(255, 249, 225, .76);
+  box-shadow: inset 0 0 0 1px rgba(120, 79, 39, .2), 0 3px 10px rgba(91, 58, 30, .1);
+  backdrop-filter: blur(2px);
+}
+
+.skin-equipment .equipment-bonus-strip span {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: center;
+  min-height: 38px;
+  padding: 5px 6px;
+  border-radius: 10px;
+  font-size: 9px;
+  line-height: 1.15;
+}
+
+.skin-equipment .equipment-slots {
+  gap: 7px;
+  margin: 10px 0 8px;
+}
+
+.skin-equipment .astervow-slot {
+  min-height: 94px;
+  padding: 9px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.skin-equipment .astervow-slot small,
+.skin-equipment .astervow-slot b,
+.skin-equipment .astervow-slot span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skin-equipment .module-status,
+.skin-equipment .dungeon-energy,
+.skin-dungeon .module-status {
+  margin: 8px 0 0;
+}
+
+.skin-equipment .inventory-list,
+.skin-shop .shop-list,
+.skin-dungeon .dungeon-list {
+  display: grid;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.skin-equipment .inventory-list article,
+.skin-shop .shop-list article,
+.skin-dungeon .dungeon-list article {
+  min-height: 82px;
+  padding: 10px 12px;
+  align-items: center;
+}
+
+.skin-equipment .inventory-list article,
+.skin-shop .shop-list article {
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.skin-equipment .inventory-list article {
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: start;
+}
+
+.skin-equipment .inventory-list article > div:not(.equipment-actions) {
+  min-width: 0;
+}
+
+.skin-equipment .inventory-list article > i,
+.skin-shop .shop-list article > i {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.skin-equipment .inventory-list article p,
+.skin-shop .shop-list article p,
+.skin-dungeon .dungeon-list article p {
+  margin: 2px 0;
+  font-size: 11px;
+  line-height: 1.32;
+}
+
+.skin-equipment .equipment-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(48px, 1fr));
+  gap: 4px;
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.skin-equipment .equipment-actions .astervow-btn,
+.skin-shop .shop-list .astervow-btn,
+.skin-dungeon .dungeon-list .astervow-btn {
+  min-height: 34px;
+  padding: 4px 7px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.skin-shop .shop-toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 7px;
+  border-radius: 12px;
+}
+
+.skin-shop .shop-refresh-clock {
+  justify-self: center;
+  min-width: 0;
+}
+
+.skin-shop .shop-toolbar > .astervow-btn {
+  min-height: 36px;
+  padding: 4px 8px;
+  font-size: 10px;
+}
+
+.skin-dungeon .dungeon-energy {
+  display: grid;
+  grid-template-columns: 26px auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border-radius: 12px;
+}
+
+.skin-dungeon .dungeon-list article {
+  grid-template-columns: 47px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.skin-dungeon .dungeon-list article footer {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.selection-screen.skin-team .selection-count {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 5px;
+  margin: 9px 8px 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+}
+
+.selection-screen.skin-team .hero-choice-grid {
+  gap: 9px;
+  margin-top: 11px;
+}
+
+.selection-screen.skin-team .hero-choice {
+  min-height: 128px;
+  padding: 8px;
+  border: 12px solid transparent;
+  border-image-source: url(/ui-astervow/panels/large-card.png);
+  border-image-slice: 38 fill;
+  border-image-width: 12px;
+  background: none;
+  box-shadow: none;
+}
+
+.selection-screen.skin-team .hero-choice-art {
+  min-height: 76px;
+  margin: -2px -2px 4px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255,255,246,.45), rgba(207,176,114,.28));
+}
+
+.selection-screen.skin-team .hero-choice i {
+  margin-top: 4px;
+  padding: 3px 8px;
+  border: 0;
+  background: rgba(255, 244, 198, .92);
+  color: #376650;
+  font-size: 9px;
+}
+
+.skin-equipment .wide-cta,
+.skin-shop .wide-cta,
+.skin-dungeon .wide-cta,
+.selection-screen.skin-team .wide-cta {
+  position: sticky;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 2;
+  min-height: 42px;
+  margin-top: 13px;
+}
+
+@media (max-width: 360px) {
+  .skin-equipment .inventory-list article,
+  .skin-shop .shop-list article { grid-template-columns: 32px minmax(0, 1fr); }
+  .skin-equipment .equipment-actions,
+  .skin-shop .shop-list .astervow-btn { grid-column: 1 / -1; width: 100%; }
+  .skin-shop .shop-toolbar { grid-template-columns: auto 1fr; }
+  .skin-shop .shop-toolbar > .astervow-btn { grid-column: 1 / -1; width: 100%; }
+}
