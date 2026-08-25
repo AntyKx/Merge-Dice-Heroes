@@ -25,6 +25,9 @@ export type HeroRole = "tank" | "melee" | "assassin" | "ranged" | "support";
 export type DefenseZone = 1 | 2 | 3 | 4;
 export type BoardRow = "front" | "midFront" | "midBack" | "back";
 export const BOARD_ROWS: readonly BoardRow[] = ["front", "midFront", "midBack", "back"];
+/** Row order from the battlefield (Route side) toward the castle -- index 0 is
+ * closest to the enemy Route, matching 五、【縱向四列】's Row1..Row4 ordering. */
+export const ALL_DEFENSE_ZONES: readonly DefenseZone[] = [1, 2, 3, 4];
 
 /** A single one of the 16 cells in the 4x4 hero-only board (see BoardState). */
 export interface BoardCell {
@@ -39,7 +42,9 @@ export function boardCellKey(cell: BoardCell): `${DefenseZone}-${BoardRow}` {
 /**
  * How a hero's attacks/effects reach Routes above the board. Kept per-hero (not a
  * single global rule) per 玩法核心.txt 九、英雄職業與道路覆蓋 -- tanks mainly cover
- * their own zone, ranged/support use different coverage shapes entirely.
+ * their own zone, ranged/support use different coverage shapes entirely. "auraOnly"
+ * means the hero does not target enemies/Routes at all (pure Support -- see
+ * SupportRangeRule below).
  */
 export interface AttackCoverageRule {
   kind: "ownZone" | "ownZonePlusAdjacent" | "rangedSelective" | "auraOnly";
@@ -49,12 +54,15 @@ export interface AttackCoverageRule {
 
 /**
  * Block/Intercept capability. baseCapacity 0 = never blocks (e.g. assassin).
- * effectiveRows lists which BoardRow values still grant Block -- e.g. a tank's
- * effectiveRows might be ["front", "midFront"] (partial) while pure DPS is [].
+ * rowCapacityMultiplier gives *graded* Block by row per 九、【坦克】"前線才能發揮
+ * 完整 Block，中前可以依英雄能力有限 Block，中後/後方基本沒有正常 Block" -- a row
+ * missing from this map has 0 capacity (no Block at all), matching the old
+ * effectiveRows list semantics but allowing "limited" (e.g. 0.5) instead of only
+ * on/off.
  */
 export interface BlockRule {
   baseCapacity: number;
-  effectiveRows: BoardRow[];
+  rowCapacityMultiplier: Partial<Record<BoardRow, number>>;
 }
 
 /** Three trigger kinds allowed for Auto Skills (十四、Hero Auto Skill). */
@@ -92,6 +100,19 @@ export interface HeroTierConfig {
   behavior: TierBehaviorPatch;
 }
 
+/**
+ * How a Support hero's Talent/Buff/Heal effects reach ALLIES. Deliberately separate
+ * from AttackCoverageRule -- 九、【Support】says support "主要依相鄰格/範圍/同排/
+ * 同列/Aura...不要主要依敵軍道路判定", i.e. it's board-adjacency based, not
+ * Route-based like enemy targeting.
+ */
+export type SupportRangeRule =
+  | { kind: "adjacentCell" }
+  | { kind: "sameRow" }
+  | { kind: "sameZone" }
+  | { kind: "radiusCells"; radius: number }
+  | { kind: "auraAll" };
+
 export interface HeroDefinition {
   id: HeroId;
   role: HeroRole;
@@ -99,7 +120,12 @@ export interface HeroDefinition {
   baseHp: number;
   attackInterval: number;
   coverage: AttackCoverageRule;
+  /** How far along a Route (0-1 of the path, 1 = at the castle) this hero can still
+   * reach an enemy. Independent from zone coverage -- both must be satisfied. */
+  rangeAlongRoute: number;
   blockRule: BlockRule;
+  /** Only meaningful for role === "support"; enemy-facing heroes leave this unset. */
+  supportRange?: SupportRangeRule;
   tiers: Record<HeroTier, HeroTierConfig>;
   autoSkill: AutoSkillDefinition;
   trait: TraitDefinition;

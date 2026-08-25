@@ -7,16 +7,14 @@
  * be BLOCKED -- routeNewSummon() never silently drops a hero, and combat cannot
  * start while Pending is non-empty (assertPendingResolvedBeforeCombat()).
  */
-import type { BoardState, DefenseZone, BoardRow, HeroInstance, PendingZoneState } from "../types";
-import { BOARD_ROWS, boardCellKey } from "../types";
+import type { BoardState, BoardRow, HeroInstance, PendingZoneState } from "../types";
+import { ALL_DEFENSE_ZONES, BOARD_ROWS, boardCellKey } from "../types";
 
 type CellKey = ReturnType<typeof boardCellKey>;
 
-const ALL_ZONES: DefenseZone[] = [1, 2, 3, 4];
-
 export function emptyCellKeys(board: BoardState): CellKey[] {
   const keys: CellKey[] = [];
-  ALL_ZONES.forEach((zone) => BOARD_ROWS.forEach((row: BoardRow) => {
+  ALL_DEFENSE_ZONES.forEach((zone) => BOARD_ROWS.forEach((row: BoardRow) => {
     const key = boardCellKey({ zone, row });
     if (!board.cells[key]) keys.push(key);
   }));
