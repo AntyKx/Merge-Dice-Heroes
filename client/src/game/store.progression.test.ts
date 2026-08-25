@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { defaultProgress } from "./persistence";
+import { HERO_XP_PER_VICTORY } from "./heroProgress";
 import { useGameStore } from "./store";
 
 const freshProgress = () => ({ ...defaultProgress, inventory: [...defaultProgress.inventory], equipmentLevels: { ...defaultProgress.equipmentLevels }, equipped: {}, daily: { ...defaultProgress.daily, claimed: [] }, dungeonClears: {}, shop: { ...defaultProgress.shop, offers: [...defaultProgress.shop.offers], purchased: [] }, lobbyRead: {} });
@@ -40,6 +41,21 @@ describe("persistent lobby progression", () => {
     expect(useGameStore.getState().screen).toBe("title");
     expect(useGameStore.getState().run).toBeUndefined();
     expect(useGameStore.getState().progress.stamina).toBe(4);
+  });
+
+  it("records trial clear rewards and experience when the final wave is won", () => {
+    const initialCrystals = useGameStore.getState().progress.crystals;
+    useGameStore.getState().selectDungeon("ruinCorridor");
+    const activeRun = useGameStore.getState().run!;
+    useGameStore.setState({ run: { ...activeRun, wave: 10, phase: "WAVE_CLEAR" } });
+    useGameStore.getState().continueWave();
+    const state = useGameStore.getState();
+    expect(state.run?.phase).toBe("VICTORY");
+    expect(state.progress.crystals).toBe(initialCrystals + 45);
+    expect(state.progress.dungeonClears.ruinCorridor).toBe(1);
+    expect(state.progress.heroProgress.knight?.experience).toBe(HERO_XP_PER_VICTORY);
+    expect(state.progress.heroProgress.fireMage?.experience).toBe(HERO_XP_PER_VICTORY);
+    expect(state.progress.heroProgress.ranger?.experience).toBe(HERO_XP_PER_VICTORY);
   });
 
   it("buys a shop item once and uses the daily free refresh", () => {
