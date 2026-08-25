@@ -541,7 +541,27 @@
   display: block;
   font-size: clamp(16px, 4cqw, 20px) !important;
   text-align: center;
-  transform: translate(-7px, 27px);
+  transform: translate(-7px, 17px);
+}
+
+.hero-codex-collection header {
+  padding-left: 28px;
+}
+
+.hero-codex-page-status {
+  min-height: 21px;
+}
+
+.hero-codex-page-status button {
+  flex: 0 0 21px;
+  height: 21px;
+  min-height: 21px;
+  padding: 0 0 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transform: none;
 }
 
 @media (max-width: 360px) {
