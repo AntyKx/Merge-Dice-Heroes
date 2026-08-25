@@ -218,6 +218,15 @@
   font-size: clamp(10px, 2.35cqw, 14px) !important;
 }
 
+/* The three module backgrounds reserve a centered text field within their painted plaque.
+   Move only the live title down into that vertical center; the team codex owns a separate
+   measured override because its plaque and crest use different geometry. */
+.skin-equipment .baked-banner-copy h2,
+.skin-shop .baked-banner-copy h2,
+.skin-dungeon .baked-banner-copy h2 {
+  transform: translateY(12px);
+}
+
 .skin-equipment .equipment-bonus-strip,
 .skin-shop .shop-toolbar,
 .skin-dungeon .dungeon-energy,
