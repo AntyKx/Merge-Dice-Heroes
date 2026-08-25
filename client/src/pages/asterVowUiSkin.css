@@ -541,7 +541,7 @@
   display: block;
   font-size: clamp(16px, 4cqw, 20px) !important;
   text-align: center;
-  transform: translate(-2px, 17px);
+  transform: translate(-2px, 38px);
 }
 
 .hero-codex-collection header {
