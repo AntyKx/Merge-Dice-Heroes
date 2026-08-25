@@ -607,7 +607,7 @@ function TeamScreen() {
   const requestedHero = new URLSearchParams(window.location.search).get("codexHero");
   const initialHero = SELECTABLE_HERO_IDS.includes(requestedHero as HeroId) ? requestedHero as HeroId : "knight";
   const [focusedHeroId, setFocusedHeroId] = useState<HeroId>(initialHero);
-  const collectionPageSize = 6;
+  const collectionPageSize = 10;
   const [collectionPage, setCollectionPage] = useState(() => Math.floor(SELECTABLE_HERO_IDS.indexOf(initialHero) / collectionPageSize));
   const [showCodexHelp, setShowCodexHelp] = useState(() => new URLSearchParams(window.location.search).get("codexHelp") === "1");
   const hero = HEROES[focusedHeroId];
