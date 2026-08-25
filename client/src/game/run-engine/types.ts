@@ -415,6 +415,11 @@ export interface TalentDefinition {
   id: string;
   category: TalentCategory;
   levels: [TalentLevelEffect, TalentLevelEffect, TalentLevelEffect];
+  /** Which selected heroes (and/or the Leader) this Talent synergizes with -- used
+   * by generateTalentChoices()'s Weighted Pool (三十: "Talent Pool 應依 3 英雄/
+   * Leader/Equipment/已有 Build 做 Weighted Pool"). Omit for a fully generic Talent
+   * with no particular hero affinity. */
+  relatedHeroIds?: HeroId[];
 }
 
 export interface RunTalentState {
@@ -432,6 +437,9 @@ export interface RuleChangeDescriptor {
 export interface BlessingDefinition {
   id: string;
   ruleChange: RuleChangeDescriptor;
+  /** Same purpose as TalentDefinition.relatedHeroIds -- 三十二's "核心祝福 Offer
+   * 至少一個最好與目前 Build 有高度關聯". */
+  relatedHeroIds?: HeroId[];
 }
 
 // ---------------------------------------------------------------------------
