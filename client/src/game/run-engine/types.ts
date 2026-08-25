@@ -223,8 +223,12 @@ export interface RouteState {
 
 export interface SpawnBatchEntry {
   enemyId: string;
-  /** Gap before this specific entry spawns, relative to the batch start. */
+  /** Gap before this specific entry spawns, relative to the batch start (per 二十、
+   * "同一 Batch 中怪物也應該有 Spawn Gap" -- e.g. 0.0s / 0.5s / 1.0s / ...). */
   gapSeconds: number;
+  /** Which Route(s) this single EnemyInstance spawns onto -- len 1 for Width 1,
+   * len 2/4 for Width 2/4 (never split into multiple instances). */
+  routes: RouteId[];
 }
 
 export interface SpawnBatch {
@@ -277,10 +281,21 @@ export interface WaveDefinition {
   event?: BattlefieldEventDefinition;
 }
 
+/** A single SpawnBatchEntry flattened to an absolute wave-clock time (built once at
+ * Wave start by wave.ts's flattenSpawnSchedule() from WaveDefinition.batches). */
+export interface ScheduledSpawn {
+  dueAtSeconds: number;
+  enemyId: string;
+  routes: RouteId[];
+}
+
 export interface WaveRuntimeState {
   waveNumber: number;
   routes: RouteState[];
-  pendingBatches: SpawnBatch[];
+  /** Sorted ascending by dueAtSeconds; spawnedCount is a cursor into it, not a
+   * shrinking list, so re-deriving state is trivial to reason about/test. */
+  spawnQueue: ScheduledSpawn[];
+  spawnedCount: number;
   elapsedSeconds: number;
 }
 
