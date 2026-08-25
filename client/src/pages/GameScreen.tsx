@@ -607,12 +607,21 @@ function TeamScreen() {
   const requestedHero = new URLSearchParams(window.location.search).get("codexHero");
   const initialHero = SELECTABLE_HERO_IDS.includes(requestedHero as HeroId) ? requestedHero as HeroId : "knight";
   const [focusedHeroId, setFocusedHeroId] = useState<HeroId>(initialHero);
+  const collectionPageSize = 6;
+  const [collectionPage, setCollectionPage] = useState(() => Math.floor(SELECTABLE_HERO_IDS.indexOf(initialHero) / collectionPageSize));
   const [showCodexHelp, setShowCodexHelp] = useState(() => new URLSearchParams(window.location.search).get("codexHelp") === "1");
   const hero = HEROES[focusedHeroId];
   const heroProgress = getHeroProgress(progress.heroProgress[focusedHeroId]);
   const nextExperience = heroXpRequirement(heroProgress.level);
   const attackSpeed = (1 / hero.attackInterval).toFixed(2);
   const roleLabel = { tank: "前線守護", area: "範圍壓制", single: "精準輸出", support: "支援回復" }[hero.role];
+  const collectionPageCount = Math.ceil(SELECTABLE_HERO_IDS.length / collectionPageSize);
+  const collectionPageStart = collectionPage * collectionPageSize;
+  const visibleHeroIds = SELECTABLE_HERO_IDS.slice(collectionPageStart, collectionPageStart + collectionPageSize);
+  const focusCatalogueHero = (heroId: HeroId) => {
+    setFocusedHeroId(heroId);
+    setCollectionPage(Math.floor(SELECTABLE_HERO_IDS.indexOf(heroId) / collectionPageSize));
+  };
 
   return <section className="selection-screen skin-team hero-codex-screen">
     <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到大廳</button>
@@ -636,10 +645,10 @@ function TeamScreen() {
     </section>
 
     <section className="hero-codex-collection" aria-label="已解鎖英雄收藏">
-      <header><span>已解鎖英雄</span><small>{SELECTABLE_HERO_IDS.length} / {SELECTABLE_HERO_IDS.length}</small></header>
-      <div>{SELECTABLE_HERO_IDS.map((heroId) => {
+      <header><span>已解鎖英雄</span><span className="hero-codex-page-status"><small>{collectionPage + 1} / {collectionPageCount}</small><button type="button" aria-label="上一頁英雄" disabled={collectionPage === 0} onClick={() => setCollectionPage((page) => page - 1)}>‹</button><button type="button" aria-label="下一頁英雄" disabled={collectionPage === collectionPageCount - 1} onClick={() => setCollectionPage((page) => page + 1)}>›</button></span></header>
+      <div>{visibleHeroIds.map((heroId) => {
         const entry = HEROES[heroId]; const entryProgress = getHeroProgress(progress.heroProgress[heroId]);
-        return <button type="button" key={heroId} className={heroId === focusedHeroId ? "is-active" : ""} style={{ "--catalogue-hero-color": entry.color } as React.CSSProperties} onClick={() => setFocusedHeroId(heroId)}><img className="hero-codex-collection__portrait" src={HERO_PORTRAITS[heroId] ?? HEROES_URL} alt="" /><span><b>{entry.name}</b><small>{entry.classLabel} · Lv.{entryProgress.level}</small></span></button>;
+        return <button type="button" key={heroId} className={heroId === focusedHeroId ? "is-active" : ""} style={{ "--catalogue-hero-color": entry.color } as React.CSSProperties} onClick={() => focusCatalogueHero(heroId)}><img className="hero-codex-collection__portrait" src={HERO_PORTRAITS[heroId] ?? HEROES_URL} alt="" /><span><b>{entry.name}</b><small>{entry.classLabel} · Lv.{entryProgress.level}</small></span></button>;
       })}</div>
     </section>
 
