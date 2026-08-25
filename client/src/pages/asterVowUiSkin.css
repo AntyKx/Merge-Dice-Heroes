@@ -454,16 +454,16 @@
 .hero-codex-feature__identity { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; justify-content: center; }
 .hero-codex-feature__identity > small { color: color-mix(in srgb, var(--codex-color) 72%, #4d3625); font-size: 9px; font-weight: 900; }
 .hero-codex-feature__identity h2 { margin: 2px 0; color: #52321e; font-size: 20px; line-height: 1.12; }
-.hero-codex-feature__identity p { margin: 0; color: #806145; font-size: 10px; line-height: 1.35; }
+.hero-codex-feature__identity p { min-height: 27px; margin: 0; color: #806145; font-size: 10px; line-height: 1.35; }
 .hero-codex-level { width: 100%; margin-top: 8px; }
-.hero-codex-level b { color: #59412b; font-size: 11px; }
+.hero-codex-level b { display: block; color: #59412b; font-size: 11px; line-height: 1; }
 .hero-codex-level span { position: relative; display: block; height: 13px; margin-top: 3px; overflow: hidden; border-radius: 999px; background: #e7d4a7; color: #72513b; font-size: 8px; font-weight: 800; line-height: 13px; text-align: center; isolation: isolate; }
 .hero-codex-level i { position: absolute; z-index: -1; inset: 0 auto 0 0; display: block; border-radius: inherit; background: linear-gradient(90deg, #65a671, #bcd878); }
 
 .hero-codex-stats { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 2px; }
 .hero-codex-stats span { display: grid; min-width: 0; gap: 1px; padding: 5px 3px; border-radius: 7px; background: rgba(255, 252, 235, .74); text-align: center; }
-.hero-codex-stats small { color: #8c6b4f; font-size: 8px; }
-.hero-codex-stats b { color: #4d3526; font-size: 13px; }
+.hero-codex-stats small { color: #8c6b4f; font-size: 8px; line-height: 1; }
+.hero-codex-stats b { color: #4d3526; font-size: 13px; line-height: 1.1; }
 
 .hero-codex-skills { display: grid; gap: 5px; margin-top: 9px; padding: 10px; }
 .hero-codex-skills header,
@@ -472,7 +472,7 @@
 .hero-codex-skills header small { color: #927358; font-size: 8px; font-weight: 700; }
 .hero-codex-skills article { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 7px; align-items: center; padding: 5px 4px; border-top: 1px solid rgba(132, 91, 53, .16); }
 .hero-codex-skills article > i { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 50%; background: #5f9f89; color: #fffbe8; font-size: 8px; font-style: normal; font-weight: 900; }
-.hero-codex-skills article small { display: block; color: #9c7654; font-size: 8px; }
+.hero-codex-skills article small { display: block; margin-bottom: 1px; color: #9c7654; font-size: 8px; line-height: 1; }
 .hero-codex-skills article b { display: block; color: #513723; font-size: 11px; line-height: 1.3; }
 
 .hero-codex-collection { margin-top: 9px; padding: 10px; }
@@ -486,12 +486,12 @@
 .hero-codex-collection button b { font-size: 10px; }
 .hero-codex-collection button small { margin-top: 2px; color: #907052; font-size: 8px; }
 
-.hero-codex-roadmap { display: flex; gap: 7px; align-items: center; margin-top: 9px; padding: 8px 10px; border-image-source: url(/ui-astervow/panels/ability-card.png); color: #5c4331; }
-.hero-codex-roadmap > svg { flex: 0 0 auto; color: #c5863f; }
-.hero-codex-roadmap b,
-.hero-codex-roadmap span { display: block; }
-.hero-codex-roadmap b { font-size: 10px; }
-.hero-codex-roadmap span { margin-top: 1px; color: #8b6b50; font-size: 9px; line-height: 1.35; }
+.hero-codex-help { position: absolute; z-index: 4; top: calc(14.5cqw + 8px); right: 10px; display: grid; width: 24px; height: 24px; place-items: center; border: 2px solid #89613c; border-radius: 50%; background: linear-gradient(180deg, #fff9dc, #e7c179); box-shadow: inset 0 1px rgba(255,255,255,.9), 0 2px 0 rgba(111,74,44,.7); color: #603f26; font-family: Georgia, serif; font-size: 16px; font-weight: 900; line-height: 1; }
+.hero-codex-help.is-open { background: #5c9b84; color: #fffbea; }
+.hero-codex-help-panel { position: absolute; z-index: 5; top: calc(14.5cqw + 37px); right: 10px; width: min(240px, calc(100% - 30px)); padding: 11px 30px 11px 12px; border: 1px solid rgba(109, 75, 43, .42); border-radius: 11px; background: rgba(255, 250, 228, .97); box-shadow: 0 8px 18px rgba(76, 50, 25, .22); color: #63442d; }
+.hero-codex-help-panel button { position: absolute; top: 6px; right: 6px; display: grid; width: 20px; height: 20px; place-items: center; border: 0; border-radius: 50%; background: rgba(107, 71, 40, .12); color: #715038; }
+.hero-codex-help-panel b { display: block; font-size: 11px; }
+.hero-codex-help-panel p { margin: 3px 0 0; color: #89684d; font-size: 10px; line-height: 1.45; }
 
 @media (max-width: 360px) {
   .skin-equipment .inventory-list article,

@@ -607,6 +607,7 @@ function TeamScreen() {
   const requestedHero = new URLSearchParams(window.location.search).get("codexHero");
   const initialHero = SELECTABLE_HERO_IDS.includes(requestedHero as HeroId) ? requestedHero as HeroId : "knight";
   const [focusedHeroId, setFocusedHeroId] = useState<HeroId>(initialHero);
+  const [showCodexHelp, setShowCodexHelp] = useState(() => new URLSearchParams(window.location.search).get("codexHelp") === "1");
   const hero = HEROES[focusedHeroId];
   const heroProgress = getHeroProgress(progress.heroProgress[focusedHeroId]);
   const nextExperience = heroXpRequirement(heroProgress.level);
@@ -616,6 +617,8 @@ function TeamScreen() {
   return <section className="selection-screen skin-team hero-codex-screen">
     <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到大廳</button>
     <BakedBannerCopy location="王城藏書室 · 英雄圖鑑" title="英雄檔案館" summary="閱讀已解鎖英雄的戰鬥資料、成長紀錄與技能檔案。" />
+    <button className={`hero-codex-help ${showCodexHelp ? "is-open" : ""}`} type="button" onClick={() => setShowCodexHelp((open) => !open)} aria-expanded={showCodexHelp} aria-controls="hero-codex-help-panel" aria-label="查看英雄圖鑑用途">?</button>
+    {showCodexHelp && <aside id="hero-codex-help-panel" className="hero-codex-help-panel" role="note"><button type="button" onClick={() => setShowCodexHelp(false)} aria-label="關閉說明"><X size={13} /></button><b>英雄圖鑑用途</b><p>這裡用來查看英雄的成長、戰鬥數值與技能檔案。隊伍編組與遠征請回到王都操作。</p></aside>}
 
     <article className="hero-codex-feature" style={{ "--codex-color": hero.color } as React.CSSProperties}>
       <div className="hero-codex-feature__art"><img className="hero-codex-feature__portrait" src={HERO_PORTRAITS[focusedHeroId] ?? HEROES_URL} alt="" /><span>{hero.classLabel}</span></div>
@@ -640,7 +643,6 @@ function TeamScreen() {
       })}</div>
     </section>
 
-    <aside className="hero-codex-roadmap" aria-label="後續圖鑑擴充"><Sparkles size={15} /><div><b>圖鑑擴充預留</b><span>英雄傳記、羈絆、造型收集與熟練度將在此解鎖。</span></div></aside>
   </section>;
 }
 
