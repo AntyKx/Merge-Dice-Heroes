@@ -319,7 +319,7 @@ const LOBBY_MODULES: Record<LobbyModuleId, { label: string; title: string; eyebr
 };
 
 function TitleScreen() {
-  const { openScreen, progress, setSetting, selectedHeroes, leaderId, setTeamSlot, chooseLeader } = useGameStore();
+  const { openScreen, progress, setSetting, selectedHeroes, leaderId, setTeamSlot, chooseLeader, startRun } = useGameStore();
   const [departing, setDeparting] = useState(false);
   const [lobbyTab, setLobbyTab] = useState<LobbyTab>("kingdom");
   const [bannerStyle, setBannerStyle] = useState<ExpeditionBannerStyle>("verdant");
@@ -399,7 +399,7 @@ function TitleScreen() {
       window.clearTimeout(exitTimer);
     };
   }, [chapterCompleted, storyChapter]);
-  const launchExpedition = () => { if (departing) return; setDeparting(true); window.setTimeout(() => openScreen("team"), 1100); };
+  const launchExpedition = () => { if (departing || selectedHeroes.length !== 3) return; setDeparting(true); window.setTimeout(() => startRun(), 1100); };
   const editFormationHero = (heroId: HeroId) => {
     if (selectedHeroes[focusedFormationSlot] === heroId) {
       setTeamSlot(focusedFormationSlot);
