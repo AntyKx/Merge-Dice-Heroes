@@ -585,3 +585,68 @@
   .hero-codex-feature__identity h2 { font-size: 18px; }
   .hero-codex-skills header small { display: none; }
 }
+
+/* Equipment page layout reminder: use three concise reading bands — current bonuses,
+   equipped loadout, and backpack management — rather than a single undifferentiated list. */
+.skin-equipment .equipment-overview,
+.skin-equipment .equipment-loadout,
+.skin-equipment .equipment-inventory {
+  position: relative;
+  z-index: 1;
+}
+.skin-equipment .equipment-overview { margin-top: 9px; }
+.skin-equipment .equipment-loadout { margin-top: 9px; }
+.skin-equipment .equipment-inventory { margin-top: 0; }
+.skin-equipment .equipment-section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  min-height: 18px;
+  padding: 0 7px 3px 13px;
+  color: #68421f;
+  font-family: "Mochiy Pop One", "Noto Sans TC", sans-serif;
+}
+.skin-equipment .equipment-section-heading span {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .025em;
+}
+.skin-equipment .equipment-section-heading small {
+  color: #956839;
+  font-family: "Noto Sans TC", sans-serif;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.skin-equipment .equipment-bonus-strip span {
+  min-height: 34px;
+  padding: 4px 6px;
+}
+.skin-equipment .equipment-slots {
+  gap: 6px;
+  margin: 0 0 7px;
+}
+.skin-equipment .astervow-slot {
+  min-height: 78px;
+  padding: 7px 5px;
+}
+.skin-equipment .module-status { margin: 6px 0 0; }
+.skin-equipment .inventory-list {
+  gap: 7px;
+  margin-top: 4px;
+}
+.skin-equipment .inventory-list article {
+  min-height: 76px;
+  padding: 8px 10px;
+}
+.skin-equipment .inventory-list article p {
+  margin: 1px 0;
+  font-size: 10px;
+  line-height: 1.24;
+}
+.skin-equipment .equipment-actions { margin-top: 1px; }
+.skin-equipment .equipment-actions .astervow-btn {
+  min-height: 31px;
+  padding: 3px 6px;
+  font-size: 9px;
+}
