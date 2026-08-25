@@ -56,12 +56,42 @@
 .selection-screen.skin-team .baked-banner-copy {
   /* .selection-screen pads 24px (not .lobby-module-screen's 16px) -- cancel that instead. */
   width: calc(100% + 48px);
-  margin: 14.5cqw -24px 0;
+  margin: 17.7cqw -24px 0;
   display: grid;
   align-content: center;
   gap: 0;
-  height: 6.5cqw;
+  min-height: 8cqw;
+  padding: 0 19cqw 0 28cqw;
   overflow: visible;
+}
+
+/* The Team background already owns the top-left ornament and central paper plaque. Keep
+   navigation deliberately compact so it reads as a utility control, not a second signboard. */
+.selection-screen.skin-team .back-link {
+  top: 9px;
+  left: 8px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 0;
+}
+.selection-screen.skin-team .back-link svg { width: 17px; height: 17px; }
+.selection-screen.skin-team .baked-banner-copy p { display: none; }
+.selection-screen.skin-team .baked-banner-copy h2 {
+  display: block;
+  overflow: visible;
+  color: #58341f;
+  font-family: "Mochiy Pop One", "Noto Sans TC", sans-serif;
+  font-size: clamp(16px, 4cqw, 20px) !important;
+  font-weight: 900;
+  letter-spacing: .04em;
+  line-height: 1.1 !important;
+  text-align: center;
+  white-space: nowrap;
 }
 .baked-banner-copy p { margin: 0 !important; color: #8a5a1f; font-size: clamp(6px, 1.1cqw, 7px) !important; font-weight: 950; letter-spacing: .06em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .baked-banner-copy h2 { margin: 0 !important; overflow: hidden; color: #55351e; font-family: "Mochiy Pop One", "Noto Sans TC", sans-serif; font-size: clamp(9px, 2.1cqw, 12px) !important; line-height: 1.1 !important; letter-spacing: -.04em; text-overflow: ellipsis; white-space: nowrap; }
@@ -492,6 +522,15 @@
 .hero-codex-help-panel button { position: absolute; top: 6px; right: 6px; display: grid; width: 20px; height: 20px; place-items: center; border: 0; border-radius: 50%; background: rgba(107, 71, 40, .12); color: #715038; }
 .hero-codex-help-panel b { display: block; font-size: 11px; }
 .hero-codex-help-panel p { margin: 3px 0 0; color: #89684d; font-size: 10px; line-height: 1.45; }
+
+/* This must follow the generic subpage banner rule above: the Team background's built-in
+   plaque needs a larger, centred title than the compact labels used by the other subpages. */
+.selection-screen.skin-team.hero-codex-screen .baked-banner-copy h2 {
+  display: block;
+  font-size: clamp(16px, 4cqw, 20px) !important;
+  text-align: center;
+  transform: translateY(17px);
+}
 
 @media (max-width: 360px) {
   .skin-equipment .inventory-list article,
