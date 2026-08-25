@@ -9,7 +9,7 @@
     "start": "NODE_ENV=production node dist/index.js",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
-    "lint": "eslint client/src/game client/src/pages/GameScreen.tsx client/src/components/GameCanvas.tsx client/src/App.tsx --ext .ts,.tsx",
+    "lint": "eslint client/src/game client/src/pages/GameScreen.tsx client/src/pages/BattleScreenV2.tsx client/src/components/GameCanvas.tsx client/src/App.tsx --ext .ts,.tsx",
     "test": "vitest run",
     "format": "prettier --write ."
   },

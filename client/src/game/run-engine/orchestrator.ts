@@ -496,7 +496,15 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
     const current = board.cells[cellKey];
     if (!current) return;
 
-    const enemyTargetPool = getEnemyTargetPool(cell, definition.coverage, definition.rangeAlongRoute, routes);
+    // A blocked enemy is engaged in melee with its blocker regardless of how far
+    // along the Route it got before being blocked (it may have been blocked at
+    // pathProgress 0) -- rangeAlongRoute alone would otherwise make a tank unable
+    // to ever damage what it's currently blocking, since minPathProgress is
+    // usually only satisfied near the castle end. Union those in explicitly and
+    // give them attack priority (they're the whole reason Block exists).
+    const rangePool = getEnemyTargetPool(cell, definition.coverage, definition.rangeAlongRoute, routes);
+    const blockedByMe = routes.flatMap((route) => route.enemies).filter((enemy) => enemy.blockedBy === current.instanceId);
+    const enemyTargetPool = [...blockedByMe, ...rangePool.filter((enemy) => enemy.blockedBy !== current.instanceId)];
     const allySupportPool = definition.supportRange
       ? getSupportTargets(cell, board, definition.supportRange).map(({ hero: ally }) => ({ instanceId: ally.instanceId, hp: ally.hp, maxHp: ally.maxHp }))
       : [];
@@ -504,7 +512,7 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
     let attackCooldown = current.attackCooldownRemainingSeconds - delta;
     let justAttacked = false;
     if (definition.coverage.kind !== "auraOnly" && attackCooldown <= 0 && enemyTargetPool.length) {
-      const target = [...enemyTargetPool].sort((a, b) => b.pathProgress - a.pathProgress)[0];
+      const target = blockedByMe[0] ?? [...enemyTargetPool].sort((a, b) => b.pathProgress - a.pathProgress)[0];
       const damage = getBasicAttackDamage(definition, current.tier, damageMultiplier);
       routes = damageRoutes(routes, target.instanceId, damage);
       attackCooldown = getEffectiveAttackInterval(definition, run.waveCombatBuff.attackSpeedMultiplier * heroSpeedMultiplier(current));

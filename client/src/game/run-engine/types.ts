@@ -35,7 +35,12 @@ export interface BoardCell {
   row: BoardRow;
 }
 
-export function boardCellKey(cell: BoardCell): `${DefenseZone}-${BoardRow}` {
+/** Named alias for boardCellKey()'s return type -- lets UI-layer code (store.ts,
+ * the Battle Screen component tree) reference a CellKey without repeating
+ * `ReturnType<typeof boardCellKey>` at every call site. */
+export type CellKey = `${DefenseZone}-${BoardRow}`;
+
+export function boardCellKey(cell: BoardCell): CellKey {
   return `${cell.zone}-${cell.row}`;
 }
 

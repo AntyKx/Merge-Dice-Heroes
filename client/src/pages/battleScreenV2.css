@@ -1,0 +1,156 @@
+/* Phase 9c Battle Screen -- self-contained dark "battle" palette, deliberately
+   distinct from the golden-parchment lobby skin. All classes are bsv2-* prefixed
+   so nothing here can collide with the existing lobby/meta CSS. */
+
+.bsv2-screen {
+  --bsv2-bg: #131a26;
+  --bsv2-panel: #1c2536;
+  --bsv2-panel-alt: #202b40;
+  --bsv2-border: #34435e;
+  --bsv2-ink: #e8edf6;
+  --bsv2-muted: #93a2bd;
+  --bsv2-gold: #e3b34c;
+  --bsv2-teal: #34c1ac;
+  --bsv2-danger: #e2645a;
+  --bsv2-good: #6fce7d;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 10px 22px;
+  box-sizing: border-box;
+  background: radial-gradient(circle at 80% -10%, rgba(52, 193, 172, .12), transparent 40%), var(--bsv2-bg);
+  color: var(--bsv2-ink);
+  font-family: "Noto Sans TC", sans-serif;
+}
+
+.bsv2-screen button { font-family: inherit; cursor: pointer; }
+.bsv2-screen button:disabled { cursor: not-allowed; opacity: .45; }
+
+/* Header */
+.bsv2-header { display: flex; align-items: center; gap: 8px; }
+.bsv2-icon-btn { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--bsv2-border); border-radius: 9px; background: var(--bsv2-panel); color: var(--bsv2-ink); }
+.bsv2-castle { flex: 1; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--bsv2-border); border-radius: 10px; background: var(--bsv2-panel); color: var(--bsv2-danger); }
+.bsv2-castle div { flex: 1; display: flex; flex-direction: column; font-size: 11px; }
+.bsv2-castle strong { font-size: 13px; color: var(--bsv2-ink); }
+.bsv2-castle i { display: block; width: 46px; height: 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
+.bsv2-castle i b { display: block; height: 100%; background: var(--bsv2-danger); }
+.bsv2-wave { display: flex; align-items: baseline; gap: 3px; padding: 6px 10px; border: 1px solid var(--bsv2-border); border-radius: 10px; background: var(--bsv2-panel); }
+.bsv2-wave small { font-size: 9px; color: var(--bsv2-muted); }
+.bsv2-wave strong { font-size: 15px; color: var(--bsv2-gold); }
+.bsv2-wave span { font-size: 10px; color: var(--bsv2-muted); }
+
+/* Route strip */
+.bsv2-route-strip { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; height: 96px; padding: 4px; border: 1px solid var(--bsv2-border); border-radius: 10px; background: linear-gradient(180deg, rgba(20,28,44,.9), rgba(15,20,32,.9)); }
+.bsv2-route-lane { position: relative; border-radius: 6px; background: rgba(255,255,255,.03); }
+.bsv2-route-lane.is-active { background: rgba(52,193,172,.06); }
+.bsv2-route-lane.is-inactive { opacity: .35; }
+.bsv2-route-lane small { position: absolute; top: 2px; left: 4px; font-size: 8px; color: var(--bsv2-muted); }
+.bsv2-route-overlay { position: absolute; inset: 4px; pointer-events: none; }
+.bsv2-enemy-marker { position: absolute; transform: translate(0, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.bsv2-enemy-marker i { display: block; width: 14px; height: 14px; margin: 0 auto; border-radius: 50%; background: var(--enemy-color, #8098c0); border: 1.5px solid rgba(0,0,0,.35); }
+.bsv2-enemy-marker.is-blocked i { box-shadow: 0 0 0 2px var(--bsv2-gold); }
+.bsv2-enemy-marker.is-boss i { width: 20px; height: 20px; box-shadow: 0 0 0 2px var(--bsv2-danger); }
+.bsv2-enemy-marker b { display: block; width: 18px; height: 3px; border-radius: 2px; background: rgba(0,0,0,.4); overflow: hidden; }
+.bsv2-enemy-marker b span { display: block; height: 100%; background: var(--bsv2-danger); }
+
+/* Board */
+.bsv2-board-section { display: flex; flex-direction: column; gap: 8px; }
+.bsv2-pending-zone { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px dashed var(--bsv2-gold); border-radius: 9px; background: rgba(227,179,76,.08); font-size: 11px; flex-wrap: wrap; }
+.bsv2-pending-zone > span { display: flex; align-items: center; gap: 3px; color: var(--bsv2-gold); }
+.bsv2-pending-card { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 8px; border: 1px solid var(--hero-color, var(--bsv2-border)); border-radius: 8px; background: var(--bsv2-panel-alt); color: var(--bsv2-ink); }
+.bsv2-pending-card.is-selected { outline: 2px solid var(--bsv2-teal); }
+.bsv2-pending-card b { font-size: 13px; color: var(--hero-color, var(--bsv2-ink)); }
+.bsv2-pending-card small { font-size: 9px; color: var(--bsv2-muted); }
+.bsv2-pending-zone em { font-style: normal; font-size: 10px; color: var(--bsv2-teal); }
+
+.bsv2-mode-banner { display: flex; align-items: center; gap: 6px; margin: 0; padding: 6px 10px; border-radius: 9px; background: rgba(227,179,76,.15); color: var(--bsv2-gold); font-size: 11px; }
+
+.bsv2-board-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 6px; border: 1px solid var(--bsv2-border); border-radius: 10px; background: var(--bsv2-panel); }
+.bsv2-cell { position: relative; aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--bsv2-border); background: rgba(255,255,255,.02); display: grid; place-items: center; padding: 0; }
+.bsv2-cell.is-empty:not(:disabled) { background: rgba(52,193,172,.05); }
+.bsv2-cell.is-filled { border-color: var(--hero-color, var(--bsv2-border)); background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.15)); }
+.bsv2-cell.is-selected { outline: 2px solid var(--bsv2-teal); }
+.bsv2-cell.is-downed { opacity: .5; }
+.bsv2-cell-icon { font-size: 15px; font-weight: 800; color: var(--hero-color, var(--bsv2-ink)); }
+.bsv2-cell-tier { position: absolute; top: 2px; left: 3px; font-size: 8px; color: var(--bsv2-muted); }
+.bsv2-cell-shield { position: absolute; top: 2px; right: 3px; color: var(--bsv2-teal); }
+.bsv2-cell-downed { position: absolute; bottom: 10px; font-size: 8px; color: var(--bsv2-danger); }
+.bsv2-cell-hp { position: absolute; bottom: 2px; left: 3px; right: 3px; height: 3px; border-radius: 2px; background: rgba(0,0,0,.4); overflow: hidden; }
+.bsv2-cell-hp em { display: block; height: 100%; background: var(--bsv2-good); }
+
+.bsv2-board-toolbar { display: flex; flex-direction: column; gap: 6px; }
+.bsv2-mode-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+.bsv2-mode-buttons button { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border: 1px solid var(--bsv2-border); border-radius: 8px; background: var(--bsv2-panel); color: var(--bsv2-ink); font-size: 11px; }
+.bsv2-mode-buttons button.is-active { border-color: var(--bsv2-teal); background: rgba(52,193,172,.15); color: var(--bsv2-teal); }
+.bsv2-buy-reposition { margin-left: auto; }
+.bsv2-mode-hint { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--bsv2-muted); }
+.bsv2-confirm-btn { padding: 6px 12px; border: none; border-radius: 8px; background: var(--bsv2-gold); color: #2a1c05; font-weight: 700; font-size: 11px; }
+.bsv2-confirm-btn:disabled { opacity: .35; }
+
+/* Generic panel */
+.bsv2-panel { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--bsv2-border); border-radius: 12px; background: var(--bsv2-panel); }
+.bsv2-panel h2 { margin: 0; font-size: 14px; }
+
+/* Wave preview */
+.bsv2-wave-preview { align-items: flex-start; }
+.bsv2-wave-enemies { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11px; color: var(--bsv2-muted); }
+.bsv2-boss-flag { display: flex; align-items: center; gap: 4px; margin: 0; font-size: 11px; color: var(--bsv2-danger); }
+
+/* Dice */
+.bsv2-dice-topline { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: var(--bsv2-muted); }
+.bsv2-dice-topline strong { color: var(--bsv2-gold); font-size: 12px; }
+.bsv2-dice-row { display: flex; gap: 6px; justify-content: center; }
+.bsv2-die { position: relative; width: 40px; height: 40px; border-radius: 9px; border: 1.5px solid var(--bsv2-border); background: var(--bsv2-panel-alt); color: var(--bsv2-ink); display: grid; place-items: center; font-size: 17px; font-weight: 800; }
+.bsv2-die.is-locked { border-color: var(--bsv2-gold); background: rgba(227,179,76,.15); color: var(--bsv2-gold); }
+.bsv2-die i { position: absolute; top: 2px; right: 2px; color: var(--bsv2-gold); }
+.bsv2-action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.bsv2-primary-btn, .bsv2-secondary-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; border-radius: 10px; border: none; font-size: 12px; font-weight: 700; }
+.bsv2-primary-btn { flex: 1; min-width: 140px; background: linear-gradient(180deg, var(--bsv2-teal), #1e8c7c); color: #06251f; }
+.bsv2-secondary-btn { flex: 1; min-width: 100px; background: var(--bsv2-panel-alt); border: 1px solid var(--bsv2-border); color: var(--bsv2-ink); }
+.bsv2-battle-btn { background: linear-gradient(180deg, var(--bsv2-gold), #b9862c); color: #2a1c05; }
+
+/* Combo choice */
+.bsv2-combo-list { display: flex; flex-direction: column; gap: 6px; }
+.bsv2-combo-card { display: flex; flex-direction: column; gap: 2px; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--bsv2-border); background: var(--bsv2-panel-alt); color: var(--bsv2-ink); text-align: left; }
+.bsv2-combo-card b { color: var(--bsv2-gold); font-size: 12px; }
+.bsv2-combo-card span { font-size: 11px; color: var(--bsv2-muted); }
+
+/* Preparation */
+.bsv2-energy-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--bsv2-gold); }
+.bsv2-energy-row strong { margin-left: auto; }
+.bsv2-hero-pick-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.bsv2-hero-pick-row button { padding: 7px 11px; border-radius: 9px; border: 1px solid var(--hero-color, var(--bsv2-border)); background: var(--bsv2-panel-alt); color: var(--hero-color, var(--bsv2-ink)); font-size: 11px; font-weight: 700; }
+.bsv2-cancel-pick { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--bsv2-border); background: var(--bsv2-panel-alt); color: var(--bsv2-ink); }
+
+/* Message bar */
+.bsv2-message { display: flex; align-items: center; gap: 6px; margin: 0; padding: 7px 10px; border-radius: 9px; background: rgba(255,255,255,.04); color: var(--bsv2-muted); font-size: 11px; }
+
+/* Dialogs */
+.bsv2-dialog-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 16px; background: rgba(8,11,18,.72); backdrop-filter: blur(2px); }
+.bsv2-modal { width: min(360px, 100%); max-height: 82vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: 16px; border: 1px solid var(--bsv2-border); background: var(--bsv2-panel); color: var(--bsv2-ink); text-align: center; }
+.bsv2-kicker { margin: 0; font-size: 10px; letter-spacing: .08em; color: var(--bsv2-gold); text-transform: uppercase; }
+.bsv2-modal h3 { margin: 0; font-size: 17px; }
+.bsv2-choice-grid { display: flex; flex-direction: column; gap: 6px; }
+.bsv2-choice-card { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--bsv2-border); background: var(--bsv2-panel-alt); color: var(--bsv2-ink); text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.bsv2-choice-card b { color: var(--bsv2-gold); font-size: 12px; }
+.bsv2-choice-card.is-blessing b { color: var(--bsv2-teal); }
+.bsv2-choice-card span { font-size: 11px; color: var(--bsv2-muted); }
+.bsv2-flip { transform: scaleX(-1); }
+
+.bsv2-result-modal.is-victory { border-color: var(--bsv2-gold); }
+.bsv2-result-modal.is-defeat { border-color: var(--bsv2-danger); }
+.bsv2-result-seal { display: grid; place-items: center; margin: 0 auto; width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,.06); color: var(--bsv2-gold); }
+.bsv2-result-modal.is-defeat .bsv2-result-seal { color: var(--bsv2-danger); }
+.bsv2-result-stats { display: flex; justify-content: space-around; }
+.bsv2-result-stats div { display: flex; flex-direction: column; }
+.bsv2-result-stats b { font-size: 16px; color: var(--bsv2-gold); }
+.bsv2-result-stats small { font-size: 9px; color: var(--bsv2-muted); }
+.bsv2-text-btn { background: none; border: none; color: var(--bsv2-muted); font-size: 11px; text-decoration: underline; }
+
+.bsv2-speed-choice { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; color: var(--bsv2-muted); }
+.bsv2-speed-choice button { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--bsv2-border); background: var(--bsv2-panel-alt); color: var(--bsv2-ink); }
+.bsv2-speed-choice button.is-selected { border-color: var(--bsv2-teal); color: var(--bsv2-teal); }

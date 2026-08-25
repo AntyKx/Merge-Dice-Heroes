@@ -1,29 +1,33 @@
 import { create } from "zustand";
 import { emitAudio } from "./audio";
-import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SHOP_OFFERS } from "./config";
+import { DAILY_QUESTS, DUNGEONS, EQUIPMENT, SHOP_OFFERS } from "./config";
+import { createDefaultMetaAdapter } from "./defaultMetaAdapter";
 import { awardHeroExperience } from "./heroProgress";
-import { advanceCombat } from "./engine/combat";
-import {
-  beginReroll,
-  chooseHeroSummon,
-  chooseTalent,
-  createDungeonRun,
-  createRun,
-  finishReroll,
-  mergeBoardSelection,
-  nextWave,
-  pauseRun,
-  prepareTalents,
-  recycleTierOne,
-  resolveDice,
-  spendSummonEnergy,
-  startCombat,
-  toggleLock,
-  triggerDebugCombination,
-} from "./engine/run";
 import { defaultProgress, loadProgress, saveProgress } from "./persistence";
-import { createHero } from "./rules/merge";
-import type { DailyQuestId, DiceCombinationKind, DungeonId, EquipmentId, EquipmentSlot, HeroId, LobbyNoticeId, PlayerProgress, RunState, ShopOfferId } from "./types";
+import {
+  acknowledgeWavePreview,
+  advanceCombat,
+  advanceToNextWave,
+  buyExtraReposition,
+  chooseBlessingReward,
+  chooseComboEffect,
+  chooseJackpotTierUpTarget,
+  chooseSummonHero,
+  chooseTalentReward,
+  confirmFate,
+  confirmFormation,
+  createRun,
+  mergeSelection,
+  placePendingHero,
+  recycleBoardHero,
+  repositionHero,
+  rerollDice,
+  spendEnergyForChosenSummon,
+  spendEnergyForRandomSummon,
+  toggleDiceLock,
+} from "./run-engine/orchestrator";
+import type { CellKey, DiceComboKind, RunState } from "./run-engine/types";
+import type { DailyQuestId, DungeonId, EquipmentId, EquipmentSlot, HeroId, LobbyNoticeId, PlayerProgress, ShopOfferId } from "./types";
 
 export type GameScreen = "title" | "team" | "leader" | "game" | "guide" | "equipment" | "shop" | "daily" | "dungeon";
 
@@ -32,11 +36,11 @@ interface GameStore {
   selectedHeroes: HeroId[];
   leaderId: HeroId;
   selectedDungeonId?: DungeonId;
+  activeDungeonId?: DungeonId;
   run?: RunState;
   progress: PlayerProgress;
-  selectedBoardIndexes: number[];
   autoSpeed: 1 | 2 | 4;
-  showDebug: boolean;
+  isPaused: boolean;
   openScreen: (screen: GameScreen) => void;
   toggleTeamHero: (heroId: HeroId) => void;
   setTeamSlot: (slotIndex: number, heroId?: HeroId) => void;
@@ -50,30 +54,30 @@ interface GameStore {
   refreshShop: () => void;
   upgradeEquipment: (equipmentId: EquipmentId) => void;
   dismantleEquipment: (equipmentId: EquipmentId) => void;
-  startDemo: (fireMageTier?: 2 | 3, showcaseHero?: HeroId, castMode?: "leader" | "ultimate") => void;
   restartRun: () => void;
-  toggleLock: (index: number) => void;
-  reroll: () => void;
-  resolve: () => void;
+  // ---- Run Engine (Phase 9c) ----
+  acknowledgeWavePreview: () => void;
+  toggleDiceLock: (index: number) => void;
+  rerollDice: () => void;
+  confirmFate: () => void;
+  chooseComboEffect: (kind: DiceComboKind) => void;
   chooseSummonHero: (heroId: HeroId) => void;
-  useSummonEnergy: () => void;
-  selectBoardHero: (index: number) => void;
-  mergeSelected: () => void;
-  swapBoardHeroes: (from: number, to: number) => void;
-  recycleTierOne: () => void;
-  beginCombat: () => void;
+  chooseJackpotTierUpTarget: (cellKey: CellKey) => void;
+  spendEnergyForRandomSummon: () => void;
+  spendEnergyForChosenSummon: (heroId: HeroId) => void;
+  mergeSelection: (cellKeys: CellKey[], targetCellKey: CellKey) => void;
+  placePendingHero: (instanceId: string, cellKey: CellKey) => void;
+  recycleBoardHero: (cellKey: CellKey) => void;
+  repositionHero: (fromCellKey: CellKey, toCellKey: CellKey) => void;
+  buyExtraReposition: () => void;
+  confirmFormation: () => void;
   combatTick: (delta: number) => void;
-  prepareTalents: () => void;
-  takeTalent: (talentId: string) => void;
-  continueWave: () => void;
-  pause: () => void;
-  setSetting: (setting: keyof PlayerProgress["settings"], value: boolean) => void;
+  chooseTalentReward: (talentId: string) => void;
+  chooseBlessingReward: (blessingId: string) => void;
+  advanceToNextWave: () => void;
   setAutoSpeed: (speed: 1 | 2 | 4) => void;
-  toggleDebug: () => void;
-  debugTriggerCombination: (kind: DiceCombinationKind) => void;
-  debugSummon: (heroId: HeroId, tier: 1 | 2 | 3) => void;
-  debugJumpWave: (wave: number) => void;
-  debugCastleHp: (amount: number) => void;
+  togglePause: () => void;
+  setSetting: (setting: keyof PlayerProgress["settings"], value: boolean) => void;
 }
 
 const loadedProgress = typeof window === "undefined" ? defaultProgress : loadProgress();
@@ -83,17 +87,23 @@ function persist(progress: PlayerProgress) {
   return progress;
 }
 
-function maybeRecord(previous: RunState | undefined, next: RunState, progress: PlayerProgress) {
-  if (!previous || previous.phase === next.phase || !["VICTORY", "DEFEAT"].includes(next.phase)) return progress;
-  const victorious = next.phase === "VICTORY";
-  const updated = {
+/** Mirrors the old game/store.ts's maybeRecord(): awards Meta-layer progress
+ * (wins/losses/bestWave/crystals/hero XP/dungeon clears) exactly once, on the
+ * tick a Run first transitions into RUN_WIN/RUN_LOSE. Dungeon-specific enemy
+ * scaling isn't wired into the new Run Engine yet (see orchestrator.ts's own
+ * scope notes) -- this only carries over the dungeon REWARD bookkeeping. */
+function maybeRecordRunResult(previous: RunState | undefined, next: RunState, progress: PlayerProgress, activeDungeonId: DungeonId | undefined): PlayerProgress {
+  if (!previous || previous.phase === next.phase || !["RUN_WIN", "RUN_LOSE"].includes(next.phase)) return progress;
+  const victorious = next.phase === "RUN_WIN";
+  const dungeon = activeDungeonId ? DUNGEONS.find((candidate) => candidate.id === activeDungeonId) : undefined;
+  const updated: PlayerProgress = {
     ...progress,
     wins: progress.wins + (victorious ? 1 : 0),
     losses: progress.losses + (victorious ? 0 : 1),
     bestWave: Math.max(progress.bestWave, next.wave),
-    crystals: progress.crystals + (victorious ? (next.dungeonId ? (DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)?.reward.crystals ?? 0) : 18) : 0),
-    inventory: victorious && next.dungeonId && DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)?.reward.equipmentId && !progress.inventory.includes(DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)!.reward.equipmentId!) ? [...progress.inventory, DUNGEONS.find((dungeon) => dungeon.id === next.dungeonId)!.reward.equipmentId!] : progress.inventory,
-    dungeonClears: victorious && next.dungeonId ? { ...progress.dungeonClears, [next.dungeonId]: (progress.dungeonClears[next.dungeonId] ?? 0) + 1 } : progress.dungeonClears,
+    crystals: progress.crystals + (victorious ? (dungeon?.reward.crystals ?? 18) : 0),
+    inventory: victorious && dungeon?.reward.equipmentId && !progress.inventory.includes(dungeon.reward.equipmentId) ? [...progress.inventory, dungeon.reward.equipmentId] : progress.inventory,
+    dungeonClears: victorious && dungeon ? { ...progress.dungeonClears, [dungeon.id]: (progress.dungeonClears[dungeon.id] ?? 0) + 1 } : progress.dungeonClears,
     daily: victorious ? { ...progress.daily, victories: progress.daily.victories + 1 } : progress.daily,
     heroProgress: victorious ? awardHeroExperience(progress.heroProgress, previous.selectedHeroes) : progress.heroProgress,
   };
@@ -109,14 +119,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedHeroes: ["knight", "fireMage", "ranger"],
   leaderId: "knight",
   selectedDungeonId: undefined,
+  activeDungeonId: undefined,
   progress: loadedProgress,
-  selectedBoardIndexes: [],
   autoSpeed: 1,
-  showDebug: false,
+  isPaused: false,
   openScreen: (screen) => set((state) => {
     const noticeId = (["equipment", "shop", "daily", "dungeon"] as string[]).includes(screen) ? screen as LobbyNoticeId : undefined;
     const progress = noticeId && !state.progress.lobbyRead[noticeId] ? persist({ ...state.progress, lobbyRead: { ...state.progress.lobbyRead, [noticeId]: true } }) : state.progress;
-    return { screen, progress, selectedBoardIndexes: [], selectedDungeonId: screen === "title" ? undefined : state.selectedDungeonId };
+    return { screen, progress, selectedDungeonId: screen === "title" ? undefined : state.selectedDungeonId };
   }),
   toggleTeamHero: (heroId) => set((state) => {
     const selectedHeroes = state.selectedHeroes.includes(heroId)
@@ -152,12 +162,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startRun: () => {
     const { selectedHeroes, leaderId, selectedDungeonId, progress } = get();
     if (selectedHeroes.length !== 3) return;
-    const equipmentBonuses = getEquipmentBonuses(progress.equipped, progress.equipmentLevels);
     const dungeon = selectedDungeonId ? DUNGEONS.find((candidate) => candidate.id === selectedDungeonId) : undefined;
     if (dungeon && progress.stamina < dungeon.energyCost) return;
     const nextProgress = dungeon ? persist({ ...progress, stamina: progress.stamina - dungeon.energyCost }) : progress;
-    const run = dungeon ? createDungeonRun(selectedHeroes, leaderId, dungeon.id, equipmentBonuses) : createRun(selectedHeroes, leaderId, Math.random, equipmentBonuses);
-    set({ run, progress: nextProgress, selectedDungeonId: undefined, screen: "game", selectedBoardIndexes: [] });
+    const run = createRun({ selectedHeroes, leaderHeroId: leaderId, adapter: createDefaultMetaAdapter(nextProgress) });
+    set({ run, progress: nextProgress, selectedDungeonId: undefined, activeDungeonId: dungeon?.id, screen: "game", isPaused: false });
   },
   selectDungeon: (selectedDungeonId) => set((state) => {
     const dungeon = DUNGEONS.find((candidate) => candidate.id === selectedDungeonId);
@@ -165,14 +174,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const previous = DUNGEONS[index - 1];
     const unlocked = dungeon?.unlocked || (previous ? (state.progress.dungeonClears[previous.id] ?? 0) > 0 : false);
     if (!dungeon || !unlocked || state.selectedHeroes.length !== 3 || state.progress.stamina < dungeon.energyCost) return state;
-    const equipmentBonuses = getEquipmentBonuses(state.progress.equipped, state.progress.equipmentLevels);
     const progress = persist({ ...state.progress, stamina: state.progress.stamina - dungeon.energyCost });
     return {
-      run: createDungeonRun(state.selectedHeroes, state.leaderId, dungeon.id, equipmentBonuses),
+      run: createRun({ selectedHeroes: state.selectedHeroes, leaderHeroId: state.leaderId, adapter: createDefaultMetaAdapter(progress) }),
       progress,
       selectedDungeonId: undefined,
+      activeDungeonId: dungeon.id,
       screen: "game",
-      selectedBoardIndexes: [],
+      isPaused: false,
     };
   }),
   equipItem: (equipmentId) => set((state) => {
@@ -212,101 +221,63 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const equipmentLevels = { ...state.progress.equipmentLevels }; delete equipmentLevels[equipmentId];
     return { progress: persist({ ...state.progress, materials, inventory: state.progress.inventory.filter((id) => id !== equipmentId), equipmentLevels, equipped: state.progress.equipped[slot] === equipmentId ? { ...state.progress.equipped, [slot]: undefined } : state.progress.equipped }) };
   }),
-  startDemo: (fireMageTier = 2, showcaseHero: HeroId = "ranger", castMode?: "leader" | "ultimate") => {
-    const random = () => 0.42;
-    let run = createRun(["knight", "fireMage", showcaseHero], castMode ? showcaseHero : "fireMage", random);
-    const board = [...run.board];
-    board[0] = createHero("knight", 2);
-    board[5] = createHero("fireMage", fireMageTier);
-    board[10] = createHero(showcaseHero, 1);
-    board[14] = createHero("knight", 1);
-    run = castMode
-      ? { ...run, board, phase: "MERGING", lastCombination: DICE_COMBINATIONS[castMode === "leader" ? "FOUR_KIND" : "FIVE_KIND"], message: castMode === "leader" ? "展示模式：隊長技能施放中。" : "展示模式：命運必殺施放中。" }
-      : { ...run, board, phase: "COMBAT", message: "展示模式：第 1 波自動戰鬥中。" };
-    set({ run, screen: "game", selectedBoardIndexes: [] });
-  },
   restartRun: () => {
     const { selectedHeroes, leaderId, progress } = get();
-    set({ run: createRun(selectedHeroes, leaderId, Math.random, getEquipmentBonuses(progress.equipped, progress.equipmentLevels)), screen: "game", selectedBoardIndexes: [] });
+    set({ run: createRun({ selectedHeroes, leaderHeroId: leaderId, adapter: createDefaultMetaAdapter(progress) }), screen: "game", activeDungeonId: undefined, isPaused: false });
   },
-  toggleLock: (index) => set((state) => state.run ? { run: toggleLock(state.run, index) } : state),
-  reroll: () => {
-    const current = get().run;
-    if (!current) return;
-    const started = beginReroll(current);
-    if (started === current) return;
-    emitAudio("reroll", get().progress.settings);
-    set({ run: started });
-    window.setTimeout(() => set((state) => state.run ? { run: finishReroll(state.run) } : state), 440);
+  // ---- Run Engine (Phase 9c) ----
+  acknowledgeWavePreview: () => set((state) => state.run ? { run: acknowledgeWavePreview(state.run) } : state),
+  toggleDiceLock: (index) => set((state) => state.run ? { run: toggleDiceLock(state.run, index) } : state),
+  rerollDice: () => {
+    const state = get();
+    if (!state.run) return;
+    emitAudio("reroll", state.progress.settings);
+    set({ run: rerollDice(state.run) });
   },
-  resolve: () => set((state) => {
-    if (!state.run) return state;
+  confirmFate: () => {
+    const state = get();
+    if (!state.run) return;
     if (state.progress.settings.vibrationEnabled) navigator.vibrate?.(12);
     emitAudio("dice_result", state.progress.settings);
-    return { run: resolveDice(state.run), selectedBoardIndexes: [] };
+    set({ run: confirmFate(state.run) });
+  },
+  chooseComboEffect: (kind) => set((state) => state.run ? { run: chooseComboEffect(state.run, kind, createDefaultMetaAdapter(state.progress)) } : state),
+  chooseSummonHero: (heroId) => set((state) => state.run ? { run: chooseSummonHero(state.run, heroId, createDefaultMetaAdapter(state.progress)) } : state),
+  chooseJackpotTierUpTarget: (cellKey) => set((state) => state.run ? { run: chooseJackpotTierUpTarget(state.run, cellKey) } : state),
+  spendEnergyForRandomSummon: () => set((state) => state.run ? { run: spendEnergyForRandomSummon(state.run, createDefaultMetaAdapter(state.progress)) } : state),
+  spendEnergyForChosenSummon: (heroId) => set((state) => state.run ? { run: spendEnergyForChosenSummon(state.run, heroId, createDefaultMetaAdapter(state.progress)) } : state),
+  mergeSelection: (cellKeys, targetCellKey) => set((state) => {
+    if (!state.run) return state;
+    const run = mergeSelection(state.run, cellKeys, targetCellKey);
+    if (run === state.run) return state;
+    emitAudio("merge", state.progress.settings);
+    return { run, progress: persist({ ...state.progress, daily: { ...state.progress.daily, merges: state.progress.daily.merges + 1 } }) };
   }),
-  chooseSummonHero: (heroId) => set((state) => state.run ? { run: chooseHeroSummon(state.run, heroId) } : state),
-  useSummonEnergy: () => set((state) => state.run ? { run: spendSummonEnergy(state.run) } : state),
-  selectBoardHero: (index) => set((state) => {
-    const hero = state.run?.board[index];
-    if (!hero || !state.run) return state;
-    const selection = state.selectedBoardIndexes;
-    if (selection.includes(index)) return { selectedBoardIndexes: selection.filter((item) => item !== index) };
-    const anchor = state.run.board[selection[0]];
-    if (!anchor || (anchor.heroId === hero.heroId && anchor.tier === hero.tier)) return { selectedBoardIndexes: [...selection, index].slice(0, 3) };
-    return { selectedBoardIndexes: [index] };
-  }),
-  mergeSelected: () => set((state) => {
-    if (!state.run || !state.selectedBoardIndexes.length) return state;
-    const run = mergeBoardSelection(state.run, state.selectedBoardIndexes, state.selectedBoardIndexes[0]);
-    if (run !== state.run) emitAudio("merge", state.progress.settings);
-    const progress = run !== state.run ? persist({ ...state.progress, daily: { ...state.progress.daily, merges: state.progress.daily.merges + 1 } }) : state.progress;
-    return { run, progress, selectedBoardIndexes: [] };
-  }),
-  swapBoardHeroes: (from, to) => set((state) => {
-    if (!state.run || state.run.phase !== "MERGING" || from === to || state.run.combat.lockedTile === to) return state;
-    const board = [...state.run.board];
-    [board[from], board[to]] = [board[to], board[from]];
-    return { run: { ...state.run, board }, selectedBoardIndexes: [] };
-  }),
-  recycleTierOne: () => set((state) => state.run ? { run: recycleTierOne(state.run) } : state),
-  beginCombat: () => set((state) => state.run ? { run: startCombat(state.run), selectedBoardIndexes: [] } : state),
+  placePendingHero: (instanceId, cellKey) => set((state) => state.run ? { run: placePendingHero(state.run, instanceId, cellKey) } : state),
+  recycleBoardHero: (cellKey) => set((state) => state.run ? { run: recycleBoardHero(state.run, cellKey) } : state),
+  repositionHero: (fromCellKey, toCellKey) => set((state) => state.run ? { run: repositionHero(state.run, fromCellKey, toCellKey) } : state),
+  buyExtraReposition: () => set((state) => state.run ? { run: buyExtraReposition(state.run) } : state),
+  confirmFormation: () => set((state) => state.run ? { run: confirmFormation(state.run) } : state),
   combatTick: (delta) => set((state) => {
-    if (!state.run) return state;
+    if (!state.run || state.isPaused) return state;
     const run = advanceCombat(state.run, delta);
-    const resolvedBattle = state.run.phase === "COMBAT" && run.phase !== "COMBAT";
+    const resolvedBattle = state.run.phase === "COMBAT_RUNNING" && run.phase !== "COMBAT_RUNNING";
     const baseProgress = resolvedBattle ? persist({ ...state.progress, daily: { ...state.progress.daily, battles: state.progress.daily.battles + 1 } }) : state.progress;
-    return { run, progress: maybeRecord(state.run, run, baseProgress) };
+    return { run, progress: maybeRecordRunResult(state.run, run, baseProgress, state.activeDungeonId) };
   }),
-  prepareTalents: () => set((state) => state.run ? { run: prepareTalents(state.run) } : state),
-  takeTalent: (talentId) => set((state) => {
+  chooseTalentReward: (talentId) => set((state) => state.run ? { run: chooseTalentReward(state.run, talentId) } : state),
+  chooseBlessingReward: (blessingId) => set((state) => state.run ? { run: chooseBlessingReward(state.run, blessingId) } : state),
+  advanceToNextWave: () => set((state) => {
     if (!state.run) return state;
-    if (state.progress.settings.vibrationEnabled) navigator.vibrate?.([10, 35, 10]);
-    return { run: chooseTalent(state.run, talentId) };
+    const run = advanceToNextWave(state.run);
+    return { run, progress: maybeRecordRunResult(state.run, run, state.progress, state.activeDungeonId) };
   }),
-  continueWave: () => set((state) => {
-    if (!state.run) return state;
-    const run = nextWave(state.run);
-    return { run, progress: maybeRecord(state.run, run, state.progress) };
-  }),
-  pause: () => set((state) => state.run ? { run: pauseRun(state.run) } : state),
-  setSetting: (setting, value) => set((state) => ({ progress: persist({ ...state.progress, settings: { ...state.progress.settings, [setting]: value } }) })),
   setAutoSpeed: (autoSpeed) => set({ autoSpeed }),
-  toggleDebug: () => set((state) => ({ showDebug: !state.showDebug })),
-  debugTriggerCombination: (kind) => set((state) => state.run ? { run: triggerDebugCombination(state.run, kind) } : state),
-  debugSummon: (heroId, tier) => set((state) => {
-    if (!state.run) return state;
-    const board = [...state.run.board];
-    const slot = board.findIndex((hero) => hero === null);
-    if (slot >= 0) board[slot] = createHero(heroId, tier);
-    return { run: { ...state.run, board, phase: "MERGING", message: `DEBUG：生成 T${tier} ${HEROES[heroId].name}。` } };
-  }),
-  debugJumpWave: (wave) => set((state) => {
-    if (!state.run) return state;
-    const fresh = createRun(state.run.selectedHeroes, state.run.leaderId);
-    let run = { ...fresh, wave: Math.max(1, Math.min(10, wave)), combat: { ...fresh.combat, castleHp: state.run.combat.castleHp } };
-    run = { ...run, phase: "SELECTING_DICE", message: `DEBUG：已跳到第 ${run.wave} 波。` };
-    return { run };
-  }),
-  debugCastleHp: (amount) => set((state) => state.run ? { run: { ...state.run, combat: { ...state.run.combat, castleHp: Math.max(1, Math.min(20, state.run.combat.castleHp + amount)) } } } : state),
+  togglePause: () => set((state) => ({ isPaused: !state.isPaused })),
+  setSetting: (setting, value) => set((state) => ({ progress: persist({ ...state.progress, settings: { ...state.progress.settings, [setting]: value } }) })),
 }));
+
+// Dev-only console/QA hook -- lets `window.__gameStore.getState()` drive combatTick()
+// manually from devtools when a headless/backgrounded tab throttles requestAnimationFrame.
+// Stripped from production builds by Vite's import.meta.env.DEV dead-code elimination.
+if (import.meta.env.DEV && typeof window !== "undefined") (window as unknown as { __gameStore?: typeof useGameStore }).__gameStore = useGameStore;

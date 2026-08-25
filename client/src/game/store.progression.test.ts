@@ -6,7 +6,7 @@ import { useGameStore } from "./store";
 const freshProgress = () => ({ ...defaultProgress, inventory: [...defaultProgress.inventory], equipmentLevels: { ...defaultProgress.equipmentLevels }, equipped: {}, daily: { ...defaultProgress.daily, claimed: [] }, dungeonClears: {}, shop: { ...defaultProgress.shop, offers: [...defaultProgress.shop.offers], purchased: [] }, lobbyRead: {} });
 
 beforeEach(() => {
-  useGameStore.setState({ screen: "title", selectedHeroes: ["knight", "fireMage", "ranger"], leaderId: "knight", selectedDungeonId: undefined, run: undefined, progress: freshProgress() });
+  useGameStore.setState({ screen: "title", selectedHeroes: ["knight", "fireMage", "ranger"], leaderId: "knight", selectedDungeonId: undefined, activeDungeonId: undefined, run: undefined, progress: freshProgress() });
 });
 
 describe("persistent lobby progression", () => {
@@ -33,7 +33,7 @@ describe("persistent lobby progression", () => {
     useGameStore.getState().selectDungeon("ruinCorridor");
     expect(useGameStore.getState().selectedDungeonId).toBeUndefined();
     expect(useGameStore.getState().screen).toBe("game");
-    expect(useGameStore.getState().run?.dungeonId).toBe("ruinCorridor");
+    expect(useGameStore.getState().activeDungeonId).toBe("ruinCorridor");
     expect(useGameStore.getState().progress.stamina).toBe(initialStamina - 5);
     const progress = freshProgress();
     useGameStore.setState({ screen: "title", run: undefined, progress: { ...progress, stamina: 4 } });
@@ -47,10 +47,13 @@ describe("persistent lobby progression", () => {
     const initialCrystals = useGameStore.getState().progress.crystals;
     useGameStore.getState().selectDungeon("ruinCorridor");
     const activeRun = useGameStore.getState().run!;
-    useGameStore.setState({ run: { ...activeRun, wave: 10, phase: "WAVE_CLEAR" } });
-    useGameStore.getState().continueWave();
+    // Fast-forward straight to "final Wave's Reward already resolved" -- exercises
+    // the same advanceToNextWave() -> RUN_WIN transition a real playthrough hits,
+    // without needing to simulate a full Wave 10 combat tick-by-tick.
+    useGameStore.setState({ run: { ...activeRun, wave: 10, phase: "REWARD_RESOLVE", talentChoices: [], blessingChoices: [] } });
+    useGameStore.getState().advanceToNextWave();
     const state = useGameStore.getState();
-    expect(state.run?.phase).toBe("VICTORY");
+    expect(state.run?.phase).toBe("RUN_WIN");
     expect(state.progress.crystals).toBe(initialCrystals + 45);
     expect(state.progress.dungeonClears.ruinCorridor).toBe(1);
     expect(state.progress.heroProgress.knight?.experience).toBe(HERO_XP_PER_VICTORY);
