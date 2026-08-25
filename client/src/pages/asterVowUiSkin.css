@@ -743,7 +743,8 @@
 }
 .skin-shop .shop-supply,
 .skin-shop .shop-offers { position: relative; z-index: 1; }
-.skin-shop .shop-supply { margin-top: 8px; }
+/* Keep the painted shop plaque and the separate supply panel visibly apart. */
+.skin-shop .shop-supply { margin-top: 34px; }
 .skin-shop .shop-offers { margin-top: 0; }
 .skin-shop .shop-section-heading {
   display: flex;
