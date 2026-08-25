@@ -18,7 +18,10 @@ export function getEffectiveBlockCapacity(cell: BoardCell, blockRule: BlockRule)
 
 export interface BlockProvider {
   instanceId: string;
-  zone: DefenseZone;
+  /** Usually just [own zone], but a len>1 list lets a T3-style "協防相鄰防區"
+   * effect (Knight, 十二) register as a provider in more than one zone without
+   * a special case in this module -- the caller decides which zones apply. */
+  zones: DefenseZone[];
   /** Already resolved via getEffectiveBlockCapacity() -- this module stays
    * HeroDefinition-agnostic, matching the merge.ts buildUpgraded pattern. */
   capacity: number;
@@ -40,7 +43,7 @@ export function computeBlockAssignments(providers: BlockProvider[], targets: Blo
   const blockedInstanceIds = new Set<string>();
 
   ALL_DEFENSE_ZONES.forEach((zone) => {
-    const zoneProviders = providers.filter((provider) => provider.zone === zone && (remainingCapacity.get(provider.instanceId) ?? 0) > 0);
+    const zoneProviders = providers.filter((provider) => provider.zones.includes(zone) && (remainingCapacity.get(provider.instanceId) ?? 0) > 0);
     if (!zoneProviders.length) return;
 
     const zoneTargets = targets

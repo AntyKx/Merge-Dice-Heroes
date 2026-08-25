@@ -14,7 +14,7 @@ describe("getEffectiveBlockCapacity", () => {
 
 describe("computeBlockAssignments", () => {
   it("Block 容量足夠時，最靠近城堡的敵人優先被擋下", () => {
-    const providers = [{ instanceId: "knight", zone: 1 as const, capacity: 1 }];
+    const providers = [{ instanceId: "knight", zones: [1 as const], capacity: 1 }];
     const targets = [
       { instanceId: "far", occupiedZones: [1 as const], blockCost: 1, pathProgress: 0.3 },
       { instanceId: "near", occupiedZones: [1 as const], blockCost: 1, pathProgress: 0.9 },
@@ -25,7 +25,7 @@ describe("computeBlockAssignments", () => {
   });
 
   it("Block 已滿時，多出來的怪不受影響繼續前進", () => {
-    const providers = [{ instanceId: "knight", zone: 1 as const, capacity: 1 }];
+    const providers = [{ instanceId: "knight", zones: [1 as const], capacity: 1 }];
     const targets = [
       { instanceId: "e1", occupiedZones: [1 as const], blockCost: 1, pathProgress: 0.9 },
       { instanceId: "e2", occupiedZones: [1 as const], blockCost: 1, pathProgress: 0.8 },
@@ -36,7 +36,7 @@ describe("computeBlockAssignments", () => {
   });
 
   it("寬體敵人可被佔據的任一防區英雄阻擋", () => {
-    const providers = [{ instanceId: "hero-zone3", zone: 3 as const, capacity: 1 }];
+    const providers = [{ instanceId: "hero-zone3", zones: [3 as const], capacity: 1 }];
     const targets = [{ instanceId: "wide", occupiedZones: [2 as const, 3 as const], blockCost: 1, pathProgress: 0.5 }];
     const assignments = computeBlockAssignments(providers, targets);
     expect(assignments.get("wide")).toBe("hero-zone3");
@@ -48,10 +48,21 @@ describe("computeBlockAssignments", () => {
     expect(assignments.size).toBe(0);
   });
 
+  it("Provider 可同時登記多個防區（例如騎士 T3 協防相鄰防區）", () => {
+    const providers = [{ instanceId: "knight-t3", zones: [2 as const, 3 as const], capacity: 2 }];
+    const targets = [
+      { instanceId: "e-zone2", occupiedZones: [2 as const], blockCost: 1, pathProgress: 0.6 },
+      { instanceId: "e-zone3", occupiedZones: [3 as const], blockCost: 1, pathProgress: 0.6 },
+    ];
+    const assignments = computeBlockAssignments(providers, targets);
+    expect(assignments.get("e-zone2")).toBe("knight-t3");
+    expect(assignments.get("e-zone3")).toBe("knight-t3");
+  });
+
   it("previousAssignments 讓既有阻擋維持穩定，不會無故換人", () => {
     const providers = [
-      { instanceId: "knight-a", zone: 1 as const, capacity: 1 },
-      { instanceId: "knight-b", zone: 1 as const, capacity: 1 },
+      { instanceId: "knight-a", zones: [1 as const], capacity: 1 },
+      { instanceId: "knight-b", zones: [1 as const], capacity: 1 },
     ];
     const targets = [{ instanceId: "e1", occupiedZones: [1 as const], blockCost: 1, pathProgress: 0.9 }];
     const previous = new Map([["e1", "knight-b"]]);
