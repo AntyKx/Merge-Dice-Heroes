@@ -473,7 +473,7 @@
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);
   gap: 4px 10px;
-  margin-top: clamp(48px, 10.8cqw, 52px);
+  margin-top: clamp(64px, 14.2cqw, 68px);
   padding: 10px 14px 9px;
   background: linear-gradient(135deg, color-mix(in srgb, var(--codex-color) 14%, #fffbed), rgba(255, 249, 225, .88));
 }
