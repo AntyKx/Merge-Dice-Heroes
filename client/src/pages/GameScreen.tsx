@@ -601,19 +601,46 @@ function LobbyModuleScreen({ moduleId }: { moduleId: LobbyModuleId }) {
 }
 
 function TeamScreen() {
-  const { openScreen, selectedHeroes, selectedDungeonId, toggleTeamHero } = useGameStore();
-  const rosterPreviewParam = new URLSearchParams(window.location.search).get("rosterPreview");
-  const rosterPreviewHero = SELECTABLE_HERO_IDS.find((heroId) => heroId === rosterPreviewParam);
-  const displayedHeroIds = rosterPreviewHero ? [rosterPreviewHero] : SELECTABLE_HERO_IDS;
-  return <section className="selection-screen skin-team">
-    <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到舞台</button>
-    <BakedBannerCopy location="遠征旗亭 · 第一步" title="選擇三位登場英雄" summary="每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。" />
-    {selectedDungeonId && <div className="dungeon-launch-note"><ShieldCheck size={15} />即將挑戰：{DUNGEONS.find((dungeon) => dungeon.id === selectedDungeonId)?.title} · 進入命運舞台時扣除體力</div>}<div className="selection-count"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.teamRosterCount} alt="" /><span>{selectedHeroes.length}</span>/3 已選</div>
-    <div className="hero-choice-grid">{displayedHeroIds.map((heroId) => {
-      const definition = HEROES[heroId]; const selected = selectedHeroes.includes(heroId);
-      return <button key={heroId} className={`hero-choice ${selected ? "is-selected" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} onClick={() => toggleTeamHero(heroId)}><span className="hero-choice-art"><img src={HERO_PORTRAITS[heroId]} alt="" /><em>{definition.classLabel}</em></span><div><b>{definition.name}</b><small>{definition.tierNotes[1]}</small></div><i>{selected ? "已選" : "選擇"}</i></button>;
-    })}</div>
-    <button className="primary-cta wide-cta astervow-btn is-teal" disabled={selectedHeroes.length !== 3} onClick={() => openScreen("leader")}><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.teamEdit} alt="" />決定隊長</button>
+  // Design reminder: this route is a read-only Hero Codex. Team formation and expedition
+  // controls belong exclusively to the Royal Court so the catalogue stays exploratory.
+  const { openScreen, progress } = useGameStore();
+  const requestedHero = new URLSearchParams(window.location.search).get("codexHero");
+  const initialHero = SELECTABLE_HERO_IDS.includes(requestedHero as HeroId) ? requestedHero as HeroId : "knight";
+  const [focusedHeroId, setFocusedHeroId] = useState<HeroId>(initialHero);
+  const hero = HEROES[focusedHeroId];
+  const heroProgress = getHeroProgress(progress.heroProgress[focusedHeroId]);
+  const nextExperience = heroXpRequirement(heroProgress.level);
+  const attackSpeed = (1 / hero.attackInterval).toFixed(2);
+  const roleLabel = { tank: "前線守護", area: "範圍壓制", single: "精準輸出", support: "支援回復" }[hero.role];
+
+  return <section className="selection-screen skin-team hero-codex-screen">
+    <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到大廳</button>
+    <BakedBannerCopy location="王城藏書室 · 英雄圖鑑" title="英雄檔案館" summary="閱讀已解鎖英雄的戰鬥資料、成長紀錄與技能檔案。" />
+
+    <article className="hero-codex-feature" style={{ "--codex-color": hero.color } as React.CSSProperties}>
+      <div className="hero-codex-feature__art"><img className="hero-codex-feature__portrait" src={HERO_PORTRAITS[focusedHeroId] ?? HEROES_URL} alt="" /><span>{hero.classLabel}</span></div>
+      <div className="hero-codex-feature__identity"><small>{roleLabel} · 已解鎖</small><h2>{hero.name}</h2><p>{hero.tierNotes[1]}</p><div className="hero-codex-level"><b>Lv.{heroProgress.level}</b><span><i style={{ width: `${Math.min(100, Math.round(heroProgress.experience / nextExperience * 100))}%` }} />{heroProgress.experience} / {nextExperience} EXP</span></div></div>
+      <div className="hero-codex-stats" aria-label={`${hero.name}基礎數值`}>
+        <span><small>攻擊</small><b>{hero.attack}</b></span><span><small>生命</small><b>{hero.maxHp}</b></span><span><small>射程</small><b>{Math.round(hero.range * 10)}</b></span><span><small>攻速</small><b>{attackSpeed}</b></span>
+      </div>
+    </article>
+
+    <section className="hero-codex-skills" aria-label={`${hero.name}技能檔案`}>
+      <header><span><Sparkles size={15} />戰術檔案</span><small>資料會隨未來養成系統持續擴充</small></header>
+      <article><i>01</i><div><small>T1 特性</small><b>{hero.tierNotes[1]}</b></div></article>
+      <article><i>02</i><div><small>隊長技能</small><b>{leaderSkill[focusedHeroId]}</b></div></article>
+      <article><i>03</i><div><small>T3 終階</small><b>{hero.tierNotes[3]}</b></div></article>
+    </section>
+
+    <section className="hero-codex-collection" aria-label="已解鎖英雄收藏">
+      <header><span>已解鎖英雄</span><small>{SELECTABLE_HERO_IDS.length} / {SELECTABLE_HERO_IDS.length}</small></header>
+      <div>{SELECTABLE_HERO_IDS.map((heroId) => {
+        const entry = HEROES[heroId]; const entryProgress = getHeroProgress(progress.heroProgress[heroId]);
+        return <button type="button" key={heroId} className={heroId === focusedHeroId ? "is-active" : ""} style={{ "--catalogue-hero-color": entry.color } as React.CSSProperties} onClick={() => setFocusedHeroId(heroId)}><img className="hero-codex-collection__portrait" src={HERO_PORTRAITS[heroId] ?? HEROES_URL} alt="" /><span><b>{entry.name}</b><small>{entry.classLabel} · Lv.{entryProgress.level}</small></span></button>;
+      })}</div>
+    </section>
+
+    <aside className="hero-codex-roadmap" aria-label="後續圖鑑擴充"><Sparkles size={15} /><div><b>圖鑑擴充預留</b><span>英雄傳記、羈絆、造型收集與熟練度將在此解鎖。</span></div></aside>
   </section>;
 }
 
