@@ -13,7 +13,8 @@ import "./heroCardAlignment.css";
 import "./teamEditFormation.css";
 import "./lobbyTeamManager.css";
 import "./chapterMap.css";
-import { AlertTriangle, BatteryCharging, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RefreshCw, RotateCcw, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, Volume2, X, Zap } from "lucide-react";
+import "./asterVowUiSkin.css";
+import { AlertTriangle, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Heart, Info, Lock, Menu, Music2, PackageOpen, Pause, Play, RotateCcw, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, Volume2, X, Zap } from "lucide-react";
 import { PixiBattle } from "@/components/GameCanvas";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS, TALENTS, WAVES } from "@/game/config";
 import { HERO_BOARD_LAYOUT, type HeroBoardLayout } from "@/game/heroBoardLayout";
@@ -26,7 +27,6 @@ const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
-const CASTLE_WALKWAY_PARTY_URL = "/manus-storage/castle-walkway-party-transparent_1070719d.png";
 const STORY_STAGE_FRAME_URL = "/manus-storage/astervow-story-stage-frame-ultra-slim_f3d08c10.png";
 const HUD_RESOURCE_ICON_URLS = {
   coins: "/manus-storage/astervow-hud-coin_72c66ed6.png",
@@ -47,6 +47,32 @@ const FORMATION_ROLE_ICON_URLS: Partial<Record<HeroId, string>> = {
   engineer: "/manus-storage/engineer_dbf5edbb.png",
   fighter: "/manus-storage/fighter_8b188187.png",
 };
+const ASTERVOW_UI_ICON_URLS = {
+  equipmentAttack: "/ui-astervow/icons/equipment/attack.png",
+  equipmentDefense: "/ui-astervow/icons/equipment/defense.png",
+  equipmentReset: "/ui-astervow/icons/equipment/reset.png",
+  equipmentWeapon: "/ui-astervow/icons/equipment/weapon.png",
+  equipmentArmor: "/ui-astervow/icons/equipment/armor.png",
+  equipmentRelic: "/ui-astervow/icons/equipment/relic.png",
+  shopSigils: "/ui-astervow/icons/shop/sigils.png",
+  shopResetTime: "/ui-astervow/icons/shop/reset-time.png",
+  shopRefresh: "/ui-astervow/icons/shop/refresh.png",
+  shopMaterials: "/ui-astervow/icons/shop/materials.png",
+  shopWeaponOffer: "/ui-astervow/icons/shop/weapon-offer.png",
+  shopRelicOffer: "/ui-astervow/icons/shop/relic-offer.png",
+  dungeonStamina: "/ui-astervow/icons/dungeon/stamina.png",
+  dungeonChallenge: "/ui-astervow/icons/dungeon/challenge.png",
+  dungeonLocked: "/ui-astervow/icons/dungeon/locked.png",
+  dungeonReward: "/ui-astervow/icons/dungeon/reward.png",
+  dungeonRule: "/ui-astervow/icons/dungeon/rule.png",
+  dungeonStageBadge: "/ui-astervow/icons/dungeon/stage-badge.png",
+  teamRosterCount: "/ui-astervow/icons/team/roster-count.png",
+  teamTank: "/ui-astervow/icons/team/tank.png",
+  teamFire: "/ui-astervow/icons/team/fire.png",
+  teamHeal: "/ui-astervow/icons/team/heal.png",
+  teamPierce: "/ui-astervow/icons/team/pierce.png",
+  teamEdit: "/ui-astervow/icons/team/edit.png",
+} as const;
 const ASTERVOW_ICON_URLS = {
   equipment: "/manus-storage/equipment_b47d9ea9.png",
   shop: "/manus-storage/shop_410470c0.png",
@@ -412,7 +438,6 @@ function TitleScreen() {
       <span className="cute-story-progress__hint" aria-hidden="true">點擊查看章節地圖</span>
     </button>
     <main className="cute-hub-standby" aria-label="王都遠征入口">
-      <img className="castle-walkway-party" src={CASTLE_WALKWAY_PARTY_URL} alt="" aria-hidden="true" />
       <TeamEditFormation selectedHeroes={selectedHeroes} leaderId={leaderId} onEdit={() => setFormationManagerOpen(true)} />
       <button className="cute-expedition-button" disabled={departing} onClick={launchExpedition}><i><img src={ASTERVOW_ICON_URLS.castle} alt="" /></i><span><small>骰塔大門已開啟</small><b>{departing ? "隊伍啟程中" : "開始遠征"}</b></span><em>體力 -5</em></button>
     </main>
@@ -501,13 +526,30 @@ function CourtyardSignboard({ kind, location, title, summary, icon }: { kind: Co
   return <header className={`courtyard-signboard sign-${kind}`}><i className="sign-emblem" aria-hidden="true">{icon}</i><div className="sign-plaque"><span className="sign-nail sign-nail-left" /><span className="sign-nail sign-nail-right" /><p>{location}</p><h2>{title}</h2><small>{summary}</small></div></header>;
 }
 
-function ModuleHeader({ moduleId }: { moduleId: LobbyModuleId }) { const { openScreen } = useGameStore(); const module = LOBBY_MODULES[moduleId]; const sign = MODULE_SIGN_META[moduleId]; return <><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />返回大廳</button><CourtyardSignboard kind={moduleId} location={sign.location} title={module.title} summary={module.summary} icon={sign.icon} /></>; }
+const ASSET_SKINNED_MODULES = new Set<LobbyModuleId>(["equipment", "shop", "dungeon"]);
+
+function BakedBannerCopy({ location, title, summary }: { location: string; title: string; summary: string }) {
+  return <div className="baked-banner-copy"><p>{location}</p><h2>{title}</h2><small>{summary}</small></div>;
+}
+
+function ModuleHeader({ moduleId }: { moduleId: LobbyModuleId }) {
+  const { openScreen } = useGameStore();
+  const module = LOBBY_MODULES[moduleId];
+  const sign = MODULE_SIGN_META[moduleId];
+  const backLabel = "返回大廳";
+  if (ASSET_SKINNED_MODULES.has(moduleId)) {
+    return <><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />{backLabel}</button><BakedBannerCopy location={sign.location} title={module.title} summary={module.summary} /></>;
+  }
+  return <><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />{backLabel}</button><CourtyardSignboard kind={moduleId} location={sign.location} title={module.title} summary={module.summary} icon={sign.icon} /></>;
+}
 
 const SLOT_LABELS: Record<EquipmentSlot, string> = { weapon: "武器", armor: "護甲", relic: "遺物" };
 
+const EQUIPMENT_SLOT_ICON_URLS: Record<EquipmentSlot, string> = { weapon: ASTERVOW_UI_ICON_URLS.equipmentWeapon, armor: ASTERVOW_UI_ICON_URLS.equipmentArmor, relic: ASTERVOW_UI_ICON_URLS.equipmentRelic };
+
 function EquipmentScreen() {
   const { progress, equipItem, unequipItem, upgradeEquipment, dismantleEquipment, openScreen } = useGameStore(); const bonuses = getEquipmentBonuses(progress.equipped, progress.equipmentLevels);
-  return <section className="lobby-module-screen accent-gold"><ModuleHeader moduleId="equipment" /><div className="equipment-bonus-strip"><span><Swords size={15} />攻擊 +{Math.round(bonuses.attackMultiplier * 100)}%</span><span><Shield size={15} />城堡 +{bonuses.castleBonus}</span><span><RotateCcw size={15} />重骰 +{bonuses.extraRerolls}</span></div><div className="equipment-slots">{(["weapon", "armor", "relic"] as EquipmentSlot[]).map((slot) => <button key={slot} className="equipment-slot" onClick={() => progress.equipped[slot] && unequipItem(slot)}><small>{SLOT_LABELS[slot]}</small><b>{progress.equipped[slot] ? EQUIPMENT[progress.equipped[slot]!].name : "尚未裝備"}</b><span>{progress.equipped[slot] ? "點擊卸下" : "背包內選擇"}</span></button>)}</div><div className="module-status"><span>背包 {progress.inventory.length} 件 · 鍛造銅礦 {progress.materials}</span><b>裝備在下一局生效</b></div><div className="inventory-list">{progress.inventory.map((equipmentId) => { const item = EQUIPMENT[equipmentId]; const equipped = progress.equipped[item.slot] === equipmentId; const level = progress.equipmentLevels[equipmentId] ?? 1; const upgradeCost = level * 8; return <article key={equipmentId} className={equipped ? "is-equipped" : ""}><i>{item.icon}</i><div><b>{item.name}</b><p>{item.description}</p><small>{SLOT_LABELS[item.slot]} · {item.rarity} · Lv.{level}/5</small></div><div className="equipment-actions"><button onClick={() => equipItem(equipmentId)}>{equipped ? <><Check size={14} />已裝備</> : "裝備"}</button><button disabled={level >= 5 || progress.materials < upgradeCost} onClick={() => upgradeEquipment(equipmentId)}><Hammer size={12} />升級 {level >= 5 ? "MAX" : upgradeCost}</button><button className="dismantle-button" onClick={() => dismantleEquipment(equipmentId)}><Trash2 size={12} />分解</button></div></article>; })}</div><button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><PackageOpen size={17} />返回冒險大廳</button></section>;
+  return <section className="lobby-module-screen accent-gold skin-equipment"><ModuleHeader moduleId="equipment" /><div className="equipment-bonus-strip"><span><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.equipmentAttack} alt="" />攻擊 +{Math.round(bonuses.attackMultiplier * 100)}%</span><span><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.equipmentDefense} alt="" />城堡 +{bonuses.castleBonus}</span><span><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.equipmentReset} alt="" />重骰 +{bonuses.extraRerolls}</span></div><div className="equipment-slots">{(["weapon", "armor", "relic"] as EquipmentSlot[]).map((slot) => <button key={slot} className="equipment-slot astervow-slot" onClick={() => progress.equipped[slot] && unequipItem(slot)}><img className="astervow-icon equipment-slot-icon" src={EQUIPMENT_SLOT_ICON_URLS[slot]} alt="" /><small>{SLOT_LABELS[slot]}</small><b>{progress.equipped[slot] ? EQUIPMENT[progress.equipped[slot]!].name : "尚未裝備"}</b><span>{progress.equipped[slot] ? "點擊卸下" : "背包內選擇"}</span></button>)}</div><div className="module-status"><span>背包 {progress.inventory.length} 件 · 鍛造銅礦 {progress.materials}</span><b>裝備在下一局生效</b></div><div className="astervow-divider" aria-hidden="true" /><div className="inventory-list">{progress.inventory.map((equipmentId) => { const item = EQUIPMENT[equipmentId]; const equipped = progress.equipped[item.slot] === equipmentId; const level = progress.equipmentLevels[equipmentId] ?? 1; const upgradeCost = level * 8; return <article key={equipmentId} className={`astervow-card ${equipped ? "is-equipped" : ""}`}><i><img className="astervow-icon item-row-icon" src={EQUIPMENT_SLOT_ICON_URLS[item.slot]} alt="" /></i><div><b>{item.name}</b><p>{item.description}</p><small>{SLOT_LABELS[item.slot]} · Lv.{level}/5<em className="astervow-badge">{item.rarity}</em></small></div><div className="equipment-actions"><button className="astervow-btn is-cream" onClick={() => equipItem(equipmentId)}>{equipped ? <><Check size={14} />已裝備</> : "裝備"}</button><button className="astervow-btn is-green" disabled={level >= 5 || progress.materials < upgradeCost} onClick={() => upgradeEquipment(equipmentId)}><Hammer size={12} />升級 {level >= 5 ? "MAX" : upgradeCost}</button><button className="dismantle-button astervow-btn is-red" onClick={() => dismantleEquipment(equipmentId)}><Trash2 size={12} />分解</button></div></article>; })}</div><button className="secondary-cta wide-cta astervow-btn is-cream" onClick={() => openScreen("title")}><PackageOpen size={17} />返回冒險大廳</button></section>;
 }
 
 function DailyScreen() {
@@ -518,7 +560,7 @@ function DailyScreen() {
 
 function DungeonScreen() {
   const { progress, selectDungeon, openScreen } = useGameStore();
-  return <section className="lobby-module-screen accent-violet"><ModuleHeader moduleId="dungeon" /><div className="dungeon-energy"><BatteryCharging size={17} /><b>體力 {progress.stamina} / 20</b><span>每次挑戰消耗對應體力</span></div><div className="dungeon-list">{DUNGEONS.map((dungeon, index) => { const unlocked = dungeon.unlocked || (index > 0 && (progress.dungeonClears[DUNGEONS[index - 1].id] ?? 0) > 0); const enoughEnergy = progress.stamina >= dungeon.energyCost; return <article key={dungeon.id} className={!unlocked ? "is-locked" : ""}><div className="dungeon-stage-number">{String(index + 1).padStart(2, "0")}</div><div><b>{dungeon.title}</b><p>{dungeon.description}</p><small>推薦戰力 {dungeon.recommendedPower} · 體力 {dungeon.energyCost}</small><strong className="dungeon-rule"><ShieldCheck size={11} />{dungeon.enemyRule.label}</strong></div><footer><span><Gift size={13} />{dungeon.reward.label} · ✦{dungeon.reward.crystals}</span><button disabled={!unlocked || !enoughEnergy} onClick={() => selectDungeon(dungeon.id)}>{!unlocked ? <><Lock size={13} />未解鎖</> : !enoughEnergy ? "體力不足" : "挑戰"}</button></footer></article>; })}</div><button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button></section>;
+  return <section className="lobby-module-screen accent-violet skin-dungeon"><ModuleHeader moduleId="dungeon" /><div className="dungeon-energy"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonStamina} alt="" /><b>體力 {progress.stamina} / 20</b><span>每次挑戰消耗對應體力</span></div><div className="astervow-divider" aria-hidden="true" /><div className="dungeon-list">{DUNGEONS.map((dungeon, index) => { const unlocked = dungeon.unlocked || (index > 0 && (progress.dungeonClears[DUNGEONS[index - 1].id] ?? 0) > 0); const enoughEnergy = progress.stamina >= dungeon.energyCost; return <article key={dungeon.id} className={`astervow-card ${!unlocked ? "is-locked" : ""}`}><div className="dungeon-stage-number"><img className="astervow-icon dungeon-stage-badge" src={ASTERVOW_UI_ICON_URLS.dungeonStageBadge} alt="" /><span>{String(index + 1).padStart(2, "0")}</span></div><div><b>{dungeon.title}</b><p>{dungeon.description}</p><small>推薦戰力 {dungeon.recommendedPower} · 體力 {dungeon.energyCost}</small><strong className="dungeon-rule"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonRule} alt="" />{dungeon.enemyRule.label}</strong></div><footer><span><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonReward} alt="" />{dungeon.reward.label} · ✦{dungeon.reward.crystals}</span><button className="astervow-btn is-purple" disabled={!unlocked || !enoughEnergy} onClick={() => selectDungeon(dungeon.id)}>{!unlocked ? <><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonLocked} alt="" />未解鎖</> : !enoughEnergy ? "體力不足" : <><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonChallenge} alt="" />挑戰</>}</button></footer></article>; })}</div><button className="secondary-cta wide-cta astervow-btn is-cream" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button></section>;
 }
 
 const HIGH_VALUE_PRICE = 12;
@@ -533,7 +575,8 @@ function ShopScreen() {
   const countdown = `${String(Math.floor(remainingSeconds / 3600)).padStart(2, "0")}:${String(Math.floor(remainingSeconds % 3600 / 60)).padStart(2, "0")}:${String(remainingSeconds % 60).padStart(2, "0")}`;
   const purchase = (offerId: ShopOfferId) => { const offer = SHOP_OFFERS[offerId]; if (offer.price >= HIGH_VALUE_PRICE) setPendingOfferId(offerId); else buyShopOffer(offerId); };
   const pendingOffer = pendingOfferId ? SHOP_OFFERS[pendingOfferId] : undefined;
-  return <section className="lobby-module-screen accent-teal"><ModuleHeader moduleId="shop" /><div className="shop-toolbar"><span>◈ {progress.sigils}</span><div className="shop-refresh-clock"><small>下次日更</small><b>{countdown}</b></div><button disabled={!progress.shop.freeRefreshAvailable} onClick={refreshShop}><RefreshCw size={14} />{progress.shop.freeRefreshAvailable ? "今日免費刷新" : "今日已刷新"}</button></div><div className="shop-list">{progress.shop.offers.map((offerId) => { const offer = SHOP_OFFERS[offerId]; const bought = progress.shop.purchased.includes(offerId); const canBuy = progress.sigils >= offer.price && !bought; return <article key={offerId} className={bought ? "is-bought" : ""}><i>{offer.icon}</i><div><b>{offer.title}</b><p>{offer.description}</p><small>{offer.reward.equipmentId ? "裝備獲得後可至工坊裝卸" : "立即獲得鍛造素材"}</small></div><button disabled={!canBuy} onClick={() => purchase(offerId)}>{bought ? <><Check size={13} />已購買</> : `◈ ${offer.price}`}</button></article>; })}</div><button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button>{pendingOffer && <div className="dialog-backdrop shop-confirm-backdrop"><div className="shop-confirm-modal"><i>{pendingOffer.icon}</i><p className="screen-kicker">確認購買</p><h3>{pendingOffer.title}</h3><span>{pendingOffer.description}</span><div className="shop-confirm-cost"><span>需要支付</span><b>◈ {pendingOffer.price}</b><small>目前持有 ◈ {progress.sigils}</small></div><div className="shop-confirm-actions"><button className="secondary-cta" onClick={() => setPendingOfferId(null)}>取消</button><button className="primary-cta" onClick={() => { buyShopOffer(pendingOffer.id); setPendingOfferId(null); }}>確認購買</button></div></div></div>}</section>;
+  const offerIcon = (offerId: ShopOfferId): string => offerId === "forgeBundle" ? ASTERVOW_UI_ICON_URLS.shopMaterials : offerId === "morningBladeOffer" ? ASTERVOW_UI_ICON_URLS.shopWeaponOffer : ASTERVOW_UI_ICON_URLS.shopRelicOffer;
+  return <section className="lobby-module-screen accent-teal skin-shop"><ModuleHeader moduleId="shop" /><div className="shop-toolbar"><span className="astervow-chip"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.shopSigils} alt="" />{progress.sigils}</span><div className="shop-refresh-clock"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.shopResetTime} alt="" /><small>下次日更</small><b>{countdown}</b></div><button className="astervow-btn is-teal" disabled={!progress.shop.freeRefreshAvailable} onClick={refreshShop}><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.shopRefresh} alt="" />{progress.shop.freeRefreshAvailable ? "今日免費刷新" : "今日已刷新"}</button></div><div className="astervow-divider" aria-hidden="true" /><div className="shop-list">{progress.shop.offers.map((offerId) => { const offer = SHOP_OFFERS[offerId]; const bought = progress.shop.purchased.includes(offerId); const canBuy = progress.sigils >= offer.price && !bought; return <article key={offerId} className={`astervow-card ${bought ? "is-bought" : ""}`}><i><img className="astervow-icon item-row-icon" src={offerIcon(offerId)} alt="" /></i><div><b>{offer.title}</b><p>{offer.description}</p><small>{offer.reward.equipmentId ? "裝備獲得後可至工坊裝卸" : "立即獲得鍛造素材"}</small></div><button className="astervow-btn is-teal" disabled={!canBuy} onClick={() => purchase(offerId)}>{bought ? <><Check size={13} />已購買</> : <><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.shopSigils} alt="" />{offer.price}</>}</button></article>; })}</div><button className="secondary-cta wide-cta astervow-btn is-cream" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button>{pendingOffer && <div className="dialog-backdrop shop-confirm-backdrop"><div className="shop-confirm-modal"><i>{pendingOffer.icon}</i><p className="screen-kicker">確認購買</p><h3>{pendingOffer.title}</h3><span>{pendingOffer.description}</span><div className="shop-confirm-cost"><span>需要支付</span><b>◈ {pendingOffer.price}</b><small>目前持有 ◈ {progress.sigils}</small></div><div className="shop-confirm-actions"><button className="secondary-cta astervow-btn is-cream" onClick={() => setPendingOfferId(null)}>取消</button><button className="primary-cta astervow-btn is-teal" onClick={() => { buyShopOffer(pendingOffer.id); setPendingOfferId(null); }}>確認購買</button></div></div></div>}</section>;
 }
 
 function LobbyModuleScreen({ moduleId }: { moduleId: LobbyModuleId }) {
@@ -548,15 +591,15 @@ function TeamScreen() {
   const rosterPreviewParam = new URLSearchParams(window.location.search).get("rosterPreview");
   const rosterPreviewHero = SELECTABLE_HERO_IDS.find((heroId) => heroId === rosterPreviewParam);
   const displayedHeroIds = rosterPreviewHero ? [rosterPreviewHero] : SELECTABLE_HERO_IDS;
-  return <section className="selection-screen">
+  return <section className="selection-screen skin-team">
     <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />回到舞台</button>
-    <CourtyardSignboard kind="team" location="遠征旗亭 · 第一步" title="選擇三位登場英雄" summary="每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。" icon={<Swords size={26} />} />
-    {selectedDungeonId && <div className="dungeon-launch-note"><ShieldCheck size={15} />即將挑戰：{DUNGEONS.find((dungeon) => dungeon.id === selectedDungeonId)?.title} · 進入命運舞台時扣除體力</div>}<div className="selection-count"><span>{selectedHeroes.length}</span>/3 已選</div>
+    <BakedBannerCopy location="遠征旗亭 · 第一步" title="選擇三位登場英雄" summary="每局只會從此召喚池中呼喚英雄。你的組合，會決定可以走出的策略。" />
+    {selectedDungeonId && <div className="dungeon-launch-note"><ShieldCheck size={15} />即將挑戰：{DUNGEONS.find((dungeon) => dungeon.id === selectedDungeonId)?.title} · 進入命運舞台時扣除體力</div>}<div className="selection-count"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.teamRosterCount} alt="" /><span>{selectedHeroes.length}</span>/3 已選</div>
     <div className="hero-choice-grid">{displayedHeroIds.map((heroId) => {
       const definition = HEROES[heroId]; const selected = selectedHeroes.includes(heroId);
       return <button key={heroId} className={`hero-choice ${selected ? "is-selected" : ""}`} style={{ "--hero-color": definition.color } as React.CSSProperties} onClick={() => toggleTeamHero(heroId)}><span className="hero-choice-art"><img src={HERO_PORTRAITS[heroId]} alt="" /><em>{definition.classLabel}</em></span><div><b>{definition.name}</b><small>{definition.tierNotes[1]}</small></div><i>{selected ? "已選" : "選擇"}</i></button>;
     })}</div>
-    <button className="primary-cta wide-cta" disabled={selectedHeroes.length !== 3} onClick={() => openScreen("leader")}><Swords size={18} />決定隊長</button>
+    <button className="primary-cta wide-cta astervow-btn is-teal" disabled={selectedHeroes.length !== 3} onClick={() => openScreen("leader")}><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.teamEdit} alt="" />決定隊長</button>
   </section>;
 }
 
