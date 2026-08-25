@@ -650,3 +650,81 @@
   padding: 3px 6px;
   font-size: 9px;
 }
+
+/* Equipment refinement: the painted workshop plaque owns a large centred title; each
+   equipment slot carries its own effect so the page reads from equipped state to backpack. */
+.skin-equipment .baked-banner-copy h2 {
+  display: block;
+  width: 100%;
+  overflow: visible;
+  color: #55351e;
+  font-size: clamp(16px, 4.1cqw, 19px) !important;
+  letter-spacing: .025em;
+  text-align: center;
+  transform: translate(-8.6cqw, 24px);
+}
+.skin-equipment .equipment-loadout { margin-top: 8px; }
+.skin-equipment .equipment-section-heading { align-items: center; min-height: 24px; padding-right: 9px; }
+.skin-equipment .equipment-help {
+  display: grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  place-items: center;
+  border: 2px solid #89613c;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fff9dc, #e7c179);
+  box-shadow: inset 0 1px rgba(255,255,255,.9), 0 2px 0 rgba(111,74,44,.7);
+  color: #603f26;
+  font-family: Georgia, serif;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+}
+.skin-equipment .equipment-help.is-open { background: #5c9b84; color: #fffbea; }
+.skin-equipment .equipment-help-panel {
+  position: relative;
+  z-index: 3;
+  margin: 0 8px 7px;
+  padding: 10px 31px 10px 12px;
+  border: 1px solid rgba(109,75,43,.42);
+  border-radius: 11px;
+  background: rgba(255,250,228,.98);
+  box-shadow: 0 7px 15px rgba(76,50,25,.18);
+  color: #63442d;
+}
+.skin-equipment .equipment-help-panel button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(107,71,40,.12);
+  color: #715038;
+}
+.skin-equipment .equipment-help-panel b { display: block; font-size: 11px; }
+.skin-equipment .equipment-help-panel p { margin: 3px 0 0; color: #89684d; font-size: 10px; line-height: 1.45; }
+.skin-equipment .astervow-slot { min-height: 86px; gap: 2px; }
+.skin-equipment .equipment-slot-bonus {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 16px;
+  padding: 1px 5px;
+  border: 1px solid rgba(112,76,43,.22);
+  border-radius: 7px;
+  background: rgba(255,249,221,.86);
+  color: #8a6038;
+  font-family: "Noto Sans TC", sans-serif;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1;
+}
+.skin-equipment .equipment-slot-bonus strong { color: #456f61; font-size: 9px; }
