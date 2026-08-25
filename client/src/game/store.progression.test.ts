@@ -27,10 +27,19 @@ describe("persistent lobby progression", () => {
     expect(useGameStore.getState().progress.crystals).toBe(initialCrystals + 20);
   });
 
-  it("selects an unlocked dungeon only when enough stamina is available", () => {
+  it("starts an unlocked trial directly only when enough stamina is available", () => {
+    const initialStamina = useGameStore.getState().progress.stamina;
     useGameStore.getState().selectDungeon("ruinCorridor");
-    expect(useGameStore.getState().selectedDungeonId).toBe("ruinCorridor");
-    expect(useGameStore.getState().screen).toBe("team");
+    expect(useGameStore.getState().selectedDungeonId).toBeUndefined();
+    expect(useGameStore.getState().screen).toBe("game");
+    expect(useGameStore.getState().run?.dungeonId).toBe("ruinCorridor");
+    expect(useGameStore.getState().progress.stamina).toBe(initialStamina - 5);
+    const progress = freshProgress();
+    useGameStore.setState({ screen: "title", run: undefined, progress: { ...progress, stamina: 4 } });
+    useGameStore.getState().selectDungeon("ruinCorridor");
+    expect(useGameStore.getState().screen).toBe("title");
+    expect(useGameStore.getState().run).toBeUndefined();
+    expect(useGameStore.getState().progress.stamina).toBe(4);
   });
 
   it("buys a shop item once and uses the daily free refresh", () => {

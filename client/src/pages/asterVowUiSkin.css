@@ -806,3 +806,80 @@
 }
 .skin-shop .shop-help-panel b { display: block; font-size: 11px; }
 .skin-shop .shop-help-panel p { margin: 3px 0 0; color: #5f877c; font-size: 10px; line-height: 1.45; }
+
+/* Trial Gate refinement: separate the painted gate title from the preparation panel, then
+   let stamina and individual trial choices read as two calm, consecutive bands. */
+.skin-dungeon .baked-banner-copy h2 {
+  display: block;
+  width: 100%;
+  overflow: visible;
+  color: #55351e;
+  font-size: clamp(16px, 4.1cqw, 19px) !important;
+  letter-spacing: .025em;
+  text-align: center;
+  transform: translate(-8.6cqw, 24px);
+}
+.skin-dungeon .dungeon-prep,
+.skin-dungeon .dungeon-trials { position: relative; z-index: 1; }
+.skin-dungeon .dungeon-prep { margin-top: 34px; }
+.skin-dungeon .dungeon-trials { margin-top: 0; }
+.skin-dungeon .dungeon-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+  padding: 0 9px 3px 13px;
+  color: #68421f;
+  font-family: "Mochiy Pop One", "Noto Sans TC", sans-serif;
+}
+.skin-dungeon .dungeon-section-heading span { font-size: 11px; font-weight: 900; letter-spacing: .025em; }
+.skin-dungeon .dungeon-section-heading small { color: #956839; font-family: "Noto Sans TC", sans-serif; font-size: 8px; font-weight: 800; }
+.skin-dungeon .dungeon-energy { margin: 0; }
+.skin-dungeon .dungeon-list { gap: 7px; margin-top: 4px; }
+.skin-dungeon .dungeon-list article { min-height: 98px; padding: 9px 10px; }
+.skin-dungeon .dungeon-list article p { margin: 1px 0; font-size: 10px; line-height: 1.24; }
+.skin-dungeon .dungeon-help {
+  display: grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  place-items: center;
+  border: 2px solid #70538e;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fbf4ff, #cdb9df);
+  box-shadow: inset 0 1px rgba(255,255,255,.9), 0 2px 0 rgba(82,57,111,.72);
+  color: #5b407b;
+  font-family: Georgia, serif;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+}
+.skin-dungeon .dungeon-help.is-open { background: #7455a0; color: #fffaff; }
+.skin-dungeon .dungeon-help-panel {
+  position: relative;
+  z-index: 3;
+  margin: 0 8px 7px;
+  padding: 10px 31px 10px 12px;
+  border: 1px solid rgba(98,75,132,.43);
+  border-radius: 11px;
+  background: rgba(252,248,255,.98);
+  box-shadow: 0 7px 15px rgba(69,50,96,.16);
+  color: #5c4677;
+}
+.skin-dungeon .dungeon-help-panel button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(89,66,123,.12);
+  color: #694d90;
+}
+.skin-dungeon .dungeon-help-panel b { display: block; font-size: 11px; }
+.skin-dungeon .dungeon-help-panel p { margin: 3px 0 0; color: #806894; font-size: 10px; line-height: 1.45; }

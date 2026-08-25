@@ -36,7 +36,7 @@ export function createDungeonRun(selectedHeroes: HeroId[], leaderId: HeroId, dun
   const dungeon = DUNGEONS.find((candidate) => candidate.id === dungeonId);
   const base = createRun(selectedHeroes, leaderId, random, equipmentBonuses);
   if (!dungeon) return base;
-  return { ...base, dungeonId, wave: dungeon.startWave, combat: makeCombatState(dungeon.startWave, equipmentBonuses.castleBonus), message: `副本：${dungeon.title} 開演！特殊規則已啟動。` };
+  return { ...base, dungeonId, wave: dungeon.startWave, combat: makeCombatState(dungeon.startWave, equipmentBonuses.castleBonus), message: `試煉：${dungeon.title} 開演！特殊規則已啟動。` };
 }
 
 function summon(run: RunState, heroId: HeroId): RunState {

@@ -164,7 +164,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const index = DUNGEONS.findIndex((candidate) => candidate.id === selectedDungeonId);
     const previous = DUNGEONS[index - 1];
     const unlocked = dungeon?.unlocked || (previous ? (state.progress.dungeonClears[previous.id] ?? 0) > 0 : false);
-    return dungeon && unlocked ? { selectedDungeonId, screen: "team" } : state;
+    if (!dungeon || !unlocked || state.selectedHeroes.length !== 3 || state.progress.stamina < dungeon.energyCost) return state;
+    const equipmentBonuses = getEquipmentBonuses(state.progress.equipped, state.progress.equipmentLevels);
+    const progress = persist({ ...state.progress, stamina: state.progress.stamina - dungeon.energyCost });
+    return {
+      run: createDungeonRun(state.selectedHeroes, state.leaderId, dungeon.id, equipmentBonuses),
+      progress,
+      selectedDungeonId: undefined,
+      screen: "game",
+      selectedBoardIndexes: [],
+    };
   }),
   equipItem: (equipmentId) => set((state) => {
     if (!state.progress.inventory.includes(equipmentId)) return state;
