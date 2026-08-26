@@ -27,10 +27,10 @@ import type {
   DiceComboEffect,
   DiceComboKind,
   HeroInstance,
-  RouteId,
-  RouteState,
   RunState,
   TalentDefinition,
+  WaveDefinition,
+  WaveRuntimeState,
 } from "@/game/run-engine/types";
 import { WAVE_DEFINITIONS } from "@/game/run-engine/waves";
 import { useGameStore } from "@/game/store";
@@ -111,15 +111,31 @@ function Bsv2Header({ run }: { run: RunState }) {
 
 const BATTLEFIELD_BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 
-function RouteStrip({ routes, activeRoutes, wave, isBossWave }: { routes: RouteState[]; activeRoutes: RouteId[]; wave: number; isBossWave: boolean }) {
-  const enemies = routes.flatMap((route) => route.enemies);
+/** Kept up from Wave Preview through Reward (not just during COMBAT_RUNNING) so the
+ * battlefield stays on screen while rolling dice, per user feedback -- the active
+ * Route lanes double as an "incoming attack" hint (animated chevrons flowing down
+ * the lane) available before any enemy has actually spawned, using the Wave's
+ * activeRoutes rather than live waveRuntime data. Inactive lanes are left
+ * un-tinted (no more darkening overlay) so the artwork stays readable underneath. */
+function RouteStrip({ waveDefinition, waveRuntime, wave }: { waveDefinition: WaveDefinition | undefined; waveRuntime: WaveRuntimeState | undefined; wave: number }) {
+  const activeRoutes = waveDefinition?.activeRoutes ?? [];
+  const liveEnemies = waveRuntime?.routes.flatMap((route) => route.enemies) ?? [];
+  const plannedCount = waveDefinition?.batches.reduce((sum, batch) => sum + batch.entries.length, 0) ?? 0;
+  const enemyCount = waveRuntime ? liveEnemies.length : plannedCount;
+  const isBossWave = !!waveDefinition?.bossEncounter;
   return <div className="bsv2-battle-stage" style={{ backgroundImage: `linear-gradient(180deg, rgba(10,14,22,.18), rgba(10,14,22,.05)), url(${BATTLEFIELD_BACKDROP_URL})` }} aria-label="戰場">
-    <div className="bsv2-stage-copy"><span>第 {wave} 波</span><small>{enemies.length} 名敵人</small></div>
+    <div className="bsv2-stage-copy"><span>第 {wave} 波</span><small>{enemyCount} 名敵人</small></div>
     {isBossWave && <div className="bsv2-boss-warning"><Shield size={13} />Boss 波次</div>}
     <div className="bsv2-route-strip">
-      {ALL_DEFENSE_ZONES.map((zone) => <div key={zone} className={`bsv2-route-lane ${activeRoutes.includes(zone) ? "is-active" : "is-inactive"}`}><small>路 {zone}</small></div>)}
+      {ALL_DEFENSE_ZONES.map((zone) => {
+        const active = activeRoutes.includes(zone);
+        return <div key={zone} className={`bsv2-route-lane ${active ? "is-active" : "is-inactive"}`}>
+          <small>路 {zone}</small>
+          {active && <span className="bsv2-route-hint" aria-hidden="true"><i /><i /><i /></span>}
+        </div>;
+      })}
       <div className="bsv2-route-overlay">
-        {enemies.map((enemy) => {
+        {liveEnemies.map((enemy) => {
           const definition = ENEMY_DEFINITIONS[enemy.defId];
           const meta = ENEMIES[enemy.defId as keyof typeof ENEMIES];
           const minZone = Math.min(...enemy.occupiedRoutes);
@@ -427,13 +443,12 @@ export default function BattleScreenV2() {
   useCombatLoop();
   if (!run) return null;
 
-  const showRoutes = run.waveRuntime !== undefined;
   const boardInteractive = run.phase === "PREPARATION";
   const waveDefinition = WAVE_DEFINITIONS[run.wave - 1];
 
   return <section className="bsv2-screen">
     <Bsv2Header run={run} />
-    {showRoutes && run.waveRuntime && <RouteStrip routes={run.waveRuntime.routes} activeRoutes={waveDefinition?.activeRoutes ?? []} wave={run.wave} isBossWave={!!waveDefinition?.bossEncounter} />}
+    <RouteStrip waveDefinition={waveDefinition} waveRuntime={run.waveRuntime} wave={run.wave} />
     {run.phase === "WAVE_PREVIEW" && <Bsv2WavePreview run={run} />}
     {run.phase === "DICE_DECISION" && <Bsv2Dice run={run} />}
     {run.phase === "DICE_RESOLVE" && <Bsv2ComboChoice run={run} />}
