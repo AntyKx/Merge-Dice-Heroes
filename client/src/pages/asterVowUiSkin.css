@@ -16,10 +16,10 @@
   background-position: top center;
   background-size: 100% auto;
 }
-.lobby-module-screen.skin-equipment { background-image: url(/manus-storage/equipment_e86359e9.png); background-color: #f2e0b8; }
-.lobby-module-screen.skin-shop { background-image: url(/manus-storage/shop_2a7c3e2f.png); background-color: #f3e3bd; }
-.lobby-module-screen.skin-dungeon { background-image: url(/manus-storage/dungeon_37ed44a2.png); background-color: #efdcb8; }
-.selection-screen.skin-team { background-image: url(/manus-storage/team_6bf20124.png); background-color: #f2e3c0; }
+.lobby-module-screen.skin-equipment { background-image: url(/manus-storage/equipment_e86359e9.webp); background-color: #f2e0b8; }
+.lobby-module-screen.skin-shop { background-image: url(/manus-storage/shop_2a7c3e2f.webp); background-color: #f3e3bd; }
+.lobby-module-screen.skin-dungeon { background-image: url(/manus-storage/dungeon_37ed44a2.webp); background-color: #efdcb8; }
+.selection-screen.skin-team { background-image: url(/manus-storage/team_6bf20124.webp); background-color: #f2e3c0; }
 
 .skin-equipment .back-link,
 .skin-shop .back-link,
