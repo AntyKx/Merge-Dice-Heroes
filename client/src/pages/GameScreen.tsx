@@ -653,13 +653,15 @@ function LeaderScreen() {
 
 function ProfileScreen() {
   // Design reminder: the LV. HUD entry now leads here instead of straight to the Hero
-  // Codex. Play history reads real progress data; avatar rewards and account login are
-  // deliberately placeholders for now -- see the user's own "以後" framing -- so this
-  // screen doesn't silently promise features (avatar unlocks, Google/Apple sign-in)
-  // that don't exist yet.
-  const { openScreen, progress, setPlayerName, leaderId } = useGameStore();
+  // Codex. Play history reads real progress data; avatar rewards are still a
+  // placeholder -- see the user's own "以後" framing -- so this screen doesn't
+  // silently promise avatar unlocks that don't exist yet. Account login (Google via
+  // Firebase Auth) is real, cloud-syncing this same PlayerProgress through the
+  // separate Cloudflare Worker in cloud/. Apple sign-in isn't wired up yet.
+  const { openScreen, progress, setPlayerName, leaderId, user, signInGoogle, signOutUser, cloudSyncError } = useGameStore();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(progress.playerName);
+  const [signingIn, setSigningIn] = useState(false);
   const avatarUrl = HERO_PORTRAITS[leaderId];
   const totalGames = progress.wins + progress.losses;
   const winRate = totalGames > 0 ? Math.round((progress.wins / totalGames) * 100) : 0;
@@ -697,9 +699,18 @@ function ProfileScreen() {
       <p className="profile-placeholder">敬請期待——之後會依成就與活動解鎖更多可更換的頭像。</p>
     </section>
 
-    <section className="profile-section" aria-label="基本資料設定">
-      <header><Settings2 size={14} /><span>基本資料設定</span></header>
-      <p className="profile-placeholder">帳號登入（Google / Apple）與跨裝置資料同步準備中。</p>
+    <section className="profile-section" aria-label="帳號登入">
+      <header><Settings2 size={14} /><span>帳號登入</span></header>
+      {user
+        ? <div className="profile-account">
+            <p className="profile-account__status"><Check size={13} />已登入：{user.email ?? user.displayName ?? "Google 帳號"}</p>
+            <button className="profile-account__signout" onClick={() => signOutUser()}>登出</button>
+          </div>
+        : <>
+            <p className="profile-placeholder">登入 Google 帳號即可在不同裝置間同步遊玩進度。（Apple 登入尚未開放）</p>
+            <button className="profile-account__signin" disabled={signingIn} onClick={async () => { setSigningIn(true); await signInGoogle(); setSigningIn(false); }}>{signingIn ? "登入中…" : "使用 Google 登入"}</button>
+          </>}
+      {cloudSyncError && <p className="profile-account__error"><AlertTriangle size={12} />{cloudSyncError}</p>}
     </section>
   </section>;
 }

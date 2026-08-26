@@ -22,3 +22,12 @@
 .profile-stats b { font-size:16px; color:var(--court-ink); }
 .profile-stats small { color:var(--court-muted); font-size:9px; margin-top:2px; }
 .profile-placeholder { margin:0; color:var(--court-muted); font-size:12px; line-height:1.6; }
+
+.profile-account { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.profile-account__status { display:flex; align-items:center; gap:5px; margin:0; color:var(--court-ink); font-size:12px; }
+.profile-account__status svg { color:var(--court-teal-dark); flex:0 0 auto; }
+.profile-account__signin, .profile-account__signout { border:1px solid var(--court-wood); border-radius:10px; padding:8px 14px; font-size:12px; font-weight:900; }
+.profile-account__signin { width:100%; margin-top:8px; color:#fff; background:linear-gradient(180deg,var(--court-teal),var(--court-teal-dark)); box-shadow:0 2px 0 var(--court-teal-dark); }
+.profile-account__signin:disabled { opacity:.6; }
+.profile-account__signout { flex:0 0 auto; color:var(--court-ink); background:var(--court-paper-light); }
+.profile-account__error { display:flex; align-items:center; gap:5px; margin:8px 0 0; color:#a8452f; font-size:11px; }

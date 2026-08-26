@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import { emitAudio } from "./audio";
+import { cloudLoadProgress, cloudSaveProgress } from "./cloudSync";
 import { DAILY_QUESTS, DUNGEONS, EQUIPMENT, SHOP_OFFERS } from "./config";
 import { createDefaultMetaAdapter } from "./defaultMetaAdapter";
+import { auth, consumePendingRedirectResult, onAuthStateChanged, signInWithGoogle, signOutOfGoogle } from "./firebase";
 import { awardHeroExperience } from "./heroProgress";
 import { defaultProgress, loadProgress, saveProgress } from "./persistence";
 import {
@@ -31,6 +33,12 @@ import type { DailyQuestId, DungeonId, EquipmentId, EquipmentSlot, HeroId, Lobby
 
 export type GameScreen = "title" | "team" | "leader" | "game" | "guide" | "equipment" | "shop" | "daily" | "dungeon" | "profile";
 
+export interface CloudUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+}
+
 interface GameStore {
   screen: GameScreen;
   selectedHeroes: HeroId[];
@@ -41,6 +49,10 @@ interface GameStore {
   progress: PlayerProgress;
   autoSpeed: 1 | 2 | 4;
   isPaused: boolean;
+  user: CloudUser | null;
+  cloudSyncError?: string;
+  signInGoogle: () => Promise<void>;
+  signOutUser: () => Promise<void>;
   openScreen: (screen: GameScreen) => void;
   toggleTeamHero: (heroId: HeroId) => void;
   setTeamSlot: (slotIndex: number, heroId?: HeroId) => void;
@@ -83,8 +95,20 @@ interface GameStore {
 
 const loadedProgress = typeof window === "undefined" ? defaultProgress : loadProgress();
 
+/** localStorage stays the source of truth for "what renders right now" (every
+ * read goes through the store's `progress` field, never the network) -- this
+ * only fires a best-effort, fire-and-forget cloud sync on top whenever the
+ * user is signed in, mirroring the earlier DiceHeroSpriteIntegratedGame_v2
+ * project's "silent cloud sync whenever local save happens" pattern. A failed
+ * cloud sync never blocks or reverts the local save. */
 function persist(progress: PlayerProgress) {
   saveProgress(progress);
+  const user = useGameStore.getState().user;
+  if (user) {
+    cloudSaveProgress(progress).catch(() => {
+      useGameStore.setState({ cloudSyncError: "雲端同步失敗，已保留本機進度。" });
+    });
+  }
   return progress;
 }
 
@@ -124,6 +148,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
   progress: loadedProgress,
   autoSpeed: 1,
   isPaused: false,
+  user: null,
+  signInGoogle: async () => {
+    try {
+      await signInWithGoogle();
+    } catch {
+      set({ cloudSyncError: "Google 登入失敗，請稍後再試。" });
+    }
+  },
+  signOutUser: async () => {
+    await signOutOfGoogle().catch(() => {});
+  },
   openScreen: (screen) => set((state) => {
     const noticeId = (["equipment", "shop", "daily", "dungeon"] as string[]).includes(screen) ? screen as LobbyNoticeId : undefined;
     const progress = noticeId && !state.progress.lobbyRead[noticeId] ? persist({ ...state.progress, lobbyRead: { ...state.progress.lobbyRead, [noticeId]: true } }) : state.progress;
@@ -282,6 +317,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return { progress: persist({ ...state.progress, playerName: trimmed }) };
   }),
 }));
+
+// Firebase auth-state wiring lives here (not in a React effect) so it's active
+// regardless of which screen mounts first, matching how `loadedProgress` above
+// is already computed at module scope. On sign-in: load the cloud save down if
+// one exists (last-write-wins, no merge/conflict UI -- a disclosed v1
+// simplification), or push the current local progress up as the first cloud
+// save if this uid has none yet.
+if (typeof window !== "undefined") {
+  void consumePendingRedirectResult();
+  onAuthStateChanged(auth, (firebaseUser) => {
+    if (!firebaseUser) {
+      useGameStore.setState({ user: null });
+      return;
+    }
+    const previousUid = useGameStore.getState().user?.uid;
+    useGameStore.setState({ user: { uid: firebaseUser.uid, email: firebaseUser.email, displayName: firebaseUser.displayName }, cloudSyncError: undefined });
+    if (previousUid === firebaseUser.uid) return;
+
+    cloudLoadProgress()
+      .then((cloudProgress) => {
+        if (cloudProgress) useGameStore.setState({ progress: persist(cloudProgress) });
+        else cloudSaveProgress(useGameStore.getState().progress).catch(() => {});
+      })
+      .catch(() => useGameStore.setState({ cloudSyncError: "雲端讀取失敗，已使用本機進度。" }));
+  });
+}
 
 // Dev-only console/QA hook -- lets `window.__gameStore.getState()` drive combatTick()
 // manually from devtools when a headless/backgrounded tab throttles requestAnimationFrame.
