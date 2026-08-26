@@ -1,21 +1,23 @@
 /**
  * Phase 9c: Battle Screen for the new Run Engine (client/src/game/run-engine/**).
  *
- * Deliberately simplified visuals compared to the old BattleScreen (no frame-
- * sprite animations, no hand-painted battlefield backdrop) -- per the user's own
- * Phase 2 scoping decision ("UI 可以先簡化"), this phase's job is a fully working,
- * correct control surface for Dice -> Summon -> Merge -> Formation -> Auto Combat
- * -> Talent/Blessing, not visual polish. It reuses HEROES/ENEMIES (client/src/
- * game/config.ts) purely for name/color/icon display -- those are meta-layer
- * display data, not combat rules, so borrowing them doesn't couple this screen to
- * the old engine.
+ * The board reuses the same animated hero sprites (HeroFrameSprite/HERO_FRAME_SHEETS,
+ * originally built for the old BattleScreen) so a summoned hero looks the same as
+ * before -- per explicit user feedback that the battle module's visuals should not
+ * change even though the underlying Dice/Summon/Merge/Formation/Combat rules did.
+ * Everything else here (Route strip, Dice tray, Reward/Pause/Result overlays) is
+ * still a simplified, purpose-built control surface for the new state machine, not
+ * a pixel port of the old screens.
  */
 import { useEffect, useRef, useState } from "react";
 import "./battleScreenV2.css";
 import { ChevronLeft, Coins, Dices, Gift, Heart, Lock, Pause, Play, RotateCcw, Shield, Sparkles, Swords, X, Zap } from "lucide-react";
 import { ENEMIES, HEROES } from "@/game/config";
+import { HERO_BOARD_LAYOUT } from "@/game/heroBoardLayout";
+import { HERO_FRAME_SHEETS, HeroFrameSprite } from "@/game/heroSprites";
 import { RUN_ENGINE_CONFIG } from "@/game/run-engine/config";
 import { ENEMY_DEFINITIONS } from "@/game/run-engine/enemies";
+import { HERO_DEFINITIONS } from "@/game/run-engine/heroes";
 import { ALL_DEFENSE_ZONES, BOARD_ROWS, boardCellKey } from "@/game/run-engine/types";
 import type {
   BlessingDefinition,
@@ -131,12 +133,27 @@ function RouteStrip({ routes, activeRoutes }: { routes: RouteState[]; activeRout
 
 type BoardMode = "merge" | "reposition" | "recycle" | "pendingPlace" | null;
 
+/** True for a brief window right after a Basic Attack lands (attackCooldownRemainingSeconds
+ * resets to the full effective interval and counts down from there) -- an approximation of the
+ * old engine's discrete "just attacked" event, close enough for a purely cosmetic animation cue.
+ * Ignores buff/equipment speed multipliers, so the window can drift a little under heavy attack-
+ * speed buffs; not worth threading those through just to pick an animation frame. */
+function isRecentlyAttacking(hero: HeroInstance): boolean {
+  const interval = HERO_DEFINITIONS[hero.heroId]?.attackInterval ?? 1;
+  return hero.attackCooldownRemainingSeconds > interval * 0.75;
+}
+
 function HeroCell({ hero, selected, onClick, disabled }: { hero: HeroInstance | undefined; selected: boolean; onClick: () => void; disabled: boolean }) {
   if (!hero) return <button className="bsv2-cell is-empty" onClick={onClick} disabled={disabled} aria-label="空格" />;
   const label = heroLabel(hero.heroId);
   const hpRatio = Math.max(0, hero.hp / hero.maxHp);
+  const action = isRecentlyAttacking(hero) ? "attack" : "idle";
+  const boardLayout = HERO_BOARD_LAYOUT[hero.heroId]?.[action];
+  const visual = HERO_FRAME_SHEETS[hero.heroId]
+    ? <span className={`bsv2-cell-sprite hero-board-sprite hero-${hero.heroId} tier-${hero.tier} is-${action}`}><HeroFrameSprite heroId={hero.heroId} action={action} boardLayout={boardLayout} /></span>
+    : <span className="bsv2-cell-icon">{label.icon}</span>;
   return <button className={`bsv2-cell is-filled ${selected ? "is-selected" : ""} ${hero.status === "downed" ? "is-downed" : ""}`} style={{ "--hero-color": label.color } as React.CSSProperties} onClick={onClick} disabled={disabled} aria-label={`${label.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}`}>
-    <span className="bsv2-cell-icon">{label.icon}</span>
+    {visual}
     <b className="bsv2-cell-tier">T{hero.tier}</b>
     {hero.shield > 0 && <i className="bsv2-cell-shield"><Shield size={9} fill="currentColor" /></i>}
     {hero.status === "downed" && <span className="bsv2-cell-downed">倒地</span>}

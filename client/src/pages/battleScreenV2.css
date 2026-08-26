@@ -70,7 +70,8 @@
 .bsv2-mode-banner { display: flex; align-items: center; gap: 6px; margin: 0; padding: 6px 10px; border-radius: 9px; background: rgba(227,179,76,.15); color: var(--bsv2-gold); font-size: 11px; }
 
 .bsv2-board-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 6px; border: 1px solid var(--bsv2-border); border-radius: 10px; background: var(--bsv2-panel); }
-.bsv2-cell { position: relative; aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--bsv2-border); background: rgba(255,255,255,.02); display: grid; place-items: center; padding: 0; }
+.bsv2-cell { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 8px; border: 1px solid var(--bsv2-border); background: rgba(255,255,255,.02); display: grid; place-items: center; padding: 0; }
+.bsv2-cell-sprite.hero-board-sprite { inset: 2px 2px 9px 2px; }
 .bsv2-cell.is-empty:not(:disabled) { background: rgba(52,193,172,.05); }
 .bsv2-cell.is-filled { border-color: var(--hero-color, var(--bsv2-border)); background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.15)); }
 .bsv2-cell.is-selected { outline: 2px solid var(--bsv2-teal); }
