@@ -86,6 +86,19 @@ function heroLabel(heroId: HeroId) {
   return { name: definition.name, color: definition.color, icon: definition.icon };
 }
 
+/** Hero-summon-choice button (THREE_KIND's overlay, "指定召喚") -- shows the same
+ * animated idle sprite as the board/team formation, per user feedback that
+ * "there used to be a character model to look at" here too. */
+function HeroPickCard({ heroId, onClick }: { heroId: HeroId; onClick: () => void }) {
+  const label = heroLabel(heroId);
+  return <button className="bsv2-hero-pick-card" style={{ "--hero-color": label.color } as React.CSSProperties} onClick={onClick}>
+    <span className="bsv2-hero-pick-portrait">
+      {HERO_FRAME_SHEETS[heroId] ? <HeroFrameSprite heroId={heroId} action="idle" /> : <em>{label.icon}</em>}
+    </span>
+    <span>{label.name}</span>
+  </button>;
+}
+
 // ---------------------------------------------------------------------------
 // Header
 // ---------------------------------------------------------------------------
@@ -333,7 +346,7 @@ function Bsv2Preparation({ run }: { run: RunState }) {
       <button className="bsv2-secondary-btn" disabled={run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost} onClick={spendEnergyForRandomSummon}><Zap size={14} />隨機召喚 ({RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost})</button>
       <button className="bsv2-secondary-btn" disabled={run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost} onClick={() => setPickingHero(true)}><Sparkles size={14} />指定召喚 ({RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost})</button>
     </div>
-    {pickingHero && <div className="bsv2-hero-pick-row">{run.selectedHeroes.map((heroId) => { const label = heroLabel(heroId); return <button key={heroId} style={{ "--hero-color": label.color } as React.CSSProperties} onClick={() => { spendEnergyForChosenSummon(heroId); setPickingHero(false); }}>{label.icon} {label.name}</button>; })}<button className="bsv2-cancel-pick" onClick={() => setPickingHero(false)}><X size={14} /></button></div>}
+    {pickingHero && <div className="bsv2-hero-pick-row">{run.selectedHeroes.map((heroId) => <HeroPickCard key={heroId} heroId={heroId} onClick={() => { spendEnergyForChosenSummon(heroId); setPickingHero(false); }} />)}<button className="bsv2-cancel-pick" onClick={() => setPickingHero(false)}><X size={14} /></button></div>}
     <button className="bsv2-primary-btn bsv2-battle-btn" disabled={!ready} onClick={confirmFormation}><Swords size={16} />確認陣型，開戰！</button>
   </section>;
 }
@@ -343,7 +356,7 @@ function Bsv2HeroChoiceOverlay({ run }: { run: RunState }) {
   if (!run.pendingHeroChoice) return null;
   return <div className="bsv2-dialog-backdrop"><div className="bsv2-modal">
     <p className="bsv2-kicker">三條的獎賞</p><h3>指定一位英雄</h3>
-    <div className="bsv2-hero-pick-row">{run.selectedHeroes.map((heroId) => { const label = heroLabel(heroId); return <button key={heroId} style={{ "--hero-color": label.color } as React.CSSProperties} onClick={() => chooseSummonHero(heroId)}>{label.icon} {label.name}</button>; })}</div>
+    <div className="bsv2-hero-pick-row">{run.selectedHeroes.map((heroId) => <HeroPickCard key={heroId} heroId={heroId} onClick={() => chooseSummonHero(heroId)} />)}</div>
   </div></div>;
 }
 
