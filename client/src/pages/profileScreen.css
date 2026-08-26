@@ -1,0 +1,24 @@
+/* Player Profile screen -- reuses .selection-screen / .back-link / --court-* tokens
+   from courtyardEntranceTheme.css for visual consistency with the other lobby pages
+   (Team Codex, Leader Select, Guide); only the profile-specific pieces live here. */
+
+.profile-identity { display:flex; align-items:center; gap:12px; margin:18px 0 14px; padding:12px 14px; border-radius:18px; border:1px solid rgba(211,154,60,.3); background:linear-gradient(150deg,#fffdf5,#f3e9cf); box-shadow:0 3px 0 rgba(91,86,57,.12); }
+.profile-identity__avatar { flex:0 0 auto; display:grid; place-items:center; width:58px; height:58px; overflow:hidden; border-radius:50%; color:var(--court-gold); background:#fff6d7; border:2px solid var(--court-gold); box-shadow:inset 0 0 0 2px rgba(255,255,255,.7); }
+.profile-identity__avatar img { display:block; width:100%; height:100%; object-fit:cover; }
+.profile-identity__info { display:grid; gap:5px; min-width:0; }
+.profile-name { display:inline-flex; align-items:center; gap:6px; border:0; background:none; padding:0; color:var(--court-ink); font-family:"Mochiy Pop One","Noto Sans TC",sans-serif; font-size:17px; letter-spacing:-.03em; }
+.profile-name svg { color:var(--court-teal-dark); flex:0 0 auto; }
+.profile-name-edit { display:flex; align-items:center; gap:6px; }
+.profile-name-edit input { min-width:0; flex:1; padding:6px 9px; border-radius:9px; border:1px solid var(--court-gold); background:#fffdf6; color:var(--court-ink); font-size:14px; }
+.profile-name-edit button { display:grid; place-items:center; width:28px; height:28px; flex:0 0 auto; border-radius:8px; border:1px solid var(--court-wood); color:#fff; }
+.profile-name-edit button:first-of-type { background:var(--court-teal); }
+.profile-name-edit button:last-of-type { background:var(--court-wood); }
+.profile-identity__info > small { color:var(--court-muted); font-size:11px; }
+
+.profile-section { margin:0 0 12px; padding:12px 14px; border-radius:16px; border:1px solid rgba(37,83,84,.14); background:rgba(255,253,246,.75); }
+.profile-section header { display:flex; align-items:center; gap:6px; margin:0 0 8px; color:var(--court-teal-dark); font-size:12px; font-weight:900; }
+.profile-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.profile-stats div { display:grid; justify-items:center; padding:8px 4px; border-radius:11px; background:rgba(211,154,60,.1); }
+.profile-stats b { font-size:16px; color:var(--court-ink); }
+.profile-stats small { color:var(--court-muted); font-size:9px; margin-top:2px; }
+.profile-placeholder { margin:0; color:var(--court-muted); font-size:12px; line-height:1.6; }

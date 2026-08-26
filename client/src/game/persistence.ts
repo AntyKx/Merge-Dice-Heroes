@@ -6,6 +6,7 @@ const todayKey = () => new Date().toISOString().slice(0, 10);
 const defaultShop = () => ({ dayKey: todayKey(), offers: ["forgeBundle", "morningBladeOffer", "fateDiceBoxOffer"] as ShopOfferId[], purchased: [] as ShopOfferId[], freeRefreshAvailable: true });
 
 export const defaultProgress: PlayerProgress = {
+  playerName: "王都新秀",
   wins: 0, losses: 0, bestWave: 0, crystals: 120, sigils: 12, materials: 24, stamina: 20,
   inventory: ["morningBlade", "watcherCloak", "fateDiceBox"], equipmentLevels: { morningBlade: 1, watcherCloak: 1, fateDiceBox: 1 }, equipped: { weapon: "morningBlade", armor: "watcherCloak" },
   daily: { dayKey: todayKey(), battles: 0, merges: 0, victories: 0, claimed: [] }, dungeonClears: {}, shop: defaultShop(),

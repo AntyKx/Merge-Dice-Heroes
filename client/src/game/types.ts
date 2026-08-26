@@ -242,6 +242,7 @@ export interface DungeonDefinition {
 }
 
 export interface PlayerProgress {
+  playerName: string;
   wins: number;
   losses: number;
   bestWave: number;

@@ -14,7 +14,8 @@ import "./teamEditFormation.css";
 import "./lobbyTeamManager.css";
 import "./chapterMap.css";
 import "./asterVowUiSkin.css";
-import { AlertTriangle, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Info, Lock, Menu, Music2, PackageOpen, Play, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, Volume2, X, Zap } from "lucide-react";
+import "./profileScreen.css";
+import { AlertTriangle, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Info, Lock, Menu, Music2, PackageOpen, Pencil, Play, ScrollText, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, UserRound, Volume2, X, Zap } from "lucide-react";
 import BattleScreenV2 from "./BattleScreenV2";
 import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS } from "@/game/config";
 import { HERO_BOARD_LAYOUT } from "@/game/heroBoardLayout";
@@ -373,7 +374,10 @@ function TitleScreen() {
   return <section className={`lobby-screen cute-hub-lobby weather-${weather} banner-${bannerStyle} ${departing ? "is-departing" : ""}`}>
     <div className="cute-hub-art" style={{ backgroundImage: `url(${CUTE_LOBBY_BACKGROUND_URL})` }} aria-hidden="true" />
     <header className="cute-hub-hud" aria-label="玩家資源">
-      <button className="cute-level" onClick={() => openScreen("team")} aria-label={`玩家等級 ${playerLevel}，查看隊伍`}><span>LV.</span><b>{String(playerLevel).padStart(2, "0")}</b><i><em style={{ width: `${levelProgress / 3 * 100}%` }} /></i></button>
+      <button className="cute-level cute-level--has-avatar" onClick={() => openScreen("profile")} aria-label={`${progress.playerName}，等級 ${playerLevel}，查看玩家檔案`}>
+        <span className="cute-level__avatar">{HERO_PORTRAITS[leaderId] ? <img src={HERO_PORTRAITS[leaderId]} alt="" /> : <UserRound size={16} />}</span>
+        <span>LV.</span><b>{String(playerLevel).padStart(2, "0")}</b><i><em style={{ width: `${levelProgress / 3 * 100}%` }} /></i>
+      </button>
       <button className="cute-resource" onClick={() => openScreen("shop")} aria-label={`金幣 ${progress.sigils}，前往商店`}><img className="cute-resource__icon" src={HUD_RESOURCE_ICON_URLS.coins} alt="" /><AnimatedResourceValue value={progress.sigils} /></button>
       <button className="cute-resource" onClick={() => openScreen("daily")} aria-label={`鑽石 ${progress.crystals}，前往每日任務`}><img className="cute-resource__icon" src={HUD_RESOURCE_ICON_URLS.crystals} alt="" /><AnimatedResourceValue value={progress.crystals} /></button>
       <button className="cute-resource" onClick={() => openScreen("dungeon")} aria-label={`體力 ${progress.stamina} / 20，前往副本`}><img className="cute-resource__icon" src={HUD_RESOURCE_ICON_URLS.stamina} alt="" /><AnimatedResourceValue value={progress.stamina} suffix="/20" /></button>
@@ -462,7 +466,7 @@ function TitleScreen() {
   </section>;
 }
 
-type CourtyardSignKind = LobbyModuleId | "guide" | "team" | "leader";
+type CourtyardSignKind = LobbyModuleId | "guide" | "team" | "leader" | "profile";
 
 const MODULE_SIGN_META: Record<LobbyModuleId, { location: string; icon: React.ReactNode }> = {
   equipment: { location: "城堡工坊巷", icon: <Hammer size={26} /> },
@@ -647,6 +651,59 @@ function LeaderScreen() {
   </section>;
 }
 
+function ProfileScreen() {
+  // Design reminder: the LV. HUD entry now leads here instead of straight to the Hero
+  // Codex. Play history reads real progress data; avatar rewards and account login are
+  // deliberately placeholders for now -- see the user's own "以後" framing -- so this
+  // screen doesn't silently promise features (avatar unlocks, Google/Apple sign-in)
+  // that don't exist yet.
+  const { openScreen, progress, setPlayerName, leaderId } = useGameStore();
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState(progress.playerName);
+  const avatarUrl = HERO_PORTRAITS[leaderId];
+  const totalGames = progress.wins + progress.losses;
+  const winRate = totalGames > 0 ? Math.round((progress.wins / totalGames) * 100) : 0;
+  const commitName = () => { setPlayerName(nameDraft); setEditingName(false); };
+  return <section className="selection-screen profile-screen">
+    <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />首頁</button>
+    <CourtyardSignboard kind="profile" location="王都名冊閣" title="玩家檔案" summary="查看遊玩履歷、頭像與基本資料設定。" icon={<UserRound size={26} />} />
+
+    <div className="profile-identity">
+      <span className="profile-identity__avatar">{avatarUrl ? <img src={avatarUrl} alt="" /> : <UserRound size={30} />}</span>
+      <div className="profile-identity__info">
+        {editingName
+          ? <div className="profile-name-edit">
+              <input value={nameDraft} maxLength={12} onChange={(event) => setNameDraft(event.target.value)} aria-label="輸入新的玩家 ID" />
+              <button onClick={commitName} aria-label="儲存 ID"><Check size={14} /></button>
+              <button onClick={() => { setNameDraft(progress.playerName); setEditingName(false); }} aria-label="取消修改"><X size={14} /></button>
+            </div>
+          : <button className="profile-name" onClick={() => setEditingName(true)} aria-label={`修改玩家 ID，目前為 ${progress.playerName}`}><span>{progress.playerName}</span><Pencil size={12} /></button>}
+        <small>目前隊長：{HEROES[leaderId].name}</small>
+      </div>
+    </div>
+
+    <section className="profile-section" aria-label="遊玩履歷">
+      <header><ScrollText size={14} /><span>遊玩履歷</span></header>
+      <div className="profile-stats">
+        <div><b>{progress.wins}</b><small>勝場</small></div>
+        <div><b>{progress.losses}</b><small>敗場</small></div>
+        <div><b>{winRate}%</b><small>勝率</small></div>
+        <div><b>{progress.bestWave}</b><small>最高波次</small></div>
+      </div>
+    </section>
+
+    <section className="profile-section" aria-label="頭像獎勵">
+      <header><Sparkles size={14} /><span>頭像獎勵</span></header>
+      <p className="profile-placeholder">敬請期待——之後會依成就與活動解鎖更多可更換的頭像。</p>
+    </section>
+
+    <section className="profile-section" aria-label="基本資料設定">
+      <header><Settings2 size={14} /><span>基本資料設定</span></header>
+      <p className="profile-placeholder">帳號登入（Google / Apple）與跨裝置資料同步準備中。</p>
+    </section>
+  </section>;
+}
+
 function GuideScreen() {
   const { openScreen } = useGameStore();
   return <section className="guide-screen"><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />首頁</button><CourtyardSignboard kind="guide" location="星圖檔案亭" title="一局的勝機，從留下一顆骰子開始。" summary="策略圖鑑 · 在出發前熟悉命運骰、召喚與守城規則。" icon={<img className="sign-logo-crest" src={LOGO_URL} alt="" />} /><div className="guide-cards"><article><span className="guide-icon dice-icon">⚄</span><h3>1. 留骰與重骰</h3><p>每波有五顆骰與兩次重骰。先點選鎖定值得保留的點數，再重骰其餘骰子。兩回合無組合後，下一回合會保證至少一對。</p></article><article><span className="guide-icon"><Sparkles size={24} /></span><h3>2. 召喚與合成</h3><p>骰型帶來召喚、隊長技或強化。三名同職、同階英雄點選後合成，T1 變 T2，T2 變 T3。棋盤滿時會轉成重整能量。</p></article><article><span className="guide-icon"><Swords size={24} /></span><h3>3. 守住十波</h3><p>英雄會自動迎敵。第 3、6、9 波後從三項天賦中選擇一項；第 10 波以雙階段 Boss 作為終幕。城堡生命歸零即失敗。</p></article></div><h3 className="dice-guide-heading">骰型一覽</h3><div className="combo-table">{Object.values(DICE_COMBINATIONS).slice().reverse().map((combo) => <div key={combo.kind}><b>{combo.label}</b><span>{combo.description}</span></div>)}</div><button className="primary-cta wide-cta" onClick={() => openScreen("team")}><Play size={17} fill="currentColor" />現在開演</button></section>;
@@ -671,5 +728,5 @@ export default function GameScreen() {
       return () => window.clearTimeout(timer);
     }
   }, [openScreen]);
-  return <main className="game-frame">{screen === "title" && <TitleScreen />}{screen === "team" && <TeamScreen />}{screen === "leader" && <LeaderScreen />}{screen === "game" && <BattleScreenV2 />}{screen === "guide" && <GuideScreen />}{(["equipment", "shop", "daily", "dungeon"] as LobbyModuleId[]).includes(screen as LobbyModuleId) && <LobbyModuleScreen moduleId={screen as LobbyModuleId} />}</main>;
+  return <main className="game-frame">{screen === "title" && <TitleScreen />}{screen === "team" && <TeamScreen />}{screen === "leader" && <LeaderScreen />}{screen === "game" && <BattleScreenV2 />}{screen === "guide" && <GuideScreen />}{screen === "profile" && <ProfileScreen />}{(["equipment", "shop", "daily", "dungeon"] as LobbyModuleId[]).includes(screen as LobbyModuleId) && <LobbyModuleScreen moduleId={screen as LobbyModuleId} />}</main>;
 }

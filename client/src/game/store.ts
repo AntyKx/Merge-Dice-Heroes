@@ -29,7 +29,7 @@ import {
 import type { CellKey, DiceComboKind, RunState } from "./run-engine/types";
 import type { DailyQuestId, DungeonId, EquipmentId, EquipmentSlot, HeroId, LobbyNoticeId, PlayerProgress, ShopOfferId } from "./types";
 
-export type GameScreen = "title" | "team" | "leader" | "game" | "guide" | "equipment" | "shop" | "daily" | "dungeon";
+export type GameScreen = "title" | "team" | "leader" | "game" | "guide" | "equipment" | "shop" | "daily" | "dungeon" | "profile";
 
 interface GameStore {
   screen: GameScreen;
@@ -78,6 +78,7 @@ interface GameStore {
   setAutoSpeed: (speed: 1 | 2 | 4) => void;
   togglePause: () => void;
   setSetting: (setting: keyof PlayerProgress["settings"], value: boolean) => void;
+  setPlayerName: (name: string) => void;
 }
 
 const loadedProgress = typeof window === "undefined" ? defaultProgress : loadProgress();
@@ -275,6 +276,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setAutoSpeed: (autoSpeed) => set({ autoSpeed }),
   togglePause: () => set((state) => ({ isPaused: !state.isPaused })),
   setSetting: (setting, value) => set((state) => ({ progress: persist({ ...state.progress, settings: { ...state.progress.settings, [setting]: value } }) })),
+  setPlayerName: (name) => set((state) => {
+    const trimmed = name.trim().slice(0, 12);
+    if (!trimmed) return state;
+    return { progress: persist({ ...state.progress, playerName: trimmed }) };
+  }),
 }));
 
 // Dev-only console/QA hook -- lets `window.__gameStore.getState()` drive combatTick()
