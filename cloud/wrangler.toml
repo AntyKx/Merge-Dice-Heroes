@@ -1,0 +1,11 @@
+name = "merge-dice-heroes-api"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "merge-dice-heroes-db"
+database_id = "c849fcf1-3aa9-40fe-9b05-39e30d7fcb0f"
+
+# Set with: wrangler secret put FIREBASE_PROJECT_ID
+# Set with: wrangler secret put ADMIN_UIDS   (comma-separated Firebase uids allowed into /admin/*)
