@@ -29,9 +29,19 @@ type Bindings = { Bindings: Env; Variables: { uid: string; email?: string } };
 const app = new Hono<Bindings>();
 
 // CORS origins aren't secret, so they're just listed here rather than in an env
-// var -- add the production Vercel URL alongside the local dev ports once the
-// game's actual deployed domain is known.
-const ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:5173", "http://localhost:4173", "https://merge-dice-heroes.vercel.app"];
+// var. Includes both the game client (Vercel) and the admin panel
+// (Cloudflare Pages, cloud/admin/) -- the admin panel's own auth check
+// (requireAdmin) is what actually gates access, this just controls which
+// origins may call the API from a browser at all.
+const ALLOWED_ORIGINS = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:4173",
+  "http://localhost:5174",
+  "https://merge-dice-heroes.vercel.app",
+  "https://merge-dice-heroes-admin.pages.dev",
+  "https://master.merge-dice-heroes-admin.pages.dev",
+];
 
 app.use(
   "*",
