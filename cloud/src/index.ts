@@ -1,11 +1,29 @@
-import { desc, eq, like } from "drizzle-orm";
+import { desc, eq, like, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
 import { cors } from "hono/cors";
-import { adminAuditLog, players, saves } from "./db/schema";
+import { PROMOTED_PROGRESS_FIELDS, adminAuditLog, players, saves } from "./db/schema";
+import type { PromotedProgressField } from "./db/schema";
 import type { Env } from "./env";
 import { getDb } from "./lib/db";
 import { FirebaseAuthError, requireFirebaseUser } from "./lib/firebaseAuth";
+
+/** Pulls the 7 promoted numeric fields off a client-shaped PlayerProgress
+ * object, defaulting any missing/non-numeric value to 0, and returns the
+ * remainder untouched (the rest-object that goes into saves.progressJson). */
+function splitProgress(progress: Record<string, unknown>): {
+  promoted: Record<PromotedProgressField, number>;
+  rest: Record<string, unknown>;
+} {
+  const promoted = {} as Record<PromotedProgressField, number>;
+  const rest = { ...progress };
+  for (const field of PROMOTED_PROGRESS_FIELDS) {
+    const value = progress[field];
+    promoted[field] = typeof value === "number" && Number.isFinite(value) ? value : 0;
+    delete rest[field];
+  }
+  return { promoted, rest };
+}
 
 type Bindings = { Bindings: Env; Variables: { uid: string; email?: string } };
 const app = new Hono<Bindings>();
@@ -52,12 +70,28 @@ const requireAdmin: MiddlewareHandler<Bindings> = async (c, next) => {
 
 app.get("/api/save", async (c) => {
   const db = getDb(c.env);
-  const row = await db.select().from(saves).where(eq(saves.uid, c.get("uid"))).get();
-  return c.json({ progress: row ? JSON.parse(row.progressJson) : null, updatedAt: row?.updatedAt ?? null });
+  const uid = c.get("uid");
+  const player = await db.select().from(players).where(eq(players.uid, uid)).get();
+  const save = await db.select().from(saves).where(eq(saves.uid, uid)).get();
+  if (!player || !save) return c.json({ progress: null, updatedAt: null });
+
+  const rest = JSON.parse(save.progressJson) as Record<string, unknown>;
+  const progress = {
+    ...rest,
+    playerName: player.playerName,
+    wins: player.wins,
+    losses: player.losses,
+    bestWave: player.bestWave,
+    crystals: player.crystals,
+    sigils: player.sigils,
+    materials: player.materials,
+    stamina: player.stamina,
+  };
+  return c.json({ progress, updatedAt: save.updatedAt });
 });
 
 app.put("/api/save", async (c) => {
-  const body = await c.req.json<{ progress: unknown; playerName?: string }>().catch(() => null);
+  const body = await c.req.json<{ progress: Record<string, unknown>; playerName?: string }>().catch(() => null);
   if (!body || typeof body.progress !== "object" || body.progress === null) {
     return c.json({ error: "Body must include a `progress` object" }, 400);
   }
@@ -66,13 +100,14 @@ app.put("/api/save", async (c) => {
   const uid = c.get("uid");
   const email = c.get("email");
   const now = new Date();
-  const progressJson = JSON.stringify(body.progress);
   const playerName = typeof body.playerName === "string" ? body.playerName.trim().slice(0, 12) || undefined : undefined;
+  const { promoted, rest } = splitProgress(body.progress);
+  const progressJson = JSON.stringify(rest);
 
   await db
     .insert(players)
-    .values({ uid, email, playerName: playerName ?? "王都新秀" })
-    .onConflictDoUpdate({ target: players.uid, set: { email, updatedAt: now, ...(playerName ? { playerName } : {}) } });
+    .values({ uid, email, playerName: playerName ?? "王都新秀", ...promoted })
+    .onConflictDoUpdate({ target: players.uid, set: { email, updatedAt: now, ...promoted, ...(playerName ? { playerName } : {}) } });
 
   await db
     .insert(saves)
@@ -105,10 +140,11 @@ app.get("/api/admin/players/:uid", requireAdmin, async (c) => {
   return c.json({ player, progress: save ? JSON.parse(save.progressJson) : null });
 });
 
-/** Adds a numeric delta to any numeric field of the target's saved progress
- * (crystals/sigils/materials/stamina/etc.) -- the generic-currency-grant
- * pattern the old reference project's admin/grant-event.js used, but logged
- * and scoped to numeric fields only. */
+/** Adds a numeric delta to one of the 7 promoted `players` columns
+ * (crystals/sigils/materials/stamina/wins/losses/bestWave) via an atomic
+ * SQL `col = col + delta` update -- race-free, unlike the old reference
+ * project's admin/grant-event.js (and this codebase's own pre-migration
+ * approach) which read-parsed-mutated-rewrote a JSON blob. */
 app.post("/api/admin/grant", requireAdmin, async (c) => {
   const body = await c.req.json<{ targetUid?: string; patch?: Record<string, number> }>().catch(() => null);
   if (!body?.targetUid || !body.patch || typeof body.patch !== "object") {
@@ -116,24 +152,27 @@ app.post("/api/admin/grant", requireAdmin, async (c) => {
   }
 
   const db = getDb(c.env);
-  const save = await db.select().from(saves).where(eq(saves.uid, body.targetUid)).get();
-  if (!save) return c.json({ error: "Player has no save yet" }, 404);
+  const existing = await db.select({ uid: players.uid }).from(players).where(eq(players.uid, body.targetUid)).get();
+  if (!existing) return c.json({ error: "Player not found" }, 404);
 
-  const progress = JSON.parse(save.progressJson) as Record<string, unknown>;
-  const applied: Record<string, number> = {};
+  const applied: Partial<Record<PromotedProgressField, number>> = {};
+  const setClause: Record<string, unknown> = { updatedAt: new Date() };
   for (const [key, delta] of Object.entries(body.patch)) {
-    if (typeof progress[key] === "number" && typeof delta === "number") {
-      progress[key] = (progress[key] as number) + delta;
-      applied[key] = delta;
+    if ((PROMOTED_PROGRESS_FIELDS as readonly string[]).includes(key) && typeof delta === "number" && Number.isFinite(delta)) {
+      const field = key as PromotedProgressField;
+      setClause[field] = sql`${players[field]} + ${delta}`;
+      applied[field] = delta;
     }
   }
-  if (Object.keys(applied).length === 0) return c.json({ error: "No matching numeric fields in patch" }, 400);
+  if (Object.keys(applied).length === 0) {
+    return c.json({ error: `No matching fields in patch (must be one of: ${PROMOTED_PROGRESS_FIELDS.join(", ")})` }, 400);
+  }
 
-  const now = new Date();
-  await db.update(saves).set({ progressJson: JSON.stringify(progress), updatedAt: now }).where(eq(saves.uid, body.targetUid));
+  await db.update(players).set(setClause).where(eq(players.uid, body.targetUid));
   await db.insert(adminAuditLog).values({ adminUid: c.get("uid"), action: "grant", targetUid: body.targetUid, detail: JSON.stringify(applied) });
 
-  return c.json({ ok: true, applied, progress });
+  const updated = await db.select().from(players).where(eq(players.uid, body.targetUid)).get();
+  return c.json({ ok: true, applied, player: updated });
 });
 
 app.get("/api/admin/audit-log", requireAdmin, async (c) => {

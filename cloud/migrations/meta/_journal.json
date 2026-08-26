@@ -8,6 +8,13 @@
       "when": 1787718130678,
       "tag": "0000_military_tag",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787724947865,
+      "tag": "0001_nebulous_shinobi_shaw",
+      "breakpoints": true
     }
   ]
 }
