@@ -43,18 +43,33 @@
 .bsv2-wave strong { font-size: 15px; color: var(--bsv2-gold); }
 .bsv2-wave span { font-size: 10px; color: var(--bsv2-muted); }
 
-/* Route strip */
-.bsv2-route-strip { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; height: 96px; padding: 4px; border: 1px solid var(--bsv2-border); border-radius: 10px; background: linear-gradient(180deg, rgba(20,28,44,.9), rgba(15,20,32,.9)); }
-.bsv2-route-lane { position: relative; border-radius: 6px; background: rgba(255,255,255,.03); }
-.bsv2-route-lane.is-active { background: rgba(52,193,172,.06); }
-.bsv2-route-lane.is-inactive { opacity: .35; }
-.bsv2-route-lane small { position: absolute; top: 2px; left: 4px; font-size: 8px; color: var(--bsv2-muted); }
-.bsv2-route-overlay { position: absolute; inset: 4px; pointer-events: none; }
-.bsv2-enemy-marker { position: absolute; transform: translate(0, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.bsv2-enemy-marker i { display: block; width: 14px; height: 14px; margin: 0 auto; border-radius: 50%; background: var(--enemy-color, #8098c0); border: 1.5px solid rgba(0,0,0,.35); }
-.bsv2-enemy-marker.is-blocked i { box-shadow: 0 0 0 2px var(--bsv2-gold); }
-.bsv2-enemy-marker.is-boss i { width: 20px; height: 20px; box-shadow: 0 0 0 2px var(--bsv2-danger); }
-.bsv2-enemy-marker b { display: block; width: 18px; height: 3px; border-radius: 2px; background: rgba(0,0,0,.4); overflow: hidden; }
+/* Battle stage -- the original hand-painted battlefield backdrop restored as the
+   Route strip's background, per explicit user feedback that the battle module's
+   visual style should carry over even though the Route/Board layout underneath
+   it is new. The 4 lanes, enemy markers, and Block highlighting are an HTML/CSS
+   overlay on top of the artwork (no PixiJS canvas -- the old EnemyStrip's Pixi
+   layer only ever drew simple colored circles, which this overlay already does
+   with more information: per-lane HP bars, blocked-state rings, boss sizing). */
+.bsv2-battle-stage { position: relative; height: 224px; overflow: hidden; border-radius: 22px; background-size: cover; background-position: center 42%; border: 1px solid var(--bsv2-gold); box-shadow: inset 0 0 0 2px rgba(255,253,235,.28), 0 5px 0 rgba(0,0,0,.18); }
+.bsv2-stage-copy { position: absolute; z-index: 2; top: 9px; left: 11px; padding: 5px 9px; display: grid; color: var(--bsv2-ink); border-radius: 10px; background: rgba(15,20,32,.62); backdrop-filter: blur(6px); }
+.bsv2-stage-copy span { font-size: 11px; font-weight: 900; }
+.bsv2-stage-copy small { font-size: 9px; color: var(--bsv2-muted); }
+.bsv2-boss-warning { position: absolute; z-index: 5; left: 50%; top: 47px; transform: translateX(-50%); padding: 5px 10px; display: flex; align-items: center; gap: 5px; border-radius: 10px; color: #fff5df; font-size: 10px; font-weight: 900; background: rgba(136,66,80,.88); animation: bsv2WarningPulse 1s infinite alternate; }
+@keyframes bsv2WarningPulse { to { transform: translateX(-50%) scale(1.03); filter: brightness(1.1); } }
+.bsv2-castle-gate { position: absolute; z-index: 3; bottom: 8px; left: 50%; transform: translateX(-50%); padding: 5px 10px; display: flex; align-items: center; gap: 4px; border-radius: 10px; color: #fff4d6; background: rgba(49,111,116,.88); box-shadow: 0 2px 0 rgba(27,80,90,.7); font-size: 10px; font-weight: 900; }
+
+.bsv2-route-strip { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
+.bsv2-route-lane { position: relative; border-left: 1px dashed rgba(255,255,255,.18); }
+.bsv2-route-lane:first-child { border-left: none; }
+.bsv2-route-lane.is-active { background: linear-gradient(180deg, rgba(52,193,172,.14), transparent 65%); }
+.bsv2-route-lane.is-inactive { background: rgba(10,14,22,.55); }
+.bsv2-route-lane small { position: absolute; top: 2px; left: 4px; color: #fff; font-size: 8px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+.bsv2-route-overlay { position: absolute; inset: 0 0 30px 0; pointer-events: none; }
+.bsv2-enemy-marker { position: absolute; transform: translate(0, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.65)); }
+.bsv2-enemy-marker i { display: block; width: 15px; height: 15px; margin: 0 auto; border-radius: 50%; background: var(--enemy-color, #8098c0); border: 1.5px solid rgba(0,0,0,.5); }
+.bsv2-enemy-marker.is-blocked i { box-shadow: 0 0 0 2px var(--bsv2-gold), 0 0 6px rgba(227,179,76,.7); }
+.bsv2-enemy-marker.is-boss i { width: 21px; height: 21px; box-shadow: 0 0 0 2px var(--bsv2-danger), 0 0 8px rgba(226,100,90,.7); }
+.bsv2-enemy-marker b { display: block; width: 18px; height: 3px; border-radius: 2px; background: rgba(0,0,0,.55); overflow: hidden; }
 .bsv2-enemy-marker b span { display: block; height: 100%; background: var(--bsv2-danger); }
 
 /* Board */

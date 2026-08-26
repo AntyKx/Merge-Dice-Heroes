@@ -104,26 +104,34 @@ function Bsv2Header({ run }: { run: RunState }) {
 }
 
 // ---------------------------------------------------------------------------
-// Route Strip -- 4 lanes above the board, aligned to the board's 4 DefenseZone
-// columns so the Route-to-Board correspondence (玩法核心.txt 五/六) is visible.
+// Battle stage -- the original battlefield backdrop, with the 4 Route lanes
+// (aligned to the board's 4 DefenseZone columns below, per 玩法核心.txt 五/六)
+// and enemy/Block markers overlaid on top of it.
 // ---------------------------------------------------------------------------
 
-function RouteStrip({ routes, activeRoutes }: { routes: RouteState[]; activeRoutes: RouteId[] }) {
+const BATTLEFIELD_BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
+
+function RouteStrip({ routes, activeRoutes, wave, isBossWave }: { routes: RouteState[]; activeRoutes: RouteId[]; wave: number; isBossWave: boolean }) {
   const enemies = routes.flatMap((route) => route.enemies);
-  return <div className="bsv2-route-strip" aria-label="敵軍道路">
-    {ALL_DEFENSE_ZONES.map((zone) => <div key={zone} className={`bsv2-route-lane ${activeRoutes.includes(zone) ? "is-active" : "is-inactive"}`}><small>路 {zone}</small></div>)}
-    <div className="bsv2-route-overlay">
-      {enemies.map((enemy) => {
-        const definition = ENEMY_DEFINITIONS[enemy.defId];
-        const meta = ENEMIES[enemy.defId as keyof typeof ENEMIES];
-        const minZone = Math.min(...enemy.occupiedRoutes);
-        const span = enemy.occupiedRoutes.length;
-        const hpRatio = Math.max(0, enemy.hp / enemy.maxHp);
-        return <div key={enemy.instanceId} className={`bsv2-enemy-marker ${enemy.blockedBy ? "is-blocked" : ""} ${definition?.tags.includes("boss") ? "is-boss" : ""}`} style={{ left: `${((minZone - 1) / 4) * 100}%`, width: `${(span / 4) * 100}%`, top: `${Math.min(96, enemy.pathProgress * 100)}%`, "--enemy-color": meta?.color ?? "#8098c0" } as React.CSSProperties}>
-          <i /><b><span style={{ width: `${hpRatio * 100}%` }} /></b>
-        </div>;
-      })}
+  return <div className="bsv2-battle-stage" style={{ backgroundImage: `linear-gradient(180deg, rgba(10,14,22,.18), rgba(10,14,22,.05)), url(${BATTLEFIELD_BACKDROP_URL})` }} aria-label="戰場">
+    <div className="bsv2-stage-copy"><span>第 {wave} 波</span><small>{enemies.length} 名敵人</small></div>
+    {isBossWave && <div className="bsv2-boss-warning"><Shield size={13} />Boss 波次</div>}
+    <div className="bsv2-route-strip">
+      {ALL_DEFENSE_ZONES.map((zone) => <div key={zone} className={`bsv2-route-lane ${activeRoutes.includes(zone) ? "is-active" : "is-inactive"}`}><small>路 {zone}</small></div>)}
+      <div className="bsv2-route-overlay">
+        {enemies.map((enemy) => {
+          const definition = ENEMY_DEFINITIONS[enemy.defId];
+          const meta = ENEMIES[enemy.defId as keyof typeof ENEMIES];
+          const minZone = Math.min(...enemy.occupiedRoutes);
+          const span = enemy.occupiedRoutes.length;
+          const hpRatio = Math.max(0, enemy.hp / enemy.maxHp);
+          return <div key={enemy.instanceId} className={`bsv2-enemy-marker ${enemy.blockedBy ? "is-blocked" : ""} ${definition?.tags.includes("boss") ? "is-boss" : ""}`} style={{ left: `${((minZone - 1) / 4) * 100}%`, width: `${(span / 4) * 100}%`, top: `${Math.min(94, enemy.pathProgress * 100)}%`, "--enemy-color": meta?.color ?? "#8098c0" } as React.CSSProperties}>
+            <i /><b><span style={{ width: `${hpRatio * 100}%` }} /></b>
+          </div>;
+        })}
+      </div>
     </div>
+    <div className="bsv2-castle-gate"><Shield size={13} fill="currentColor" /><span>守望堡</span></div>
   </div>;
 }
 
@@ -425,7 +433,7 @@ export default function BattleScreenV2() {
 
   return <section className="bsv2-screen">
     <Bsv2Header run={run} />
-    {showRoutes && run.waveRuntime && <RouteStrip routes={run.waveRuntime.routes} activeRoutes={waveDefinition?.activeRoutes ?? []} />}
+    {showRoutes && run.waveRuntime && <RouteStrip routes={run.waveRuntime.routes} activeRoutes={waveDefinition?.activeRoutes ?? []} wave={run.wave} isBossWave={!!waveDefinition?.bossEncounter} />}
     {run.phase === "WAVE_PREVIEW" && <Bsv2WavePreview run={run} />}
     {run.phase === "DICE_DECISION" && <Bsv2Dice run={run} />}
     {run.phase === "DICE_RESOLVE" && <Bsv2ComboChoice run={run} />}
