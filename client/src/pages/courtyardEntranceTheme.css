@@ -73,6 +73,10 @@
 .equipment-slot small,.inventory-list p,.quest-top p,.dungeon-list p,.shop-list p,.guide-cards p,.combo-table span { color:var(--court-muted); }
 .equipment-slot b,.inventory-list b,.quest-top b,.dungeon-list b,.shop-list b,.guide-cards h3,.combo-table b { color:var(--court-ink); }
 .inventory-list small,.dungeon-list small,.shop-list small { color:#9a7240; }
+.dice-codex-table>div b { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.dice-codex-table>div b i { flex:0 0 auto; padding:2px 5px; border-radius:999px; color:#8a5d2c; background:rgba(227,179,76,.2); font-size:8px; font-style:normal; letter-spacing:.04em; }
+.dice-codex-table>div span { display:grid; gap:2px; }
+.dice-codex-table>div span strong { color:var(--court-ink); font-size:11px; }
 .inventory-list article.is-equipped,.quest-list article.is-ready { border-color:var(--court-gold); box-shadow:inset 0 0 0 2px rgba(255,244,179,.72),0 3px 0 rgba(112,76,47,.25),0 6px 10px rgba(75,50,29,.08); }
 
 .inventory-list article>i,.shop-list article>i,.dungeon-stage-number,.guide-icon {

@@ -518,6 +518,9 @@ export interface RunState {
   talents: RunTalentState[];
   blessings: string[];
   equipment: EquipmentLoadout;
+  /** Every dice effect selected during this run, kept independently from the
+   * authoritative effect state so UI history can never change gameplay. */
+  comboHistory: Array<{ kind: DiceComboKind; wave: number }>;
 
   // ---- Phase 9 orchestration bookkeeping (mirrors the old game/types.ts
   // RunState's pendingHeroChoice/pendingFreeMerge/talentChoices/message fields,
@@ -525,6 +528,9 @@ export interface RunState {
   /** Set after DICE_RESOLVE (getEligibleComboEffects) until the player picks one --
    * 二十八's "多 Combo 選擇", never auto-resolved to "the highest". */
   pendingComboChoices: DiceComboDefinition[];
+  /** Every run begins with one free random summon, redeemable during its first
+   * PREPARATION phase before normal Fate Energy summon costs apply. */
+  initialFreeRandomSummonAvailable: boolean;
   /** THREE_KIND: player must name which of the 3 selected heroes to summon. */
   pendingHeroChoice: boolean;
   /** FULL_HOUSE: the next Merge this Preparation may use 2 instead of 3. */

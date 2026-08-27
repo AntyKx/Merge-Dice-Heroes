@@ -10,7 +10,9 @@ import {
   confirmFate,
   confirmFormation,
   createRun,
+  mergeSelection,
   repositionHero,
+  spendEnergyForRandomSummon,
 } from "./orchestrator";
 
 /** Fixed-face fake random -- randomDie(() => 0.4) always rolls a 3, so every Dice
@@ -48,6 +50,54 @@ function runCombatUntil(run: ReturnType<typeof setupRunWithHeroAtZone2>, predica
 }
 
 describe("orchestrator end-to-end Wave lifecycle", () => {
+  it("每局首個 Preparation 可免費隨機召喚一次，之後才消耗命運能量", () => {
+    let run = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter });
+    run = acknowledgeWavePreview(run, fixedRandom);
+    run = confirmFate(run);
+    run = chooseComboEffect(run, "NONE", fakeAdapter, fixedRandom);
+
+    expect(run.initialFreeRandomSummonAvailable).toBe(true);
+    expect(run.fateEnergy.current).toBe(1);
+
+    run = spendEnergyForRandomSummon(run, fakeAdapter, fixedRandom);
+
+    expect(run.initialFreeRandomSummonAvailable).toBe(false);
+    expect(run.fateEnergy.current).toBe(1);
+    expect(Object.keys(run.board.cells)).toHaveLength(1);
+  });
+
+  it("一般三名同英雄同階可合成，並保留目標格作為升階英雄位置", () => {
+    let run = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter });
+    run = acknowledgeWavePreview(run, fixedRandom);
+    run = confirmFate(run);
+    run = chooseComboEffect(run, "THREE_KIND", fakeAdapter, fixedRandom);
+    run = chooseSummonHero(run, "ranger", fakeAdapter);
+    const first = run.board.cells["1-front"]!;
+    run = { ...run, board: { cells: { ...run.board.cells, "2-front": { ...first, instanceId: "ranger-regression-second" }, "3-front": { ...first, instanceId: "ranger-regression-third" } } } };
+
+    run = mergeSelection(run, ["1-front", "2-front", "3-front"], "2-front");
+
+    expect(run.board.cells["2-front"]?.tier).toBe(2);
+    expect(run.board.cells["1-front"]).toBeUndefined();
+    expect(run.board.cells["3-front"]).toBeUndefined();
+  });
+
+  it("葫蘆的兩名免費同英雄同階合成可完成並消耗免費合成狀態", () => {
+    let run = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter });
+    run = acknowledgeWavePreview(run, fixedRandom);
+    run = confirmFate(run);
+    run = chooseComboEffect(run, "THREE_KIND", fakeAdapter, fixedRandom);
+    run = chooseSummonHero(run, "ranger", fakeAdapter);
+    const first = run.board.cells["1-front"]!;
+    run = { ...run, board: { cells: { ...run.board.cells, "2-front": { ...first, instanceId: "ranger-regression-free-second" } } }, pendingFreeMerge: true };
+
+    run = mergeSelection(run, ["1-front", "2-front"], "1-front");
+
+    expect(run.board.cells["1-front"]?.tier).toBe(2);
+    expect(run.board.cells["2-front"]).toBeUndefined();
+    expect(run.pendingFreeMerge).toBe(false);
+  });
+
   it("Ranger 在棋盤上可獨自清光 Wave 1 並進入 Reward，城堡不受損", () => {
     let run = setupRunWithHeroAtZone2("ranger");
     expect(run.phase).toBe("COMBAT_RUNNING");

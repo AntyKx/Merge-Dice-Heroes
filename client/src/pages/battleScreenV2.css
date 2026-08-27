@@ -33,6 +33,20 @@
 /* Header */
 .bsv2-header { display: flex; align-items: center; gap: 8px; }
 .bsv2-icon-btn { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--bsv2-border); border-radius: 9px; background: var(--bsv2-panel); color: var(--bsv2-ink); }
+.bsv2-header { position: relative; }
+.bsv2-history-toggle { color: var(--bsv2-gold); }
+.bsv2-history-toggle.is-open { border-color: var(--bsv2-gold); background: #29334a; box-shadow: 0 0 0 2px rgba(227,179,76,.14); }
+.bsv2-dice-history { position: absolute; z-index: 35; top: calc(100% + 6px); right: 0; width: min(270px, calc(100vw - 30px)); display: grid; gap: 7px; padding: 10px; border: 1px solid rgba(227,179,76,.75); border-radius: 12px; background: rgba(20,28,42,.97); box-shadow: 0 12px 30px rgba(0,0,0,.4); color: var(--bsv2-ink); }
+.bsv2-dice-history header { display: flex; align-items: center; justify-content: space-between; color: var(--bsv2-gold); font-size: 11px; font-weight: 900; }
+.bsv2-dice-history header span { display: inline-flex; align-items: center; gap: 5px; }
+.bsv2-dice-history header button { display: grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: 6px; background: rgba(255,255,255,.08); color: var(--bsv2-muted); }
+.bsv2-dice-history ol { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.bsv2-dice-history li { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 6px; background: #2a3650; font-size: 10px; }
+.bsv2-dice-history li small { color: var(--bsv2-teal); font-size: 8px; }
+.bsv2-dice-history p { margin: 0; color: var(--bsv2-muted); font-size: 10px; }
+.bsv2-dice-history footer { display: grid; gap: 2px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,.09); }
+.bsv2-dice-history footer small { color: var(--bsv2-muted); font-size: 8px; }
+.bsv2-dice-history footer span { color: #cdebcf; font-size: 10px; font-weight: 700; }
 .bsv2-castle { flex: 1; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--bsv2-border); border-radius: 10px; background: var(--bsv2-panel); color: var(--bsv2-danger); }
 .bsv2-castle div { flex: 1; display: flex; flex-direction: column; font-size: 11px; }
 .bsv2-castle strong { font-size: 13px; color: var(--bsv2-ink); }
@@ -51,12 +65,35 @@
    layer only ever drew simple colored circles, which this overlay already does
    with more information: per-lane HP bars, blocked-state rings, boss sizing). */
 .bsv2-battle-stage { position: relative; height: 224px; overflow: hidden; border-radius: 22px; background-size: cover; background-position: center 42%; border: 1px solid var(--bsv2-gold); box-shadow: inset 0 0 0 2px rgba(255,253,235,.28), 0 5px 0 rgba(0,0,0,.18); }
+.bsv2-battle-stage { background-position: center 58%; }
 .bsv2-stage-copy { position: absolute; z-index: 2; top: 9px; left: 11px; padding: 5px 9px; display: grid; color: var(--bsv2-ink); border-radius: 10px; background: rgba(15,20,32,.62); backdrop-filter: blur(6px); }
 .bsv2-stage-copy span { font-size: 11px; font-weight: 900; }
 .bsv2-stage-copy small { font-size: 9px; color: var(--bsv2-muted); }
 .bsv2-boss-warning { position: absolute; z-index: 5; left: 50%; top: 47px; transform: translateX(-50%); padding: 5px 10px; display: flex; align-items: center; gap: 5px; border-radius: 10px; color: #fff5df; font-size: 10px; font-weight: 900; background: rgba(136,66,80,.88); animation: bsv2WarningPulse 1s infinite alternate; }
 @keyframes bsv2WarningPulse { to { transform: translateX(-50%) scale(1.03); filter: brightness(1.1); } }
 .bsv2-castle-gate { position: absolute; z-index: 3; bottom: 8px; left: 50%; transform: translateX(-50%); padding: 5px 10px; display: flex; align-items: center; gap: 4px; border-radius: 10px; color: #fff4d6; background: rgba(49,111,116,.88); box-shadow: 0 2px 0 rgba(27,80,90,.7); font-size: 10px; font-weight: 900; }
+.bsv2-wave-forecast { position: absolute; z-index: 6; top: 8px; right: 7px; width: 78px; display: grid; gap: 3px; pointer-events: none; }
+.bsv2-wave-forecast section { padding: 4px 5px; border: 1px solid rgba(255,243,204,.52); border-radius: 7px; color: #fff8e7; background: rgba(14,22,34,.74); box-shadow: 0 1px 3px rgba(0,0,0,.32); backdrop-filter: blur(3px); }
+.bsv2-wave-forecast section.is-boss { border-color: rgba(226,100,90,.9); background: rgba(97,38,48,.8); }
+.bsv2-wave-forecast span { display: block; color: var(--bsv2-gold); font-size: 8px; font-weight: 900; line-height: 1.1; }
+.bsv2-wave-forecast p { display: flex; flex-wrap: wrap; gap: 1px 3px; margin: 2px 0 0; }
+.bsv2-wave-forecast i { font-style: normal; font-size: 7px; line-height: 1.2; white-space: nowrap; }
+.bsv2-wave-forecast b { display: flex; align-items: center; gap: 2px; margin-top: 2px; color: #ffd5ce; font-size: 7px; }
+
+/* User-supplied forest castle scene: the source's painted 4×4 tiles are the
+   actual Run Engine board. UI cells are kept transparent and only carry heroes,
+   health bars and interaction state. */
+.bsv2-forest-stage { background-position: center 14%; }
+.bsv2-forest-board .bsv2-legacy-board-skin { padding: 0; border: 0; background: transparent; box-shadow: none; }
+.bsv2-forest-board .bsv2-legacy-board-heading { display: none; }
+.bsv2-forest-board .bsv2-board-grid { width: 78%; aspect-ratio: 620 / 530; padding: 1.8%; gap: 1.25%; border: 0; border-radius: 3%; background-image: url('/manus-storage/forest-castle-board_f340d81f.webp'); background-repeat: no-repeat; background-size: 165% auto; background-position: 30% 49%; box-shadow: 0 4px 12px rgba(27,45,22,.22); }
+.bsv2-forest-board .bsv2-cell { min-height: 0; border: 0; border-radius: 9%; background: transparent; box-shadow: none; }
+.bsv2-forest-board .bsv2-cell::after { color: rgba(99,77,35,.52); font-size: 20px; }
+.bsv2-forest-board .bsv2-cell:not(.is-filled):hover { background: rgba(255,246,189,.22); }
+.bsv2-forest-board .bsv2-cell.is-target { background: rgba(100,204,241,.24); outline: 2px solid rgba(119,229,255,.9); outline-offset: -3px; }
+.bsv2-forest-board .bsv2-cell.is-selected { background: rgba(255,229,102,.24); outline: 2px solid rgba(255,213,77,.95); outline-offset: -3px; }
+.bsv2-forest-board .bsv2-cell-sprite { transform: translateY(3%) scale(1.14); filter: drop-shadow(0 3px 2px rgba(38,52,24,.4)); }
+.bsv2-forest-board .bsv2-cell-hp { left: 9%; right: 9%; bottom: 7%; }
 
 .bsv2-route-strip { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
 .bsv2-route-lane { position: relative; border-left: 1px dashed rgba(255,255,255,.18); }
@@ -79,6 +116,25 @@
 
 /* Board */
 .bsv2-board-section { display: flex; flex-direction: column; gap: 8px; }
+/* Old-engine visual language restored: a bright framed hero stage, with the new engine's
+   4×4 board state and Route mapping left untouched. */
+.bsv2-legacy-board-skin { position: relative; isolation: isolate; overflow: hidden; padding: 7px; border: 1px solid #cfb268; border-radius: 12px; background: linear-gradient(135deg, #e9ede2 0%, #fff7e6 52%, #dbe9dd 100%); box-shadow: inset 0 0 0 2px rgba(255,255,255,.72), 0 4px 0 rgba(91,86,57,.14); }
+.bsv2-legacy-board-skin::before { content: "✦  •  ✦"; position: absolute; z-index: -1; left: 12px; top: 7px; color: #caa44a; opacity: .62; letter-spacing: 3px; font-size: 9px; }
+.bsv2-legacy-board-skin::after { content: ""; position: absolute; z-index: -1; inset: 4px; border: 1px solid rgba(201,156,56,.46); border-radius: 10px; pointer-events: none; }
+.bsv2-legacy-board-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; padding: 0 1px 2px; color: #315b5a; }
+.bsv2-legacy-board-heading span { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 900; }
+.bsv2-legacy-board-heading small { overflow: hidden; color: #637a72; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.bsv2-legacy-board-skin .bsv2-board-grid { width: 86%; margin: 0 auto; gap: 5px; padding: 5px; border-color: #b89a57; border-radius: 10px; background: linear-gradient(145deg, rgba(101,137,126,.28), rgba(255,250,232,.7)); box-shadow: inset 0 0 0 2px rgba(255,255,255,.68), inset 0 0 14px rgba(64,92,78,.14); }
+.bsv2-legacy-board-skin .bsv2-cell { min-height: 0; border: 1.5px solid var(--hero-color, #aa965f); border-radius: 9px; background: radial-gradient(circle at 50% 25%, #fffdf2 0%, #e5efe4 57%, #a8c4b7 100%); box-shadow: inset 1px 1px 0 rgba(255,255,255,.9), inset -1px -1px 0 rgba(75,104,96,.2), 0 1px 0 rgba(84,83,58,.16); }
+.bsv2-legacy-board-skin .bsv2-cell.is-empty { border-color: #b7ad85; background: linear-gradient(145deg, rgba(255,253,237,.72), rgba(207,225,209,.72)); }
+.bsv2-legacy-board-skin .bsv2-cell.is-empty::after { content: "＋"; color: rgba(86,125,110,.52); font-size: 16px; font-weight: 700; }
+.bsv2-legacy-board-skin .bsv2-cell.is-filled { background: radial-gradient(circle at 50% 28%, #fffdf2 0%, color-mix(in srgb, var(--hero-color) 16%, #e7efe5) 62%, #95b1a6 100%); }
+.bsv2-legacy-board-skin .bsv2-cell-sprite.hero-board-sprite { inset: 1px 2px 7px; filter: drop-shadow(0 1px 1px rgba(19,27,48,.45)); }
+.bsv2-legacy-board-skin .bsv2-cell-sprite .frame-hero-sprite { transform: scale(1.08); transform-origin: center 88%; }
+.bsv2-legacy-board-skin .bsv2-cell-tier { top: 3px; left: 4px; padding: 1px 4px; border-radius: 4px; color: #6a4515; background: #ffe385; font-size: 8px; font-weight: 900; box-shadow: 0 1px 0 rgba(102,71,23,.22); }
+.bsv2-legacy-board-skin .bsv2-cell-shield { top: 3px; right: 4px; color: #348b91; filter: drop-shadow(0 1px 0 rgba(255,255,255,.85)); }
+.bsv2-legacy-board-skin .bsv2-cell-hp { z-index: 4; right: 4px; bottom: 4px; left: 4px; height: 4px; background: #364c5a; box-shadow: 0 0 0 2px rgba(255,255,255,.58); }
+.bsv2-legacy-board-skin .bsv2-cell-hp em { background: #79d16d; }
 .bsv2-pending-zone { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px dashed var(--bsv2-gold); border-radius: 9px; background: rgba(227,179,76,.08); font-size: 11px; flex-wrap: wrap; }
 .bsv2-pending-zone > span { display: flex; align-items: center; gap: 3px; color: var(--bsv2-gold); }
 .bsv2-pending-card { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 8px; border: 1px solid var(--hero-color, var(--bsv2-border)); border-radius: 8px; background: var(--bsv2-panel-alt); color: var(--bsv2-ink); }
@@ -103,7 +159,7 @@
 .bsv2-cell-hp { position: absolute; bottom: 2px; left: 3px; right: 3px; height: 3px; border-radius: 2px; background: rgba(0,0,0,.4); overflow: hidden; }
 .bsv2-cell-hp em { display: block; height: 100%; background: var(--bsv2-good); }
 
-.bsv2-board-toolbar { display: flex; flex-direction: column; gap: 6px; }
+.bsv2-board-toolbar { display: flex; flex-direction: column; gap: 4px; padding: 5px 6px 0; }
 .bsv2-mode-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
 .bsv2-mode-buttons button { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border: 1px solid var(--bsv2-border); border-radius: 8px; background: var(--bsv2-panel); color: var(--bsv2-ink); font-size: 11px; }
 .bsv2-mode-buttons button.is-active { border-color: var(--bsv2-teal); background: rgba(52,193,172,.15); color: var(--bsv2-teal); }
@@ -136,9 +192,24 @@
 
 /* Combo choice */
 .bsv2-combo-list { display: flex; flex-direction: column; gap: 6px; }
-.bsv2-combo-card { display: flex; flex-direction: column; gap: 2px; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--bsv2-border); background: var(--bsv2-panel-alt); color: var(--bsv2-ink); text-align: left; }
+.bsv2-combo-card { display: flex; flex-direction: column; gap: 3px; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--bsv2-border); background: var(--bsv2-panel-alt); color: var(--bsv2-ink); text-align: left; }
+.bsv2-combo-card:active { transform: scale(.98); }
+.bsv2-combo-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .bsv2-combo-card b { color: var(--bsv2-gold); font-size: 12px; }
-.bsv2-combo-card span { font-size: 11px; color: var(--bsv2-muted); }
+.bsv2-combo-heading i { flex: 0 0 auto; padding: 2px 5px; border: 1px solid color-mix(in srgb, var(--bsv2-gold) 52%, transparent); border-radius: 999px; color: #ffe7a2; font-size: 8px; font-style: normal; font-weight: 800; }
+.bsv2-combo-card strong { color: #f5efce; font-size: 13px; line-height: 1.15; }
+.bsv2-combo-card .bsv2-combo-summary { color: var(--bsv2-muted); font-size: 10px; }
+.bsv2-combo-card small { color: #a7b9bf; font-size: 9px; line-height: 1.25; }
+.bsv2-combo-choice { position: relative; }
+.bsv2-special-combo-flare { position: absolute; z-index: 12; inset: 6px; display: grid; place-content: center; gap: 5px; overflow: hidden; border: 1px solid rgba(255,234,137,.9); border-radius: 12px; background: radial-gradient(circle, rgba(244,195,67,.96), rgba(74,38,78,.92) 58%, rgba(20,28,42,.94)); box-shadow: 0 0 26px rgba(242,193,60,.72); color: #fffbed; text-align: center; animation: bsv2SpecialCombo .76s cubic-bezier(.22,1,.36,1) both; pointer-events: none; }
+.bsv2-special-combo-flare::before { content: ""; position: absolute; inset: -40%; background: conic-gradient(from 15deg, transparent 0 15%, rgba(255,251,202,.52) 18% 20%, transparent 23% 38%, rgba(255,251,202,.36) 41% 43%, transparent 46% 100%); animation: bsv2SpecialRays .76s linear both; }
+.bsv2-special-combo-flare span, .bsv2-special-combo-flare b, .bsv2-special-combo-flare i { position: relative; z-index: 1; }
+.bsv2-special-combo-flare span { color: #fff0ad; font-size: 12px; font-weight: 900; letter-spacing: .08em; }
+.bsv2-special-combo-flare b { font-size: 17px; text-shadow: 0 2px 0 rgba(63,31,21,.45); }
+.bsv2-special-combo-flare i { color: #fff3bb; font-size: 16px; font-style: normal; letter-spacing: 7px; }
+.bsv2-special-combo-flare.is-five_kind { background: radial-gradient(circle, rgba(255,225,106,.98), rgba(126,73,31,.94) 58%, rgba(24,30,47,.96)); }
+@keyframes bsv2SpecialCombo { 0% { opacity: 0; transform: scale(.92); } 20% { opacity: 1; transform: scale(1); } 78% { opacity: 1; } 100% { opacity: 0; transform: scale(1.04); } }
+@keyframes bsv2SpecialRays { from { transform: rotate(0deg) scale(.7); } to { transform: rotate(135deg) scale(1.08); } }
 
 /* Preparation */
 .bsv2-energy-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--bsv2-gold); }
@@ -152,6 +223,104 @@
 
 /* Message bar */
 .bsv2-message { display: flex; align-items: center; gap: 6px; margin: 0; padding: 7px 10px; border-radius: 9px; background: rgba(255,255,255,.04); color: var(--bsv2-muted); font-size: 11px; }
+
+/* Mobile battle-density pass: protect the original four-route map height first;
+   compact the board controls and move transient messages into a collapsible log. */
+.bsv2-screen { gap: 6px; padding: 8px 10px 14px; }
+.bsv2-battle-stage { height: 224px; min-height: 224px; flex: 0 0 224px; }
+.bsv2-board-section { gap: 5px; }
+.bsv2-legacy-board-skin { padding: 6px; }
+.bsv2-legacy-board-heading { min-height: 23px; padding: 2px 3px 4px; }
+.bsv2-legacy-board-heading span { font-size: 11px; }
+.bsv2-legacy-board-heading small { font-size: 8px; }
+.bsv2-legacy-board-skin .bsv2-board-grid { width: 78%; gap: 4px; padding: 5px; }
+.bsv2-legacy-board-skin .bsv2-cell { min-height: 0; }
+.bsv2-legacy-board-skin .bsv2-cell-sprite { transform: translateY(2px) scale(.98); }
+.bsv2-board-toolbar { gap: 3px; padding: 3px 5px 0; }
+.bsv2-mode-buttons { gap: 4px; }
+.bsv2-mode-buttons button { min-height: 27px; padding: 4px 8px; border-radius: 7px; font-size: 10px; }
+.bsv2-mode-hint { gap: 6px; font-size: 10px; }
+.bsv2-confirm-btn { min-height: 27px; padding: 4px 9px; border-radius: 7px; font-size: 10px; }
+.bsv2-panel { gap: 6px; padding: 8px; border-radius: 10px; }
+.bsv2-preparation .bsv2-energy-row { min-height: 20px; font-size: 11px; }
+.bsv2-preparation .bsv2-action-row { gap: 5px; }
+.bsv2-preparation .bsv2-primary-btn, .bsv2-preparation .bsv2-secondary-btn { min-width: 0; min-height: 34px; padding: 6px 8px; border-radius: 8px; font-size: 11px; }
+.bsv2-battle-log { align-self: flex-start; position: relative; z-index: 3; margin-top: -2px; }
+.bsv2-battle-log > button { display: flex; align-items: center; gap: 4px; min-height: 24px; padding: 3px 7px; border: 1px solid rgba(255,255,255,.12); border-radius: 7px; color: var(--bsv2-muted); background: rgba(255,255,255,.04); font-size: 9px; }
+.bsv2-battle-log > button svg:last-child { transition: transform 160ms ease; }
+.bsv2-battle-log.is-expanded > button svg:last-child { transform: rotate(180deg); }
+.bsv2-battle-log p { max-width: min(280px, calc(100vw - 40px)); margin: 3px 0 0; padding: 6px 8px; border: 1px solid var(--bsv2-border); border-radius: 8px; color: var(--bsv2-muted); background: rgba(17,26,42,.94); font-size: 10px; line-height: 1.4; }
+
+/* Portrait first-screen contract: at the 449×937 reference size, the route map,
+   4×4 stage and current decision controls stay in one composed frame. */
+@media (max-width: 480px) {
+  .bsv2-screen { min-height: 100dvh; gap: 4px; padding: 6px 8px 8px; }
+  .bsv2-header { gap: 6px; }
+  .bsv2-icon-btn { width: 29px; height: 29px; border-radius: 8px; }
+  .bsv2-castle { gap: 5px; padding: 4px 8px; border-radius: 8px; }
+  .bsv2-castle div { font-size: 10px; }
+  .bsv2-castle strong { font-size: 12px; }
+  .bsv2-wave { gap: 2px; padding: 4px 8px; border-radius: 8px; }
+  .bsv2-wave strong { font-size: 14px; }
+  .bsv2-battle-stage { height: 176px; min-height: 176px; flex-basis: 176px; border-radius: 16px; background-position: center top; }
+  .bsv2-wave-forecast { top: 6px; right: 6px; width: 72px; }
+  .bsv2-wave-forecast section { padding: 3px 4px; }
+  .bsv2-wave-forecast span { font-size: 7px; }
+  .bsv2-wave-forecast i, .bsv2-wave-forecast b { font-size: 6px; }
+  .bsv2-legacy-board-skin { padding: 5px; }
+  .bsv2-legacy-board-skin .bsv2-board-grid { width: 76%; gap: 3px; padding: 4px; }
+  .bsv2-legacy-board-heading { min-height: 20px; padding: 1px 2px 3px; }
+  .bsv2-legacy-board-heading span { font-size: 10px; }
+  .bsv2-legacy-board-heading small { font-size: 7px; }
+  .bsv2-mode-buttons button { min-height: 25px; padding: 3px 7px; font-size: 9px; }
+  .bsv2-panel { gap: 5px; padding: 6px; border-radius: 9px; }
+  .bsv2-preparation .bsv2-energy-row { min-height: 18px; font-size: 10px; }
+  .bsv2-preparation .bsv2-primary-btn, .bsv2-preparation .bsv2-secondary-btn { min-height: 31px; padding: 5px 7px; font-size: 10px; }
+  .bsv2-dice-row { gap: 5px; }
+  .bsv2-die { width: 38px; height: 38px; }
+  .bsv2-primary-btn, .bsv2-secondary-btn { min-height: 32px; padding: 6px 9px; font-size: 11px; }
+  .bsv2-forest-board .bsv2-board-grid { width: 76%; gap: 1.25%; padding: 1.8%; }
+}
+
+/* Hard-fit profile for compact mobile browser viewports such as 417×702.
+   This is intentionally a separate height query so ordinary tall phones retain
+   the more generous presentation above. */
+@media (max-width: 480px) and (max-height: 760px) {
+  .bsv2-screen { height: 100dvh; min-height: 0; max-height: 100dvh; overflow: hidden; gap: 3px; padding: 4px 7px 5px; }
+  .bsv2-header { min-height: 30px; gap: 5px; }
+  .bsv2-icon-btn { width: 26px; height: 26px; }
+  .bsv2-castle { min-height: 28px; padding: 3px 6px; }
+  .bsv2-castle div { font-size: 9px; }
+  .bsv2-castle strong { font-size: 11px; }
+  .bsv2-wave { min-height: 28px; padding: 3px 6px; }
+  .bsv2-wave strong { font-size: 12px; }
+  .bsv2-battle-stage { height: 132px; min-height: 132px; flex-basis: 132px; border-radius: 13px; }
+  .bsv2-stage-copy { top: 5px; left: 5px; padding: 4px 5px; border-radius: 6px; }
+  .bsv2-stage-copy span { font-size: 9px; }
+  .bsv2-stage-copy small { font-size: 7px; }
+  .bsv2-wave-forecast { top: 4px; right: 4px; width: 62px; gap: 2px; }
+  .bsv2-wave-forecast section { padding: 2px 3px; border-radius: 5px; }
+  .bsv2-wave-forecast span { font-size: 6px; }
+  .bsv2-wave-forecast i, .bsv2-wave-forecast b { font-size: 5px; }
+  .bsv2-castle-gate { bottom: 4px; padding: 3px 7px; border-radius: 7px; font-size: 8px; }
+  .bsv2-legacy-board-skin { padding: 3px; border-radius: 10px; }
+  .bsv2-legacy-board-heading { min-height: 17px; padding: 1px 2px; }
+  .bsv2-legacy-board-heading span { font-size: 9px; }
+  .bsv2-legacy-board-heading small { font-size: 6px; }
+  .bsv2-legacy-board-skin .bsv2-board-grid { width: 60%; gap: 3px; padding: 3px; }
+  .bsv2-forest-board .bsv2-board-grid { width: 68%; gap: 1.25%; padding: 1.8%; }
+  .bsv2-legacy-board-skin .bsv2-cell-sprite { transform: translateY(1px) scale(.84); }
+  .bsv2-board-toolbar { gap: 2px; padding: 2px 3px 0; }
+  .bsv2-mode-buttons { gap: 3px; }
+  .bsv2-mode-buttons button { min-height: 22px; padding: 2px 6px; border-radius: 6px; font-size: 8px; }
+  .bsv2-mode-hint { display: none; }
+  .bsv2-confirm-btn { min-height: 22px; padding: 2px 7px; font-size: 8px; }
+  .bsv2-panel { gap: 4px; padding: 5px; border-radius: 7px; }
+  .bsv2-preparation .bsv2-energy-row { min-height: 16px; font-size: 9px; }
+  .bsv2-preparation .bsv2-action-row { gap: 4px; }
+  .bsv2-preparation .bsv2-primary-btn, .bsv2-preparation .bsv2-secondary-btn { min-height: 27px; padding: 4px 6px; border-radius: 6px; font-size: 9px; }
+  .bsv2-battle-log { display: none; }
+}
 
 /* Dialogs */
 .bsv2-dialog-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 16px; background: rgba(8,11,18,.72); backdrop-filter: blur(2px); }
@@ -178,3 +347,661 @@
 .bsv2-speed-choice { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; color: var(--bsv2-muted); }
 .bsv2-speed-choice button { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--bsv2-border); background: var(--bsv2-panel-alt); color: var(--bsv2-ink); }
 .bsv2-speed-choice button.is-selected { border-color: var(--bsv2-teal); color: var(--bsv2-teal); }
+
+/* Single continuous forest battlefield: the upper road and lower printed 4×4
+   tiles are one scene. Route enemies travel above; the same Run Engine cells
+   are absolutely placed over the painted tiles below. */
+.bsv2-battle-stage.is-combined-scene {
+  height: min(68dvh, 540px);
+  min-height: 420px;
+  flex: 0 0 min(68dvh, 540px);
+  background-size: 100% auto;
+  background-position: center top;
+}
+.bsv2-battle-stage.is-combined-scene .bsv2-route-strip { z-index: 1; inset: 0 0 57% 0; }
+.bsv2-battle-stage.is-combined-scene .bsv2-route-overlay { inset: 0; }
+.bsv2-battle-stage.is-combined-scene .bsv2-route-hint { inset: 12px 0 0; gap: 10px; }
+.bsv2-battle-stage.is-combined-scene .bsv2-route-hint i { animation-name: bsv2CombinedRouteFlow; }
+@keyframes bsv2CombinedRouteFlow { 0% { transform: translateY(-6px); opacity: 0; } 18% { opacity: .95; } 82% { opacity: .95; } 100% { transform: translateY(190px); opacity: 0; } }
+.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate { z-index: 3; bottom: 58%; }
+.bsv2-board-embedded {
+  position: absolute;
+  z-index: 4;
+  top: 37%;
+  right: 5.5%;
+  bottom: 3.5%;
+  left: 5.5%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-height: 0;
+  pointer-events: none;
+}
+.bsv2-board-embedded .bsv2-legacy-board-skin {
+  width: 100%;
+  min-height: 0;
+  height: calc(100% - 28px);
+  flex: 0 0 calc(100% - 28px);
+  display: grid;
+  place-items: stretch center;
+  overflow: visible;
+  isolation: auto;
+}
+.bsv2-board-embedded .bsv2-legacy-board-skin::before,
+.bsv2-board-embedded .bsv2-legacy-board-skin::after { display: none; }
+.bsv2-board-embedded .bsv2-board-grid {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  margin: 0;
+  aspect-ratio: 620 / 530;
+  background-size: 165% auto;
+  background-position: 30% 49%;
+  pointer-events: auto;
+}
+.bsv2-board-embedded .bsv2-cell { pointer-events: auto; }
+.bsv2-board-embedded .bsv2-board-toolbar {
+  width: 100%;
+  flex: 0 0 auto;
+  padding: 0;
+  pointer-events: auto;
+}
+.bsv2-board-embedded .bsv2-mode-buttons { justify-content: center; }
+.bsv2-board-embedded .bsv2-pending-zone { position: absolute; z-index: 7; top: 0; left: 50%; max-width: 92%; transform: translateX(-50%); pointer-events: auto; }
+
+@media (max-width: 480px) {
+  .bsv2-battle-stage.is-combined-scene { height: min(69dvh, 560px); min-height: 405px; flex-basis: min(69dvh, 560px); border-radius: 16px; }
+  .bsv2-battle-stage.is-combined-scene .bsv2-stage-copy { top: 5px; left: 6px; }
+  .bsv2-battle-stage.is-combined-scene .bsv2-wave-forecast { top: 5px; right: 5px; }
+  .bsv2-board-embedded { top: 36.5%; right: 4.5%; bottom: 3%; left: 4.5%; }
+  .bsv2-board-embedded .bsv2-cell-sprite.hero-board-sprite { transform: translateY(4%) scale(1.12); }
+  .bsv2-board-embedded .bsv2-cell-sprite .frame-hero-sprite { transform: scale(1.38) !important; transform-origin: center 84% !important; }
+  .bsv2-board-embedded .bsv2-cell-hp { right: 7%; bottom: 5%; left: 7%; }
+}
+
+@media (max-width: 480px) and (max-height: 760px) {
+  .bsv2-battle-stage.is-combined-scene { height: 64dvh; min-height: 382px; flex-basis: 64dvh; }
+  .bsv2-board-embedded { top: 36%; right: 4%; bottom: 2.5%; left: 4%; }
+  .bsv2-board-embedded .bsv2-mode-buttons button { min-height: 22px; padding: 2px 6px; font-size: 8px; }
+}
+
+/* Forest castle scene final board layer: override the earlier legacy skin after
+   every mobile density rule. The painted tiles remain visible; only game state
+   (hero, tier, shield, HP and selection) is drawn above them. */
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-board-grid {
+  width: 78%;
+  margin: 0 auto;
+  gap: 1.25%;
+  padding: 1.8%;
+  border: 0;
+  border-radius: 3%;
+  background-image: url('/manus-storage/forest-castle-board_f340d81f.webp');
+  background-repeat: no-repeat;
+  background-size: 165% auto;
+  background-position: 30% 49%;
+  background-color: transparent;
+  box-shadow: 0 4px 12px rgba(27,45,22,.22);
+}
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell,
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell.is-empty,
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell.is-filled {
+  min-height: 0;
+  border: 0;
+  border-radius: 9%;
+  background: transparent;
+  box-shadow: none;
+}
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell.is-empty::after { color: rgba(99,77,35,.46); }
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell.is-empty:not(:disabled):hover { background: rgba(255,246,189,.22); }
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell.is-selected { background: rgba(255,229,102,.24); outline: 2px solid rgba(255,213,77,.95); outline-offset: -3px; }
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell-sprite.hero-board-sprite { inset: 0 1px 7%; transform: translateY(4%) scale(1.14); filter: drop-shadow(0 3px 2px rgba(38,52,24,.42)); mix-blend-mode: multiply; }
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell-sprite .frame-hero-sprite { transform: scale(1.45) !important; transform-origin: center 82% !important; }
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell-hp { left: 8%; right: 8%; bottom: 6%; }
+
+@media (max-width: 480px) and (max-height: 760px) {
+  .bsv2-forest-board .bsv2-legacy-board-skin .bsv2-board-grid { width: 68%; gap: 1.25%; padding: 1.8%; }
+  .bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell-sprite.hero-board-sprite { transform: translateY(4%) scale(1.08); }
+}
+
+/* Unified mobile battle canvas — the 1024×1535 forest artwork is the sole
+   coordinate space. Its image, route overlay, 4×4 grid and cell-contained
+   hero sprites all scale from the same portrait stage; no cover crop or px
+   offsets are used here. */
+.bsv2-battle-stage.is-combined-scene {
+  --scene-ui-reserve: 185px;
+  --board-left: 21.6%;
+  --board-top: 32.3%;
+  --board-width: 57.8%;
+  --board-ratio: 1.12 / 1;
+  --board-cell-inset: 1.45%;
+  --board-cell-gap: 1.05%;
+  position: relative;
+  width: min(100%, 420px, calc((100dvh - var(--scene-ui-reserve)) * 2 / 3));
+  max-width: 420px;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 2 / 3;
+  flex: 0 0 auto;
+  margin: 0 auto 37px;
+  overflow: visible;
+  background: #10222c;
+  background-image: none !important;
+  background-size: auto;
+  background-position: center;
+}
+.bsv2-battle-stage.is-combined-scene .bsv2-scene-art {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.bsv2-battle-stage.is-combined-scene .bsv2-stage-copy,
+.bsv2-battle-stage.is-combined-scene .bsv2-boss-warning,
+.bsv2-battle-stage.is-combined-scene .bsv2-wave-forecast { z-index: 7; }
+.bsv2-battle-stage.is-combined-scene .bsv2-route-strip {
+  box-sizing: border-box;
+  z-index: 1;
+  top: 4%;
+  right: auto;
+  bottom: auto;
+  left: var(--board-left);
+  width: var(--board-width);
+  height: calc(var(--board-top) - 4%);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--board-cell-gap);
+  padding: var(--board-cell-inset);
+}
+.bsv2-battle-stage.is-combined-scene .bsv2-route-overlay { inset: 0; }
+.bsv2-battle-stage.is-combined-scene .bsv2-route-hint { inset: 5px 0 0; gap: 5px; }
+.bsv2-battle-stage.is-combined-scene .bsv2-route-hint i { animation-name: bsv2PortraitRouteFlow; }
+@keyframes bsv2PortraitRouteFlow { 0% { transform: translateY(-5px); opacity: 0; } 18% { opacity: .92; } 82% { opacity: .92; } 100% { transform: translateY(130px); opacity: 0; } }
+.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate {
+  z-index: 3;
+  bottom: 8%;
+  padding: 3px 7px;
+  font-size: 8px;
+  background: rgba(49,111,116,.73);
+}
+.bsv2-board-embedded {
+  position: absolute;
+  z-index: 4;
+  top: var(--board-top);
+  right: auto;
+  bottom: auto;
+  left: var(--board-left);
+  width: var(--board-width);
+  height: auto;
+  aspect-ratio: var(--board-ratio);
+  display: block;
+  pointer-events: none;
+}
+.bsv2-board-embedded .bsv2-legacy-board-skin {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: block;
+  overflow: visible;
+  isolation: auto;
+  background: transparent;
+}
+.bsv2-board-embedded .bsv2-legacy-board-skin::before,
+.bsv2-board-embedded .bsv2-legacy-board-skin::after { display: none; }
+.bsv2-board-embedded .bsv2-board-grid,
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-board-grid {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  max-width: none;
+  margin: 0;
+  padding: var(--board-cell-inset);
+  gap: var(--board-cell-gap);
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none;
+  pointer-events: auto;
+}
+.bsv2-board-embedded .bsv2-cell,
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell,
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell.is-empty,
+.bsv2-forest-board .bsv2-legacy-board-skin .bsv2-cell.is-filled {
+  position: relative;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  isolation: auto;
+  pointer-events: auto;
+}
+.bsv2-board-embedded .bsv2-cell.is-empty::after { content: ""; }
+.bsv2-board-embedded .bsv2-cell-sprite.hero-board-sprite {
+  inset: 1% 3% 5%;
+  display: block;
+  background: transparent !important;
+  transform: none;
+  transform-origin: center bottom;
+  filter: drop-shadow(0 2px 1px rgba(38,52,24,.42));
+  mix-blend-mode: color-burn;
+}
+.bsv2-board-embedded .bsv2-cell-sprite .frame-hero-sprite {
+  transform: translate(6%, 20%) scale(1.34) !important;
+  transform-origin: center 86% !important;
+  mix-blend-mode: color-burn;
+}
+/* This selector intentionally matches the legacy skin's specificity. The old
+   board rules used a 1.14× parent scale and 1.45× child scale, which overrode
+   the portrait canvas and pushed visible heroes outside their actual cells. */
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell-sprite.hero-board-sprite {
+  inset: 1% 3% 5%;
+  transform: none;
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  mix-blend-mode: color-burn;
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell-sprite .frame-hero-sprite {
+  transform: translate(var(--hero-visual-x, 4%), var(--hero-visual-y, -8%)) scale(1.02) !important;
+  transform-origin: center center !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  mix-blend-mode: color-burn;
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-filled {
+  overflow: hidden !important;
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.bsv2-board-embedded.bsv2-forest-board .hero-assassin { --hero-visual-x: 1.1%; --hero-visual-y: -8.3%; }
+.bsv2-board-embedded.bsv2-forest-board .hero-bard { --hero-visual-x: 4.9%; --hero-visual-y: -8.3%; }
+.bsv2-board-embedded.bsv2-forest-board .hero-deathKnight { --hero-visual-x: 8.5%; --hero-visual-y: -8.3%; }
+.bsv2-board-embedded.bsv2-forest-board .hero-engineer { --hero-visual-x: 2.5%; --hero-visual-y: -8%; }
+.bsv2-board-embedded.bsv2-forest-board .hero-fighter { --hero-visual-x: 3.3%; --hero-visual-y: -8.6%; }
+.bsv2-board-embedded.bsv2-forest-board .hero-fireMage { --hero-visual-x: 2.1%; --hero-visual-y: -8.3%; }
+.bsv2-board-embedded.bsv2-forest-board .hero-frostQueen { --hero-visual-x: .7%; --hero-visual-y: -8%; }
+.bsv2-board-embedded.bsv2-forest-board .hero-knight { --hero-visual-x: 4.6%; --hero-visual-y: -8.2%; }
+.bsv2-board-embedded.bsv2-forest-board .hero-priest { --hero-visual-x: 4.3%; --hero-visual-y: -8.3%; }
+.bsv2-board-embedded.bsv2-forest-board .hero-ranger { --hero-visual-x: 2.8%; --hero-visual-y: -8.1%; }
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-filled .hero-board-sprite {
+  position: absolute;
+  z-index: 1;
+  inset: 5px 7px 7px;
+  overflow: visible;
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-filled .bsv2-cell-tier {
+  position: absolute;
+  z-index: 3;
+  top: 3px;
+  left: 3px;
+  max-width: 36%;
+  min-height: 0;
+  margin: 0;
+  padding: 1px 2px;
+  line-height: 1;
+  pointer-events: none;
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-filled .bsv2-cell-hp {
+  position: absolute;
+  z-index: 3;
+  right: 7px;
+  bottom: 3px;
+  left: 7px;
+  height: 2px;
+  margin: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid rgba(40, 64, 28, .72);
+  border-radius: 999px;
+  background: rgba(28, 47, 21, .62);
+  box-shadow: none !important;
+  pointer-events: none;
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-filled .bsv2-cell-hp em {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #a9ef80 0%, #5acb57 70%, #2e963d 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.38);
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-selected::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 3%;
+  border: 2px solid rgba(255, 236, 129, .98);
+  border-radius: 3px;
+  background: rgba(255, 218, 81, .2);
+  box-shadow: 0 0 0 1px rgba(72, 47, 12, .75), 0 0 9px rgba(255, 213, 71, .9), inset 0 0 8px rgba(255, 249, 183, .5);
+  animation: bsv2CellFocusPulse 850ms ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-merge-candidate::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 8%;
+  border: 1px dashed rgba(115, 239, 204, .92);
+  border-radius: 3px;
+  box-shadow: inset 0 0 7px rgba(89, 229, 180, .24);
+  pointer-events: none;
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-reposition-target::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 9%;
+  border: 1px solid rgba(153, 205, 255, .92);
+  border-radius: 50%;
+  background: rgba(109, 180, 255, .13);
+  box-shadow: 0 0 7px rgba(104, 177, 255, .48);
+  pointer-events: none;
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-hit .bsv2-cell-sprite {
+  animation: bsv2HeroHitFlash 380ms var(--ease-out, cubic-bezier(.23, 1, .32, 1)) both;
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-hit-flash {
+  position: absolute;
+  z-index: 4;
+  inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 245, 190, .96), rgba(255, 104, 75, .25) 60%, transparent 72%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: bsv2HitGlow 380ms var(--ease-out, cubic-bezier(.23, 1, .32, 1)) both;
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-damage-float {
+  position: absolute;
+  z-index: 5;
+  top: 25%;
+  left: 50%;
+  color: #fff2cf;
+  font-size: clamp(7px, 1.8vw, 10px);
+  font-style: normal;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -.04em;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #6c2f26, 0 0 3px rgba(76, 24, 18, .85);
+  animation: bsv2DamageFloat 620ms var(--ease-out, cubic-bezier(.23, 1, .32, 1)) both;
+}
+@keyframes bsv2HeroHitFlash {
+  0% { filter: brightness(1) saturate(1) drop-shadow(0 2px 1px rgba(38,52,24,.42)); }
+  28% { filter: brightness(2.5) saturate(.35) drop-shadow(0 0 5px rgba(255, 207, 118, .95)); }
+  100% { filter: brightness(1) saturate(1) drop-shadow(0 2px 1px rgba(38,52,24,.42)); }
+}
+@keyframes bsv2HitGlow {
+  from { opacity: 0; transform: scale(.74); }
+  35% { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.22); }
+}
+@keyframes bsv2DamageFloat {
+  from { opacity: 0; transform: translate(-50%, 18%) scale(.88); }
+  18% { opacity: 1; }
+  to { opacity: 0; transform: translate(-50%, -68%) scale(1.04); }
+}
+@keyframes bsv2CellFocusPulse {
+  from { opacity: .68; transform: scale(.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.bsv2-board-embedded .bsv2-cell-tier {
+  top: 7%;
+  left: 7%;
+  min-height: 0;
+  padding: 1px 2px;
+  border-radius: 3px;
+  color: #6d501b;
+  background: rgba(255, 238, 149, .92);
+  box-shadow: 0 1px 0 rgba(88, 55, 12, .24);
+  font-size: clamp(5px, 1.38vw, 7px);
+  line-height: 1;
+}
+.bsv2-board-embedded .bsv2-cell-shield { top: 5%; right: 5%; }
+.bsv2-board-embedded .bsv2-cell-hp { right: 10%; bottom: 6%; left: 10%; height: 4px; }
+.bsv2-board-embedded .bsv2-pending-zone { z-index: 8; pointer-events: auto; }
+.bsv2-board-embedded .bsv2-board-toolbar {
+  position: absolute;
+  z-index: 9;
+  top: 218%;
+  left: -26%;
+  width: 152%;
+  padding: 0;
+  pointer-events: auto;
+}
+.bsv2-board-embedded .bsv2-mode-buttons { justify-content: center; gap: 4px; }
+.bsv2-board-embedded .bsv2-mode-buttons button { min-height: 24px; padding: 3px 7px; font-size: 9px; }
+.bsv2-battle-stage.is-combined-scene .bsv2-enemy-marker {
+  transition: top 280ms linear, left 180ms linear, width 180ms ease-out;
+  will-change: top, transform;
+  animation: bsv2EnemyRoadStride 460ms ease-in-out infinite alternate;
+}
+@keyframes bsv2EnemyRoadStride {
+  from { transform: translate(0, -50%) translateY(-1px) scale(.96); }
+  to { transform: translate(0, -50%) translateY(2px) scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bsv2-battle-stage.is-combined-scene .bsv2-enemy-marker { transition: none; animation: none; }
+  .bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-hit .bsv2-cell-sprite,
+  .bsv2-board-embedded.bsv2-forest-board .bsv2-hit-flash,
+  .bsv2-board-embedded.bsv2-forest-board .bsv2-damage-float { animation: none; }
+}
+
+@media (min-height: 820px) {
+  .bsv2-battle-stage.is-combined-scene { --scene-ui-reserve: 165px; }
+}
+
+@media (max-width: 480px) and (max-height: 760px) {
+  .bsv2-battle-stage.is-combined-scene { --scene-ui-reserve: 185px; border-radius: 14px; }
+  .bsv2-battle-stage.is-combined-scene .bsv2-stage-copy { top: 4px; left: 5px; }
+  .bsv2-battle-stage.is-combined-scene .bsv2-wave-forecast { top: 4px; right: 4px; }
+  .bsv2-board-embedded.bsv2-forest-board .bsv2-cell-sprite .frame-hero-sprite { transform: translate(var(--hero-visual-x, 4%), var(--hero-visual-y, -8%)) scale(1.02) !important; }
+  .bsv2-board-embedded .bsv2-cell-hp { height: 3px; }
+}
+
+/* Design reminder: the supplied 941×1672 forest citadel is one continuous vertical battlefield.
+   Its road, printed 4×4 cells and castle must scale together; every hero, T marker and HP bar
+   remains clipped to the measured painted cell that owns it. */
+.bsv2-battle-stage.is-combined-scene {
+  --scene-ui-reserve: 185px;
+  --board-left: 15.4%;
+  --board-top: 36.5%;
+  --board-width: 67.7%;
+  --board-height: 29.2%;
+  width: min(100%, 420px, calc((100dvh - var(--scene-ui-reserve)) / 1.7779));
+  max-width: 420px;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 941 / 1672;
+  flex: 0 0 auto;
+  margin: 0 auto 37px;
+  overflow: visible;
+  background: #11344a;
+}
+.bsv2-battle-stage.is-combined-scene .bsv2-scene-art { object-fit: contain; object-position: center; }
+.bsv2-battle-stage.is-combined-scene .bsv2-route-strip {
+  top: 4%;
+  left: 19.3%;
+  width: 61.6%;
+  height: 31.5%;
+  padding: 0;
+  gap: 0;
+}
+.bsv2-battle-stage.is-combined-scene .bsv2-route-hint { inset: 4px 0 0; gap: 5px; }
+.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate { bottom: 7%; }
+.bsv2-board-embedded {
+  position: absolute;
+  z-index: 4;
+  top: var(--board-top);
+  right: auto;
+  bottom: auto;
+  left: var(--board-left);
+  width: var(--board-width);
+  height: var(--board-height);
+  aspect-ratio: auto;
+  display: block;
+  pointer-events: none;
+}
+.bsv2-board-embedded .bsv2-legacy-board-skin { width: 100%; height: 100%; overflow: visible; }
+.bsv2-board-embedded .bsv2-board-grid {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent !important;
+  pointer-events: none;
+}
+.bsv2-board-embedded .bsv2-cell,
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell,
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-empty,
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-filled {
+  position: absolute;
+  display: block;
+  min-height: 0;
+  overflow: hidden !important;
+  border: 0;
+  border-radius: 6%;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: auto;
+}
+/* The supplied tile board is painted with slight perspective. These sixteen rectangles follow
+   each row's actual left/right boundary instead of forcing a square CSS grid. */
+.bsv2-board-embedded .bsv2-cell:nth-child(1) { top: 0%; left: 7.5%; width: 22.1%; height: 21.1%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(2) { top: 0%; left: 29.7%; width: 21.7%; height: 21.1%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(3) { top: 0%; left: 51.3%; width: 22%; height: 21.1%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(4) { top: 0%; left: 73.3%; width: 20.7%; height: 21.1%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(5) { top: 21.3%; left: 4.9%; width: 23.4%; height: 23.4%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(6) { top: 21.3%; left: 28.3%; width: 21.7%; height: 23.4%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(7) { top: 21.3%; left: 50%; width: 25.1%; height: 23.4%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(8) { top: 21.3%; left: 75.4%; width: 22%; height: 23.4%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(9) { top: 44.9%; left: 2%; width: 23.2%; height: 26.8%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(10) { top: 44.9%; left: 25.3%; width: 24.8%; height: 26.8%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(11) { top: 44.9%; left: 50.1%; width: 24.8%; height: 26.8%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(12) { top: 44.9%; left: 74.9%; width: 25.1%; height: 26.8%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(13) { top: 72%; left: 0%; width: 25.3%; height: 28%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(14) { top: 72%; left: 25.3%; width: 26.2%; height: 28%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(15) { top: 72%; left: 51.5%; width: 24.8%; height: 28%; }
+.bsv2-board-embedded .bsv2-cell:nth-child(16) { top: 72%; left: 76.3%; width: 23.7%; height: 28%; }
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-filled .hero-board-sprite {
+  position: absolute;
+  z-index: 1;
+  inset: 2% 1% 8%;
+  overflow: hidden;
+}
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell-sprite .frame-hero-sprite {
+  transform: translate(var(--hero-visual-x, 4%), var(--hero-visual-y, -8%)) scale(1.16) !important;
+  transform-origin: center center !important;
+}
+.bsv2-board-embedded .bsv2-cell-tier,
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-filled .bsv2-cell-tier {
+  top: 7%;
+  left: 8%;
+  z-index: 3;
+  max-width: 34%;
+  padding: 1px 2px;
+  overflow: hidden;
+  font-size: clamp(5px, 1.38vw, 7px);
+  line-height: 1;
+  white-space: nowrap;
+}
+.bsv2-board-embedded .bsv2-cell-hp,
+.bsv2-board-embedded.bsv2-forest-board .bsv2-cell.is-filled .bsv2-cell-hp {
+  right: 12%;
+  bottom: 8%;
+  left: 12%;
+  z-index: 3;
+  height: clamp(2px, .7vw, 3px);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.bsv2-board-embedded .bsv2-board-toolbar { top: 212%; z-index: 12; }
+/* 戰鬥手機版：不可隱藏合成確認列；否則選滿三名英雄後無法按下「合成升階」。 */
+.bsv2-board-embedded .bsv2-board-toolbar .bsv2-mode-hint {
+  display: flex;
+  min-height: 23px;
+  padding: 2px 4px;
+  border: 1px solid rgba(255,222,119,.42);
+  border-radius: 6px;
+  background: rgba(15,39,53,.93);
+  color: #fff0b0;
+  box-shadow: 0 1px 4px rgba(3,18,28,.45);
+}
+.bsv2-board-embedded .bsv2-board-toolbar .bsv2-mode-hint > span { min-width: 0; flex: 1; font-size: 8px; line-height: 1.15; }
+.bsv2-board-embedded .bsv2-board-toolbar .bsv2-confirm-btn { min-width: 56px; min-height: 22px; padding: 2px 6px; font-size: 8px; }
+.bsv2-board-embedded .bsv2-board-toolbar .bsv2-confirm-btn:disabled { opacity: .56; }
+.bsv2-battle-stage.is-combined-scene .bsv2-route-lane.is-active::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 7%;
+  bottom: 6%;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(255,245,177,0), rgba(255,232,103,.64) 22%, rgba(100,220,185,.52) 72%, rgba(255,245,177,0));
+  box-shadow: 0 0 5px rgba(255,223,102,.58);
+  pointer-events: none;
+}
+.bsv2-battle-stage.is-combined-scene .bsv2-route-lane.is-active::after {
+  content: "◆";
+  position: absolute;
+  z-index: 2;
+  top: 8%;
+  left: 50%;
+  color: #fff4a5;
+  font-size: 10px;
+  line-height: 1;
+  text-shadow: 0 0 5px rgba(255,211,82,.92), 0 1px 2px rgba(21,62,55,.85);
+  transform: translateX(-50%);
+  animation: bsv2CitadelRouteAdvance 1.45s linear infinite;
+  pointer-events: none;
+}
+@keyframes bsv2CitadelRouteAdvance {
+  0% { opacity: 0; transform: translate(-50%, -4px) scale(.74) rotate(0deg); }
+  15% { opacity: .96; }
+  82% { opacity: .96; }
+  100% { opacity: 0; transform: translate(-50%, 118px) scale(1.15) rotate(45deg); }
+}
+.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate {
+  bottom: 6%;
+  width: 122px;
+  min-height: 31px;
+  padding: 4px 7px;
+  gap: 5px;
+  border: 1px solid rgba(255,231,144,.88);
+  border-radius: 8px;
+  background: rgba(26,86,90,.91);
+  box-shadow: inset 0 1px rgba(230,255,221,.42), 0 2px 0 rgba(16,53,55,.72), 0 3px 8px rgba(12,32,33,.38);
+}
+.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate>svg { flex: 0 0 auto; color: #ffe68b; filter: drop-shadow(0 1px 1px rgba(5,31,33,.75)); }
+.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate div { display: grid; grid-template-columns: auto 1fr; column-gap: 3px; min-width: 0; flex: 1; }
+.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate span { color: #d9f4e7; font-size: 7px; font-weight: 900; line-height: 1; white-space: nowrap; }
+.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate strong { color: #fff4be; font-size: 9px; line-height: 1; text-align: right; }
+.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate i { grid-column: 1 / -1; display: block; height: 3px; margin-top: 3px; overflow: hidden; border-radius: 999px; background: rgba(7,40,42,.72); }
+.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate i b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#ffdb70,#f09a49); box-shadow: 0 0 4px rgba(255,218,104,.7); }
+@media (min-height: 820px) { .bsv2-battle-stage.is-combined-scene { --scene-ui-reserve: 165px; } }
+@media (max-width: 480px) and (max-height: 760px) {
+  .bsv2-battle-stage.is-combined-scene { --scene-ui-reserve: 185px; border-radius: 14px; }
+  .bsv2-battle-stage.is-combined-scene .bsv2-castle-gate { width: 110px; min-height: 27px; padding: 3px 5px; }
+  .bsv2-battle-stage.is-combined-scene .bsv2-castle-gate span { font-size: 6px; }
+  .bsv2-battle-stage.is-combined-scene .bsv2-castle-gate strong { font-size: 8px; }
+  .bsv2-battle-stage.is-combined-scene .bsv2-route-lane.is-active::after { font-size: 8px; }
+  .bsv2-board-embedded .bsv2-cell-hp { height: 2px; }
+}

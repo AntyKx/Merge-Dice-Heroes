@@ -129,7 +129,9 @@ export function createRun({ selectedHeroes, leaderHeroId, adapter }: CreateRunPa
     talents: [],
     blessings: [],
     equipment,
+    comboHistory: [],
     pendingComboChoices: [],
+    initialFreeRandomSummonAvailable: true,
     pendingHeroChoice: false,
     pendingFreeMerge: false,
     pendingJackpotTierUp: false,
@@ -210,7 +212,13 @@ export function chooseComboEffect(run: RunState, kind: DiceComboKind, adapter: M
   if (run.phase !== "DICE_RESOLVE") return run;
   const choice = run.pendingComboChoices.find((entry) => entry.kind === kind);
   if (!choice) return run;
-  let next: RunState = { ...run, phase: "PREPARATION", pendingComboChoices: [], message: `骰型成立：${kind}。` };
+  let next: RunState = {
+    ...run,
+    phase: "PREPARATION",
+    pendingComboChoices: [],
+    comboHistory: [...run.comboHistory, { kind, wave: run.wave }],
+    message: `骰型成立：${kind}。`,
+  };
   const { effect } = choice;
   if (effect.kind === "gainFateEnergy") next = { ...next, fateEnergy: gainEnergy(next.fateEnergy, effect.amount) };
   else if (effect.kind === "summonRandom") for (let i = 0; i < effect.count; i += 1) next = summonRandomFromRoster(next, adapter, random);
@@ -254,7 +262,12 @@ export function chooseJackpotTierUpTarget(run: RunState, cellKey: ReturnType<typ
 // ---------------------------------------------------------------------------
 
 export function spendEnergyForRandomSummon(run: RunState, adapter: MetaProgressionAdapter, random: () => number = Math.random): RunState {
-  if (run.phase !== "PREPARATION" || !canAfford(run.fateEnergy, RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost)) return run;
+  if (run.phase !== "PREPARATION") return run;
+  if (run.initialFreeRandomSummonAvailable) {
+    const summoned = summonRandomFromRoster(run, adapter, random);
+    return { ...summoned, initialFreeRandomSummonAvailable: false, message: "開局免費隨機召喚完成！" };
+  }
+  if (!canAfford(run.fateEnergy, RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost)) return run;
   const spent = { ...run, fateEnergy: spendEnergy(run.fateEnergy, RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost) };
   return summonRandomFromRoster(spent, adapter, random);
 }

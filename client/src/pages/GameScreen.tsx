@@ -1,5 +1,5 @@
 /** 精靈骰塔劇場：垂直舞台卷軸介面，命運青綠標示可操作決策，戰鬥規則完全由 game/ 引擎掌管。 */
-/* Design reminder: a bright, original hand-painted chibi castle courtyard is the fixed scenic stage; mobile HUD, progress, and compact actions must stay legible without covering the focal castle. */
+/* Design reminder: a bright royal-blue chibi castle is the fixed scenic stage; mobile HUD, progress, and compact actions must stay legible without covering the focal castle. */
 import { useEffect, useRef, useState } from "react";
 import "./shopEnhancements.css";
 import "./lobbyCompact.css";
@@ -17,7 +17,7 @@ import "./asterVowUiSkin.css";
 import "./profileScreen.css";
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Info, Lock, Menu, Music2, PackageOpen, Pencil, Play, ScrollText, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, UserRound, Volume2, X, Zap } from "lucide-react";
 import BattleScreenV2 from "./BattleScreenV2";
-import { DAILY_QUESTS, DICE_COMBINATIONS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS } from "@/game/config";
+import { DAILY_QUESTS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS } from "@/game/config";
 import { HERO_BOARD_LAYOUT } from "@/game/heroBoardLayout";
 import { HERO_FRAME_SHEETS, HeroFrameSprite, type HeroAnimationAction } from "@/game/heroSprites";
 import { getHeroProgress, heroXpRequirement } from "@/game/heroProgress";
@@ -29,6 +29,7 @@ const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
 const HEROES_URL = "/manus-storage/merge-dice-heroes-characters_e2aafd6a.png";
 const CUTE_LOBBY_BACKGROUND_URL = "/manus-storage/merge-dice-heroes-chibi-castle-courtyard_9bec38cf.png";
+const LOBBY_BACKGROUND_URL = "/manus-storage/royal-blue-castle_91f126b8.webp";
 const STORY_STAGE_FRAME_URL = "/manus-storage/astervow-story-stage-frame-ultra-slim_f3d08c10.png";
 const HUD_RESOURCE_ICON_URLS = {
   coins: "/manus-storage/astervow-hud-coin_72c66ed6.png",
@@ -85,6 +86,18 @@ const ASTERVOW_ICON_URLS = {
   expedition: "/manus-storage/expedition_a43a1129.png",
   forge: "/manus-storage/forge_195bcb52.png",
 } as const;
+
+const DICE_CODEX_ENTRIES = [
+  { label: "無組合", tag: "基礎", effect: "＋1 命運能量", note: "可投入隨機或指定召喚。" },
+  { label: "一對", tag: "立即", effect: "隨機召喚 1 名英雄", note: "英雄會進入棋盤或待命區。" },
+  { label: "兩對", tag: "立即", effect: "隨機召喚 2 名英雄", note: "快速補足戰線。" },
+  { label: "三條", tag: "指定", effect: "指定召喚 1 名英雄", note: "從目前編組選擇職業。" },
+  { label: "小順子", tag: "本波", effect: "攻速＋15%", note: "僅在本波自動戰鬥有效。" },
+  { label: "大順子", tag: "本波", effect: "攻速＋20%、傷害＋10%", note: "僅在本波自動戰鬥有效。" },
+  { label: "葫蘆", tag: "特殊", effect: "下次合成僅需 2 名", note: "需選相同職業、相同 T 階。" },
+  { label: "四條", tag: "特殊", effect: "隊長爆發立即就緒", note: "依隊長爆發規則施放。" },
+  { label: "五條", tag: "特殊", effect: "指定 T1／T2 直接升階", note: "同時讓隊長爆發就緒。" },
+] as const;
 
 type LobbyWeather = "day" | "night";
 type ScenePreviewMode = "auto" | LobbyWeather;
@@ -372,7 +385,7 @@ function TitleScreen() {
     window.setTimeout(() => setUnlockingChapterIndex(null), 760);
   };
   return <section className={`lobby-screen cute-hub-lobby weather-${weather} banner-${bannerStyle} ${departing ? "is-departing" : ""}`}>
-    <div className="cute-hub-art" style={{ backgroundImage: `url(${CUTE_LOBBY_BACKGROUND_URL})` }} aria-hidden="true" />
+    <div className="cute-hub-art" style={{ backgroundImage: `url(${LOBBY_BACKGROUND_URL})` }} aria-hidden="true" />
     <header className="cute-hub-hud" aria-label="玩家資源">
       <button className="cute-level cute-level--has-avatar" onClick={() => openScreen("profile")} aria-label={`${progress.playerName}，等級 ${playerLevel}，查看玩家檔案`}>
         <span className="cute-level__avatar">{HERO_PORTRAITS[leaderId] ? <img src={HERO_PORTRAITS[leaderId]} alt="" /> : <UserRound size={16} />}</span>
@@ -717,7 +730,7 @@ function ProfileScreen() {
 
 function GuideScreen() {
   const { openScreen } = useGameStore();
-  return <section className="guide-screen"><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />首頁</button><CourtyardSignboard kind="guide" location="星圖檔案亭" title="一局的勝機，從留下一顆骰子開始。" summary="策略圖鑑 · 在出發前熟悉命運骰、召喚與守城規則。" icon={<img className="sign-logo-crest" src={LOGO_URL} alt="" />} /><div className="guide-cards"><article><span className="guide-icon dice-icon">⚄</span><h3>1. 留骰與重骰</h3><p>每波有五顆骰與兩次重骰。先點選鎖定值得保留的點數，再重骰其餘骰子。兩回合無組合後，下一回合會保證至少一對。</p></article><article><span className="guide-icon"><Sparkles size={24} /></span><h3>2. 召喚與合成</h3><p>骰型帶來召喚、隊長技或強化。三名同職、同階英雄點選後合成，T1 變 T2，T2 變 T3。棋盤滿時會轉成重整能量。</p></article><article><span className="guide-icon"><Swords size={24} /></span><h3>3. 守住十波</h3><p>英雄會自動迎敵。第 3、6、9 波後從三項天賦中選擇一項；第 10 波以雙階段 Boss 作為終幕。城堡生命歸零即失敗。</p></article></div><h3 className="dice-guide-heading">骰型一覽</h3><div className="combo-table">{Object.values(DICE_COMBINATIONS).slice().reverse().map((combo) => <div key={combo.kind}><b>{combo.label}</b><span>{combo.description}</span></div>)}</div><button className="primary-cta wide-cta" onClick={() => openScreen("team")}><Play size={17} fill="currentColor" />現在開演</button></section>;
+  return <section className="guide-screen"><button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />首頁</button><CourtyardSignboard kind="guide" location="星圖檔案亭" title="命運骰收藏圖鑑" summary="策略圖鑑 · 選擇前了解每種骰型的立即效果、持續效果與操作條件。" icon={<img className="sign-logo-crest" src={LOGO_URL} alt="" />} /><div className="guide-cards"><article><span className="guide-icon dice-icon">⚄</span><h3>1. 留骰與重骰</h3><p>每波有五顆骰與兩次重骰。先點選鎖定值得保留的點數，再重骰其餘骰子。兩回合無組合後，下一回合會保證至少一對。</p></article><article><span className="guide-icon"><Sparkles size={24} /></span><h3>2. 召喚與合成</h3><p>骰型帶來召喚、隊長技或強化。三名同職、同階英雄點選後合成，T1 變 T2，T2 變 T3。棋盤滿時會轉成重整能量。</p></article><article><span className="guide-icon"><Swords size={24} /></span><h3>3. 守住十波</h3><p>英雄會自動迎敵。第 3、6、9 波後從三項天賦中選擇一項；第 10 波以雙階段 Boss 作為終幕。城堡生命歸零即失敗。</p></article></div><h3 className="dice-guide-heading">全部骰型 · 效果收藏</h3><div className="combo-table dice-codex-table">{DICE_CODEX_ENTRIES.map((combo) => <div key={combo.label}><b>{combo.label}<i>{combo.tag}</i></b><span><strong>{combo.effect}</strong>{combo.note}</span></div>)}</div><button className="primary-cta wide-cta" onClick={() => openScreen("team")}><Play size={17} fill="currentColor" />現在開演</button></section>;
 }
 
 export default function GameScreen() {

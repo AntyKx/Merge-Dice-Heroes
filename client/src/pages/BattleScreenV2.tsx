@@ -11,7 +11,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import "./battleScreenV2.css";
-import { ChevronLeft, Coins, Dices, Gift, Heart, Lock, Pause, Play, RotateCcw, Shield, Sparkles, Swords, X, Zap } from "lucide-react";
+import { ChevronDown, ChevronLeft, Coins, Dices, Gift, Heart, Lock, Pause, Play, RotateCcw, Shield, Sparkles, Swords, X, Zap } from "lucide-react";
 import { ENEMIES, HEROES } from "@/game/config";
 import { HERO_BOARD_LAYOUT } from "@/game/heroBoardLayout";
 import { HERO_FRAME_SHEETS, HeroFrameSprite } from "@/game/heroSprites";
@@ -27,6 +27,7 @@ import type {
   DiceComboEffect,
   DiceComboKind,
   HeroInstance,
+  HeroTier,
   RunState,
   TalentDefinition,
   WaveDefinition,
@@ -81,6 +82,21 @@ function describeComboEffect(effect: DiceComboEffect): string {
   }
 }
 
+function previewComboEffect(effect: DiceComboEffect): { tag: string; value: string; followUp: string } {
+  switch (effect.kind) {
+    case "gainFateEnergy": return { tag: "立即獲得", value: `＋${effect.amount} 命運能量`, followUp: "可用於隨機或指定召喚。" };
+    case "summonRandom": return { tag: "立即召喚", value: `＋${effect.count} 名隨機英雄`, followUp: "英雄會加入棋盤或待命區。" };
+    case "summonChosen": return { tag: "下一步", value: "指定 1 名英雄", followUp: "從目前編組中選擇要召喚的職業。" };
+    case "combatBuff": {
+      const buffs = [effect.attackSpeedPct ? `攻速＋${Math.round(effect.attackSpeedPct * 100)}%` : "", effect.damagePct ? `傷害＋${Math.round(effect.damagePct * 100)}%` : ""].filter(Boolean).join("、");
+      return { tag: "本波增益", value: buffs, followUp: "僅在本波自動戰鬥期間有效。" };
+    }
+    case "freeMergeWithTwo": return { tag: "持續效果", value: "下次合成僅需 2 名", followUp: "選兩名相同職業、相同 T 階英雄即可升階。" };
+    case "leaderBurstReady": return { tag: "隊長爆發", value: "立即就緒", followUp: "開戰後可依隊長規則觸發爆發。" };
+    case "jackpotTierUp": return { tag: "下一步", value: "指定 T1／T2 直接升階", followUp: "同時使隊長爆發立即就緒。" };
+  }
+}
+
 function heroLabel(heroId: HeroId) {
   const definition = HEROES[heroId];
   return { name: definition.name, color: definition.color, icon: definition.icon };
@@ -107,13 +123,31 @@ function Bsv2Header({ run }: { run: RunState }) {
   const openScreen = useGameStore((state) => state.openScreen);
   const togglePause = useGameStore((state) => state.togglePause);
   const isPaused = useGameStore((state) => state.isPaused);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const ratio = run.castle.hp / run.castle.maxHp;
   return <header className="bsv2-header">
     <button className="bsv2-icon-btn" onClick={() => openScreen("title")} aria-label="離開本局"><ChevronLeft size={18} /></button>
     <div className="bsv2-castle"><Heart size={14} fill="currentColor" /><div><span>城堡</span><strong>{Math.max(0, Math.round(run.castle.hp))}/{run.castle.maxHp}</strong></div><i><b style={{ width: `${Math.max(0, ratio) * 100}%` }} /></i></div>
     <div className="bsv2-wave"><small>WAVE</small><strong>{String(run.wave).padStart(2, "0")}</strong><span>/ {TOTAL_WAVES}</span></div>
+    <button className={`bsv2-icon-btn bsv2-history-toggle ${historyOpen ? "is-open" : ""}`} onClick={() => setHistoryOpen((open) => !open)} aria-label="查看本局骰型歷程" aria-expanded={historyOpen}><Dices size={16} /></button>
     {run.phase === "COMBAT_RUNNING" && <button className="bsv2-icon-btn" onClick={togglePause} aria-label={isPaused ? "繼續" : "暫停"}>{isPaused ? <Play size={17} fill="currentColor" /> : <Pause size={17} fill="currentColor" />}</button>}
+    {historyOpen && <Bsv2DiceHistory run={run} onClose={() => setHistoryOpen(false)} />}
   </header>;
+}
+
+function Bsv2DiceHistory({ run, onClose }: { run: RunState; onClose: () => void }) {
+  const activeEffects = [
+    run.waveCombatBuff.attackSpeedMultiplier > 1 ? `攻速＋${Math.round((run.waveCombatBuff.attackSpeedMultiplier - 1) * 100)}%` : null,
+    run.waveCombatBuff.damageMultiplier > 1 ? `傷害＋${Math.round((run.waveCombatBuff.damageMultiplier - 1) * 100)}%` : null,
+    run.pendingFreeMerge ? "下一次合成僅需 2 名" : null,
+    run.pendingJackpotTierUp ? "可指定 T1／T2 直接升階" : null,
+    run.leader.burstReady ? "隊長爆發就緒" : null,
+  ].filter(Boolean);
+  return <aside className="bsv2-dice-history" aria-label="本局骰型歷程">
+    <header><span><Dices size={14} />本局骰型</span><button type="button" onClick={onClose} aria-label="收起骰型歷程"><X size={13} /></button></header>
+    {run.comboHistory.length > 0 ? <ol>{run.comboHistory.slice().reverse().map((entry, index) => <li key={`${entry.wave}-${entry.kind}-${index}`}><small>W{entry.wave}</small><b>{COMBO_LABELS[entry.kind]}</b></li>)}</ol> : <p>尚未選擇骰型效果。</p>}
+    <footer><small>目前加成</small>{activeEffects.length > 0 ? <span>{activeEffects.join(" · ")}</span> : <span>尚無持續加成</span>}</footer>
+  </aside>;
 }
 
 // ---------------------------------------------------------------------------
@@ -122,7 +156,7 @@ function Bsv2Header({ run }: { run: RunState }) {
 // and enemy/Block markers overlaid on top of it.
 // ---------------------------------------------------------------------------
 
-const BATTLEFIELD_BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
+const FOREST_CASTLE_BOARD_URL = "/manus-storage/forest-citadel-board_4039b3e9.webp";
 
 /** Kept up from Wave Preview through Reward (not just during COMBAT_RUNNING) so the
  * battlefield stays on screen while rolling dice, per user feedback -- the active
@@ -130,15 +164,30 @@ const BATTLEFIELD_BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1
  * the lane) available before any enemy has actually spawned, using the Wave's
  * activeRoutes rather than live waveRuntime data. Inactive lanes are left
  * un-tinted (no more darkening overlay) so the artwork stays readable underneath. */
-function RouteStrip({ waveDefinition, waveRuntime, wave }: { waveDefinition: WaveDefinition | undefined; waveRuntime: WaveRuntimeState | undefined; wave: number }) {
+function RouteStrip({ waveDefinition, waveRuntime, wave, castleHp, castleMaxHp, boardOverlay }: { waveDefinition: WaveDefinition | undefined; waveRuntime: WaveRuntimeState | undefined; wave: number; castleHp: number; castleMaxHp: number; boardOverlay?: React.ReactNode }) {
   const activeRoutes = waveDefinition?.activeRoutes ?? [];
   const liveEnemies = waveRuntime?.routes.flatMap((route) => route.enemies) ?? [];
   const plannedCount = waveDefinition?.batches.reduce((sum, batch) => sum + batch.entries.length, 0) ?? 0;
   const enemyCount = waveRuntime ? liveEnemies.length : plannedCount;
   const isBossWave = !!waveDefinition?.bossEncounter;
-  return <div className="bsv2-battle-stage" style={{ backgroundImage: `linear-gradient(180deg, rgba(10,14,22,.18), rgba(10,14,22,.05)), url(${BATTLEFIELD_BACKDROP_URL})` }} aria-label="戰場">
+  const nextWaveDefinition = WAVE_DEFINITIONS[wave];
+  const summarizeEnemies = (definition: WaveDefinition | undefined) => {
+    const counts = new Map<string, number>();
+    definition?.batches.forEach((batch) => batch.entries.forEach((entry) => counts.set(entry.enemyId, (counts.get(entry.enemyId) ?? 0) + 1)));
+    if (definition?.bossEncounter) counts.set(definition.bossEncounter.bossEnemyId, (counts.get(definition.bossEncounter.bossEnemyId) ?? 0) + 1);
+    return Array.from(counts.entries()).map(([enemyId, count]) => ({ name: ENEMIES[enemyId as keyof typeof ENEMIES]?.name ?? enemyId, count }));
+  };
+  const currentSummary = summarizeEnemies(waveDefinition);
+  const nextSummary = summarizeEnemies(nextWaveDefinition);
+  const castleRatio = Math.max(0, castleHp / castleMaxHp);
+  return <div className={`bsv2-battle-stage bsv2-forest-stage ${boardOverlay ? "is-combined-scene" : ""}`} aria-label="森林城堡戰場">
+    <img className="bsv2-scene-art" src={FOREST_CASTLE_BOARD_URL} alt="" aria-hidden="true" />
     <div className="bsv2-stage-copy"><span>第 {wave} 波</span><small>{enemyCount} 名敵人</small></div>
     {isBossWave && <div className="bsv2-boss-warning"><Shield size={13} />Boss 波次</div>}
+    <aside className="bsv2-wave-forecast" aria-label="敵軍波次摘要">
+      <section><span>本波 W{wave}</span><p>{currentSummary.map((enemy) => <i key={enemy.name}>{enemy.name}×{enemy.count}</i>)}</p>{isBossWave && <b><Shield size={10} />Boss</b>}</section>
+      {nextWaveDefinition && <section className={nextWaveDefinition.bossEncounter ? "is-boss" : ""}><span>下波 W{wave + 1}</span><p>{nextSummary.map((enemy) => <i key={enemy.name}>{enemy.name}×{enemy.count}</i>)}</p>{nextWaveDefinition.bossEncounter && <b><Shield size={10} />Boss 預警</b>}</section>}
+    </aside>
     <div className="bsv2-route-strip">
       {ALL_DEFENSE_ZONES.map((zone) => {
         const active = activeRoutes.includes(zone);
@@ -160,7 +209,8 @@ function RouteStrip({ waveDefinition, waveRuntime, wave }: { waveDefinition: Wav
         })}
       </div>
     </div>
-    <div className="bsv2-castle-gate"><Shield size={13} fill="currentColor" /><span>守望堡</span></div>
+    <div className="bsv2-castle-gate" aria-label={`守望堡生命 ${Math.max(0, Math.round(castleHp))}/${castleMaxHp}`}><Shield size={15} fill="currentColor" /><div><span>守望堡生命</span><strong>{Math.max(0, Math.round(castleHp))}/{castleMaxHp}</strong><i><b style={{ width: `${castleRatio * 100}%` }} /></i></div></div>
+    {boardOverlay}
   </div>;
 }
 
@@ -180,8 +230,8 @@ function isRecentlyAttacking(hero: HeroInstance): boolean {
   return hero.attackCooldownRemainingSeconds > interval * 0.75;
 }
 
-function HeroCell({ hero, selected, onClick, disabled }: { hero: HeroInstance | undefined; selected: boolean; onClick: () => void; disabled: boolean }) {
-  if (!hero) return <button className="bsv2-cell is-empty" onClick={onClick} disabled={disabled} aria-label="空格" />;
+function HeroCell({ cellKey, hero, selected, mergeCandidate, repositionTarget, hitAmount, onClick, disabled }: { cellKey: CellKey; hero: HeroInstance | undefined; selected: boolean; mergeCandidate: boolean; repositionTarget: boolean; hitAmount?: number; onClick: () => void; disabled: boolean }) {
+  if (!hero) return <button data-cell-key={cellKey} className="bsv2-cell is-empty" onClick={onClick} disabled={disabled} aria-label="空格" />;
   const label = heroLabel(hero.heroId);
   const hpRatio = Math.max(0, hero.hp / hero.maxHp);
   const action = isRecentlyAttacking(hero) ? "attack" : "idle";
@@ -189,8 +239,9 @@ function HeroCell({ hero, selected, onClick, disabled }: { hero: HeroInstance | 
   const visual = HERO_FRAME_SHEETS[hero.heroId]
     ? <span className={`bsv2-cell-sprite hero-board-sprite hero-${hero.heroId} tier-${hero.tier} is-${action}`}><HeroFrameSprite heroId={hero.heroId} action={action} boardLayout={boardLayout} /></span>
     : <span className="bsv2-cell-icon">{label.icon}</span>;
-  return <button className={`bsv2-cell is-filled ${selected ? "is-selected" : ""} ${hero.status === "downed" ? "is-downed" : ""}`} style={{ "--hero-color": label.color } as React.CSSProperties} onClick={onClick} disabled={disabled} aria-label={`${label.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}`}>
+  return <button data-cell-key={cellKey} className={`bsv2-cell is-filled ${selected ? "is-selected" : ""} ${mergeCandidate ? "is-merge-candidate" : ""} ${repositionTarget ? "is-reposition-target" : ""} ${hitAmount ? "is-hit" : ""} ${hero.status === "downed" ? "is-downed" : ""}`} style={{ "--hero-color": label.color } as React.CSSProperties} onClick={onClick} disabled={disabled} aria-label={`${label.name} T${hero.tier}，生命 ${Math.ceil(hero.hp)}/${hero.maxHp}`}>
     {visual}
+    {hitAmount ? <><i className="bsv2-hit-flash" aria-hidden="true" /><strong className="bsv2-damage-float" aria-hidden="true">-{Math.max(1, Math.round(hitAmount))}</strong></> : null}
     <b className="bsv2-cell-tier">T{hero.tier}</b>
     {hero.shield > 0 && <i className="bsv2-cell-shield"><Shield size={9} fill="currentColor" /></i>}
     {hero.status === "downed" && <span className="bsv2-cell-downed">倒地</span>}
@@ -198,7 +249,7 @@ function HeroCell({ hero, selected, onClick, disabled }: { hero: HeroInstance | 
   </button>;
 }
 
-function Bsv2Board({ board, interactive, pendingJackpotTierUp }: { board: BoardState; interactive: boolean; pendingJackpotTierUp: boolean }) {
+function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false, visualTestFullBoard = false }: { board: BoardState; interactive: boolean; pendingJackpotTierUp: boolean; embedded?: boolean; visualTestFullBoard?: boolean }) {
   const mergeSelection = useGameStore((state) => state.mergeSelection);
   const repositionHero = useGameStore((state) => state.repositionHero);
   const recycleBoardHero = useGameStore((state) => state.recycleBoardHero);
@@ -211,6 +262,38 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp }: { board: BoardS
   const [selectedCells, setSelectedCells] = useState<CellKey[]>([]);
   const [repositionFrom, setRepositionFrom] = useState<CellKey | null>(null);
   const [placingInstanceId, setPlacingInstanceId] = useState<string | null>(null);
+  const [focusedCell, setFocusedCell] = useState<CellKey | null>(null);
+  const [mergeNotice, setMergeNotice] = useState<string | null>(null);
+  const [hitCues, setHitCues] = useState<Partial<Record<CellKey, number>>>({});
+  const previousVitalsRef = useRef<Record<string, { cellKey: CellKey; hp: number; shield: number }>>({});
+  const hitTimerRef = useRef<number[]>([]);
+
+  // Presentation-only cue: the Run Engine remains the authority for HP/Shield.
+  // Comparing consecutive authoritative board snapshots gives the UI a reliable
+  // hit pulse without adding animation state to gameplay data.
+  useEffect(() => {
+    const nextVitals: Record<string, { cellKey: CellKey; hp: number; shield: number }> = {};
+    const incoming: Array<{ cellKey: CellKey; amount: number }> = [];
+    (Object.entries(board.cells) as Array<[CellKey, HeroInstance | undefined]>).forEach(([cellKey, hero]) => {
+      if (!hero) return;
+      const previous = previousVitalsRef.current[hero.instanceId];
+      const damage = previous ? (previous.hp + previous.shield) - (hero.hp + hero.shield) : 0;
+      if (damage > 0.01) incoming.push({ cellKey, amount: damage });
+      nextVitals[hero.instanceId] = { cellKey, hp: hero.hp, shield: hero.shield };
+    });
+    previousVitalsRef.current = nextVitals;
+    incoming.forEach(({ cellKey, amount }) => {
+      setHitCues((current) => ({ ...current, [cellKey]: amount }));
+      const timer = window.setTimeout(() => setHitCues((current) => {
+        const next = { ...current };
+        delete next[cellKey];
+        return next;
+      }), 620);
+      hitTimerRef.current.push(timer);
+    });
+  }, [board]);
+
+  useEffect(() => () => hitTimerRef.current.forEach((timer) => window.clearTimeout(timer)), []);
 
   // Reset all local selection state whenever the board stops being interactive
   // (e.g. leaving PREPARATION for COMBAT_RUNNING) -- adjusted during render per
@@ -226,10 +309,37 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp }: { board: BoardS
     }
   }
 
+  const cap = run?.pendingFreeMerge ? 2 : 3;
+  const pendingRemaining = run ? run.reposition.baseAllowance - run.reposition.usedThisWave : 0;
+  const finishReposition = (fromCellKey: CellKey, toCellKey: CellKey) => {
+    if (fromCellKey === toCellKey || pendingRemaining <= 0) return;
+    repositionHero(fromCellKey, toCellKey);
+    setRepositionFrom(null);
+    setFocusedCell(toCellKey);
+    const remainingAfterMove = pendingRemaining - 1;
+    setMergeNotice(null);
+    if (remainingAfterMove <= 0) setMode(null);
+  };
+
   if (!run) return null;
-  const cap = run.pendingFreeMerge ? 2 : 3;
+
+  const visualTestHeroes = visualTestFullBoard
+    ? BOARD_ROWS.flatMap((row, rowIndex) => ALL_DEFENSE_ZONES.map((zone, zoneIndex) => ({
+        ...run.board.cells[Object.keys(run.board.cells).find((key) => run.board.cells[key as CellKey]) as CellKey]!,
+        instanceId: `visual-test-${row}-${zone}`,
+        heroId: run.selectedHeroes[(rowIndex * ALL_DEFENSE_ZONES.length + zoneIndex) % run.selectedHeroes.length],
+        tier: (((rowIndex + zoneIndex) % 3) + 1) as HeroTier,
+        hp: 72 + ((rowIndex * 11 + zoneIndex * 7) % 28),
+        maxHp: 100,
+        shield: 0,
+        status: "active" as const,
+        attackCooldownRemainingSeconds: 0,
+      })))
+    : null;
 
   const clickCell = (cellKey: CellKey) => {
+    setFocusedCell(cellKey);
+    if (visualTestFullBoard) return;
     if (pendingJackpotTierUp) { chooseJackpotTierUpTarget(cellKey); return; }
     const hero = board.cells[cellKey];
     if (mode === "pendingPlace" && placingInstanceId && !hero) {
@@ -238,25 +348,57 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp }: { board: BoardS
       setMode(null);
       return;
     }
+    if (!hero && mode === "merge") {
+      setSelectedCells([]);
+      setFocusedCell(null);
+      setMergeNotice("已取消選取。");
+      return;
+    }
     if (mode === "recycle" && hero) { recycleBoardHero(cellKey); return; }
     if (mode === "reposition") {
       if (!repositionFrom) { if (hero) setRepositionFrom(cellKey); return; }
-      if (repositionFrom !== cellKey) repositionHero(repositionFrom, cellKey);
-      setRepositionFrom(null);
+      if (repositionFrom === cellKey) { setRepositionFrom(null); setFocusedCell(null); return; }
+      finishReposition(repositionFrom, cellKey);
       return;
     }
     if (mode === "merge" && hero) {
-      if (selectedCells.includes(cellKey)) { setSelectedCells(selectedCells.filter((key) => key !== cellKey)); return; }
-      const anchor = selectedCells[0] ? board.cells[selectedCells[0]] : undefined;
-      if (anchor && (anchor.heroId !== hero.heroId || anchor.tier !== hero.tier)) { setSelectedCells([cellKey]); return; }
-      if (selectedCells.length < cap) setSelectedCells([...selectedCells, cellKey]);
+      setSelectedCells((current) => {
+        if (current.includes(cellKey)) return current.filter((key) => key !== cellKey);
+        const anchor = current[0] ? board.cells[current[0]] : undefined;
+        if (!anchor || (anchor.heroId === hero.heroId && anchor.tier === hero.tier && hero.tier < 3)) return current.length < cap ? [...current, cellKey] : current;
+        return [cellKey];
+      });
+      setMergeNotice(null);
     }
   };
 
-  const confirmMerge = () => { if (selectedCells.length === cap) mergeSelection(selectedCells, selectedCells[0]); setSelectedCells([]); };
-  const pendingRemaining = run.reposition.baseAllowance - run.reposition.usedThisWave;
-
-  return <section className="bsv2-board-section">
+  const mergeAnchor = selectedCells[0] ? board.cells[selectedCells[0]] : undefined;
+  const canConfirmMerge = selectedCells.length === cap
+    && !!mergeAnchor
+    && mergeAnchor.tier < 3
+    && selectedCells.every((cellKey) => {
+      const hero = board.cells[cellKey];
+      return hero?.heroId === mergeAnchor.heroId && hero.tier === mergeAnchor.tier;
+    });
+  const mergeConfirmLabel = canConfirmMerge
+    ? "合成升階"
+    : selectedCells.length === 0
+      ? `需選 ${cap} 名`
+      : `還差 ${Math.max(0, cap - selectedCells.length)} 名`;
+  const confirmMerge = () => {
+    if (!canConfirmMerge) {
+      setMergeNotice(`請選擇 ${cap} 名相同職業、相同 T 階的英雄。`);
+      return;
+    }
+    mergeSelection(selectedCells, selectedCells[0]);
+    setSelectedCells([]);
+    setFocusedCell(null);
+    setMode(null);
+    setMergeNotice(run.pendingFreeMerge ? "兩名免費合成完成！" : "三名合成完成！");
+  };
+  return <section className={`bsv2-board-section bsv2-forest-board ${embedded ? "bsv2-board-embedded" : ""}`}>
+    <div className="bsv2-legacy-board-skin" aria-label="英雄舞台">
+    <div className="bsv2-legacy-board-heading"><span><Swords size={15} />英雄舞台</span><small>{interactive ? "召喚、合成與調度英雄" : "英雄在此守住四條防線"}</small></div>
     {run.pending.heroes.length > 0 && <div className="bsv2-pending-zone" aria-label="待命區">
       <span><Sparkles size={13} />待命區</span>
       {run.pending.heroes.map((hero) => { const label = heroLabel(hero.heroId); return <button key={hero.instanceId} className={`bsv2-pending-card ${placingInstanceId === hero.instanceId ? "is-selected" : ""}`} style={{ "--hero-color": label.color } as React.CSSProperties} disabled={!interactive} onClick={() => { setMode("pendingPlace"); setPlacingInstanceId(hero.instanceId); }}><b>{label.icon}</b><small>{label.name} T{hero.tier}</small></button>; })}
@@ -265,22 +407,28 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp }: { board: BoardS
 
     {pendingJackpotTierUp && <p className="bsv2-mode-banner is-jackpot"><Sparkles size={14} />五條就緒！點選一名 T1/T2 英雄直接升階。</p>}
 
-    <div className="bsv2-board-grid">
-      {BOARD_ROWS.map((row) => ALL_DEFENSE_ZONES.map((zone) => {
+    <div className={`bsv2-board-grid ${mode === "reposition" ? "is-repositioning" : ""}`}>
+      {BOARD_ROWS.map((row, rowIndex) => ALL_DEFENSE_ZONES.map((zone) => {
         const cellKey = boardCellKey({ zone, row });
-        return <HeroCell key={cellKey} hero={board.cells[cellKey]} selected={selectedCells.includes(cellKey) || repositionFrom === cellKey} onClick={() => clickCell(cellKey)} disabled={!interactive && !pendingJackpotTierUp} />;
+        const testHero = visualTestHeroes?.[rowIndex * ALL_DEFENSE_ZONES.length + (zone - 1)];
+        const hero = testHero ?? board.cells[cellKey];
+        const mergeCandidate = mode === "merge" && !!hero && !selectedCells.includes(cellKey) && (!mergeAnchor || (mergeAnchor.heroId === hero.heroId && mergeAnchor.tier === hero.tier && hero.tier < 3));
+        const repositionTarget = mode === "reposition" && !!repositionFrom && repositionFrom !== cellKey;
+        return <HeroCell key={cellKey} cellKey={cellKey} hero={hero} selected={focusedCell === cellKey || selectedCells.includes(cellKey) || repositionFrom === cellKey} mergeCandidate={mergeCandidate} repositionTarget={repositionTarget} hitAmount={hitCues[cellKey]} onClick={() => clickCell(cellKey)} disabled={visualTestFullBoard ? false : !interactive && !pendingJackpotTierUp} />;
       }))}
+    </div>
     </div>
 
     {interactive && !pendingJackpotTierUp && <div className="bsv2-board-toolbar">
       <div className="bsv2-mode-buttons">
-        <button className={mode === "merge" ? "is-active" : ""} onClick={() => { setMode(mode === "merge" ? null : "merge"); setSelectedCells([]); }}><Sparkles size={14} />合成</button>
-        <button className={mode === "reposition" ? "is-active" : ""} onClick={() => { setMode(mode === "reposition" ? null : "reposition"); setRepositionFrom(null); }}>調度 {pendingRemaining}</button>
+        <button className={mode === "merge" ? "is-active" : ""} onClick={() => { setMode(mode === "merge" ? null : "merge"); setSelectedCells([]); setMergeNotice(null); }}><Sparkles size={14} />合成</button>
+        <button className={mode === "reposition" ? "is-active" : ""} disabled={pendingRemaining <= 0} onClick={() => { setMode(mode === "reposition" ? null : "reposition"); setRepositionFrom(null); setMergeNotice(null); }}>調度 {pendingRemaining}</button>
         <button className={mode === "recycle" ? "is-active" : ""} onClick={() => setMode(mode === "recycle" ? null : "recycle")}><X size={14} />回收</button>
         {pendingRemaining <= 0 && <button className="bsv2-buy-reposition" disabled={!run || run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost} onClick={buyExtraReposition}>+1 調度 ({RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost})</button>}
       </div>
-      {mode === "merge" && <div className="bsv2-mode-hint"><span>已選 {selectedCells.length}/{cap} 名{run.pendingFreeMerge ? "（葫蘆：僅需 2 名）" : ""}</span><button className="bsv2-confirm-btn" disabled={selectedCells.length !== cap} onClick={confirmMerge}>合成升階</button></div>}
-      {mode === "reposition" && <p className="bsv2-mode-hint">{repositionFrom ? "點選目標空格或英雄以交換" : "點選要移動的英雄"}</p>}
+      {mode === "merge" && <div className="bsv2-mode-hint"><span>點選 {cap} 名相同職業、相同 T 階：{selectedCells.length}/{cap} 名{run.pendingFreeMerge ? "（葫蘆免費合成）" : ""}</span><button className="bsv2-confirm-btn" disabled={!canConfirmMerge} onClick={confirmMerge}>{mergeConfirmLabel}</button></div>}
+      {mergeNotice && <p className="bsv2-merge-notice" role="status">{mergeNotice}</p>}
+      {mode === "reposition" && <p className="bsv2-mode-hint">{repositionFrom ? "點選目標格或另一名英雄，立即換位並扣除 1 次。" : "點選一名英雄，再點選目標格即可換位。"}</p>}
       {mode === "recycle" && <p className="bsv2-mode-hint">點選棋盤英雄立即回收，換取命運能量。</p>}
     </div>}
   </section>;
@@ -324,9 +472,24 @@ function Bsv2Dice({ run }: { run: RunState }) {
 function Bsv2ComboChoice({ run }: { run: RunState }) {
   const chooseComboEffect = useGameStore((state) => state.chooseComboEffect);
   const choices = run.pendingComboChoices.filter((choice: DiceComboDefinition) => choice.kind !== "NONE" || run.pendingComboChoices.length === 1);
+  const [celebration, setCelebration] = useState<DiceComboKind | null>(null);
+  const choose = (kind: DiceComboKind) => {
+    if (kind !== "FULL_HOUSE" && kind !== "FIVE_KIND") { chooseComboEffect(kind); return; }
+    setCelebration(kind);
+    window.setTimeout(() => chooseComboEffect(kind), 760);
+  };
   return <section className="bsv2-panel bsv2-combo-choice">
     <h2>命運已定，選擇一項效果</h2>
-    <div className="bsv2-combo-list">{choices.map((choice) => <button key={choice.kind} className="bsv2-combo-card" onClick={() => chooseComboEffect(choice.kind)}><b>{COMBO_LABELS[choice.kind]}</b><span>{describeComboEffect(choice.effect)}</span></button>)}</div>
+    <div className="bsv2-combo-list">{choices.map((choice) => {
+      const preview = previewComboEffect(choice.effect);
+      return <button key={choice.kind} className="bsv2-combo-card" disabled={celebration !== null} onClick={() => choose(choice.kind)}>
+        <span className="bsv2-combo-heading"><b>{COMBO_LABELS[choice.kind]}</b><i>{preview.tag}</i></span>
+        <strong>{preview.value}</strong>
+        <span className="bsv2-combo-summary">{describeComboEffect(choice.effect)}</span>
+        <small>{preview.followUp}</small>
+      </button>;
+    })}</div>
+    {celebration && <div className={`bsv2-special-combo-flare is-${celebration.toLowerCase()}`} role="status" aria-live="polite"><span>{celebration === "FULL_HOUSE" ? "葫蘆成立" : "五條大獎"}</span><b>{celebration === "FULL_HOUSE" ? "下一次合成僅需兩名" : "指定英雄直接升階"}</b><i>{celebration === "FULL_HOUSE" ? "◇ ◇ ◇" : "✦ ✦ ✦"}</i></div>}
   </section>;
 }
 
@@ -340,14 +503,23 @@ function Bsv2Preparation({ run }: { run: RunState }) {
   const confirmFormation = useGameStore((state) => state.confirmFormation);
   const [pickingHero, setPickingHero] = useState(false);
   const ready = run.pending.heroes.length === 0 && !run.pendingHeroChoice && !run.pendingFreeMerge && !run.pendingJackpotTierUp;
+  const hasOpeningSummon = run.initialFreeRandomSummonAvailable;
   return <section className="bsv2-panel bsv2-preparation">
     <div className="bsv2-energy-row"><Coins size={15} /><span>命運能量</span><strong>{run.fateEnergy.current}/{run.fateEnergy.max}</strong></div>
     <div className="bsv2-action-row">
-      <button className="bsv2-secondary-btn" disabled={run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost} onClick={spendEnergyForRandomSummon}><Zap size={14} />隨機召喚 ({RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost})</button>
+      <button className="bsv2-secondary-btn" disabled={!hasOpeningSummon && run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost} onClick={spendEnergyForRandomSummon}><Zap size={14} />{hasOpeningSummon ? "開局隨機召喚（免費）" : `隨機召喚 (${RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost})`}</button>
       <button className="bsv2-secondary-btn" disabled={run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost} onClick={() => setPickingHero(true)}><Sparkles size={14} />指定召喚 ({RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost})</button>
     </div>
     {pickingHero && <div className="bsv2-hero-pick-row">{run.selectedHeroes.map((heroId) => <HeroPickCard key={heroId} heroId={heroId} onClick={() => { spendEnergyForChosenSummon(heroId); setPickingHero(false); }} />)}<button className="bsv2-cancel-pick" onClick={() => setPickingHero(false)}><X size={14} /></button></div>}
     <button className="bsv2-primary-btn bsv2-battle-btn" disabled={!ready} onClick={confirmFormation}><Swords size={16} />確認陣型，開戰！</button>
+  </section>;
+}
+
+function Bsv2BattleLog({ message }: { message: string }) {
+  const [expanded, setExpanded] = useState(false);
+  return <section className={`bsv2-battle-log ${expanded ? "is-expanded" : ""}`} aria-label="戰鬥 Log">
+    <button type="button" onClick={() => setExpanded((open) => !open)} aria-expanded={expanded} aria-controls="battle-log-message"><Gift size={12} /><span>戰鬥 Log</span><ChevronDown size={13} /></button>
+    {expanded && <p id="battle-log-message">{message}</p>}
   </section>;
 }
 
@@ -457,17 +629,20 @@ export default function BattleScreenV2() {
   if (!run) return null;
 
   const boardInteractive = run.phase === "PREPARATION";
+  const visualTestFullBoard = import.meta.env.DEV && new URLSearchParams(window.location.search).has("fullBoardPreview");
   const waveDefinition = WAVE_DEFINITIONS[run.wave - 1];
+  const boardInScene = (run.phase === "PREPARATION" || run.phase === "COMBAT_RUNNING" || run.phase === "REWARD_RESOLVE")
+    ? <Bsv2Board board={run.board} interactive={boardInteractive} pendingJackpotTierUp={run.pendingJackpotTierUp} embedded visualTestFullBoard={visualTestFullBoard} />
+    : undefined;
 
   return <section className="bsv2-screen">
     <Bsv2Header run={run} />
-    <RouteStrip waveDefinition={waveDefinition} waveRuntime={run.waveRuntime} wave={run.wave} />
+    <RouteStrip waveDefinition={waveDefinition} waveRuntime={run.waveRuntime} wave={run.wave} castleHp={run.castle.hp} castleMaxHp={run.castle.maxHp} boardOverlay={boardInScene} />
     {run.phase === "WAVE_PREVIEW" && <Bsv2WavePreview run={run} />}
     {run.phase === "DICE_DECISION" && <Bsv2Dice run={run} />}
     {run.phase === "DICE_RESOLVE" && <Bsv2ComboChoice run={run} />}
-    {(run.phase === "PREPARATION" || run.phase === "COMBAT_RUNNING" || run.phase === "REWARD_RESOLVE") && <Bsv2Board board={run.board} interactive={boardInteractive} pendingJackpotTierUp={run.pendingJackpotTierUp} />}
     {run.phase === "PREPARATION" && <Bsv2Preparation run={run} />}
-    <p className="bsv2-message"><Gift size={13} />{run.message}</p>
+    <Bsv2BattleLog message={run.message} />
     <Bsv2HeroChoiceOverlay run={run} />
     <Bsv2RewardOverlay run={run} />
     <Bsv2PauseOverlay />

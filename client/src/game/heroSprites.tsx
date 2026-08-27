@@ -5,7 +5,7 @@
  * into its own module specifically so BattleScreenV2.tsx can import it without
  * creating a circular import between the two page components.
  *
- * Assets are bundled locally under client/public/manus-storage/hero-sheet-*.png
+ * Assets are bundled locally under client/public/hero-sheets/hero-sheet-*.png
  * (git-tracked, regenerated via scripts/build_hero_sheets.py from the raw
  * per-frame source PNGs in the untracked 素材/英雄圖/<hero>/individual/ folders).
  * They used to live on Manus's "external storage" instead, reached through a
@@ -25,16 +25,16 @@ type HeroFrameSheet = { source: string; totalFrames: number; actions: Record<Her
 
 type ExternalHeroSheetId = Exclude<HeroId, "archer">;
 const HERO_SHEET_URLS: Record<ExternalHeroSheetId, string> = {
-  assassin: "/manus-storage/hero-sheet-assassin.png",
-  bard: "/manus-storage/hero-sheet-bard.png",
-  deathKnight: "/manus-storage/hero-sheet-deathKnight.png",
-  engineer: "/manus-storage/hero-sheet-engineer.png",
-  fighter: "/manus-storage/hero-sheet-fighter.png",
-  fireMage: "/manus-storage/hero-sheet-fireMage.png",
-  frostQueen: "/manus-storage/hero-sheet-frostQueen.png",
-  knight: "/manus-storage/hero-sheet-knight.png",
-  priest: "/manus-storage/hero-sheet-priest.png",
-  ranger: "/manus-storage/hero-sheet-ranger.png",
+  assassin: "/hero-sheets/hero-sheet-assassin.png",
+  bard: "/hero-sheets/hero-sheet-bard.png",
+  deathKnight: "/hero-sheets/hero-sheet-deathKnight.png",
+  engineer: "/hero-sheets/hero-sheet-engineer.png",
+  fighter: "/hero-sheets/hero-sheet-fighter.png",
+  fireMage: "/hero-sheets/hero-sheet-fireMage.png",
+  frostQueen: "/hero-sheets/hero-sheet-frostQueen.png",
+  knight: "/hero-sheets/hero-sheet-knight.png",
+  priest: "/hero-sheets/hero-sheet-priest.png",
+  ranger: "/hero-sheets/hero-sheet-ranger.png",
 };
 const heroSheet = (heroId: ExternalHeroSheetId): HeroFrameSheet => ({ source: HERO_SHEET_URLS[heroId], totalFrames: 20, actions: { idle: { start: 0, count: 6 }, attack: { start: 6, count: 5 }, skill: { start: 11, count: 3 }, move: { start: 14, count: 6 } } });
 

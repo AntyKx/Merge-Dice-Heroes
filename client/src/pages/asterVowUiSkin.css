@@ -893,6 +893,18 @@
 }
 .skin-dungeon .dungeon-help-panel b { display: block; font-size: 12px; }
 .skin-dungeon .dungeon-help-panel p { margin: 5px 0 0; color: #806894; font-size: 10px; line-height: 1.55; }
+
+/* Shared subpage action rhythm: every compact action uses the same 8px breathing room,
+   34px touch height, and centred baseline so the three illustrated screens scan evenly. */
+.skin-equipment .equipment-actions { gap: 8px; margin-top: 8px; }
+.skin-equipment .equipment-actions .astervow-btn,
+.skin-shop .shop-list .astervow-btn,
+.skin-dungeon .dungeon-list .astervow-btn { min-height: 34px; }
+.skin-shop .shop-toolbar { column-gap: 8px; }
+.skin-shop .shop-list article { column-gap: 10px; }
+.skin-shop .shop-list .astervow-btn { min-width: 58px; align-self: center; justify-self: end; }
+.skin-dungeon .dungeon-list article footer { gap: 8px; min-height: 34px; margin-top: 8px; }
+.skin-dungeon .dungeon-list article footer .astervow-btn { flex: 0 0 66px; }
 @media (prefers-reduced-motion: no-preference) {
   .skin-dungeon .dungeon-help-overlay { animation: dungeon-help-fade 160ms var(--ease-out) both; }
   .skin-dungeon .dungeon-help-panel { animation: dungeon-help-rise 180ms var(--ease-out) both; }
@@ -930,6 +942,55 @@
 .skin-dungeon .dungeon-drop-preview b { overflow: hidden; color: #614b72; font-size: 8px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .skin-dungeon .dungeon-drop-preview em { margin-left: auto; color: #8e5e9e; font-size: 7px; font-style: normal; font-weight: 900; white-space: nowrap; }
 .skin-dungeon .dungeon-list article:has(.dungeon-unlock-note) { min-height: 123px; }
+
+/* Compact trial catalogue: each gate is an information-dense row so standard, event, and
+   future seasonal gates can share the list without forcing oversized cards off the first fold. */
+.skin-dungeon .dungeon-list { gap: 6px; }
+.skin-dungeon .dungeon-list article {
+  min-height: 0;
+  padding: 7px 9px;
+  gap: 6px;
+}
+.skin-dungeon .dungeon-list article > div > b { font-size: 12px; line-height: 1.15; }
+.skin-dungeon .dungeon-list article > div > p:not(.dungeon-unlock-note) {
+  display: -webkit-box;
+  margin: 1px 0;
+  overflow: hidden;
+  font-size: 9px;
+  line-height: 1.18;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+.skin-dungeon .dungeon-list article > div > small { font-size: 8px; line-height: 1.2; }
+.skin-dungeon .dungeon-rule { display: inline-flex; align-items: center; gap: 3px; margin-left: 5px; font-size: 8px; line-height: 1.2; }
+.skin-dungeon .dungeon-rule .astervow-icon { width: 11px; height: 11px; }
+.skin-dungeon .dungeon-drop-preview { min-height: 24px; gap: 4px; margin-top: 4px; padding: 3px 5px; }
+.skin-dungeon .dungeon-drop-preview > img { width: 14px; height: 14px; }
+.skin-dungeon .dungeon-drop-preview span { display: flex; align-items: baseline; gap: 4px; }
+.skin-dungeon .dungeon-drop-preview small,.skin-dungeon .dungeon-drop-preview b,.skin-dungeon .dungeon-drop-preview em { font-size: 7px; }
+.skin-dungeon .dungeon-list article footer { min-height: 30px; margin-top: 5px; }
+.skin-dungeon .dungeon-list article footer span { font-size: 8px; }
+.skin-dungeon .dungeon-list article footer .astervow-btn { flex-basis: 62px; min-height: 30px; padding: 3px 5px; font-size: 9px; }
+.skin-dungeon .dungeon-list article:has(.dungeon-unlock-note) { min-height: 0; }
+.skin-dungeon .dungeon-unlock-note { margin: 3px 0 1px; font-size: 7px !important; line-height: 1.15 !important; }
+
+/* 447px portrait correction: force both content rows to fit their real contents instead of
+   stretching inside the nine-slice frame, then give the violet CTA enough horizontal room. */
+.skin-dungeon .dungeon-list article {
+  grid-auto-rows: max-content;
+  align-content: start;
+  align-items: start;
+}
+.skin-dungeon .dungeon-list article > div { align-self: start; }
+.skin-dungeon .dungeon-list article footer { align-self: start; min-height: 28px; margin-top: 2px; }
+.skin-dungeon .dungeon-list article footer .astervow-btn {
+  flex: 0 0 76px;
+  min-height: 28px;
+  padding: 2px 4px;
+  font-size: 8px;
+  overflow: hidden;
+}
+.skin-dungeon .dungeon-list article footer .astervow-btn .astervow-icon { width: 10px; height: 10px; }
 
 .trial-result-modal { max-width: min(330px, calc(100vw - 34px)); }
 .trial-result-rewards {

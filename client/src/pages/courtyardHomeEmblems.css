@@ -1,5 +1,7 @@
 /* Design reminder: user-supplied badge art fills existing courtyard frames directly, while the supplied chibi party anchors the castle walkway without obscuring controls. */
 
+/* Design reminder: the royal-blue castle remains a bright painted stage; layered gold paper trims,
+   45-degree dice pips and #20A690 confirmation states make the hub read as the Fate Dice Tower. */
 .cute-story-progress {
   overflow:visible;
   width:min(300px,82vw);
@@ -73,11 +75,22 @@
 .cute-expedition-button i { width:43px; height:43px; border:0; background:transparent; box-shadow:none; }.cute-expedition-button i img { width:43px; height:43px; object-fit:contain; filter:drop-shadow(0 1px 0 rgba(255,255,238,.72)); }
 .cute-hub-nav button>i { top:3px; right:23%; }
 
-/* Five-path footer: four utilities frame a large Kingdom return control; strict min-width rules prevent any column from pushing past the portrait frame. */
-.kingdom-footer-nav { grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.42fr) minmax(0,1fr) minmax(0,1fr); inline-size:100%; width:100%; max-width:100%; min-width:0; padding-right:8px; padding-left:8px; overflow:hidden; contain:inline-size; }
-.kingdom-footer-nav button { width:100%; min-width:0; max-width:100%; min-height:62px; overflow:visible; }.kingdom-footer-nav .nav-emblem { width:35px; height:35px; max-width:100%; }.kingdom-footer-nav .cute-nav-shop .nav-emblem,.kingdom-footer-nav .cute-nav-dungeon .nav-emblem { color:inherit; background:transparent; }
+/* Fate Dice Tower stage layer: subtle side curtains frame the new castle art without covering
+   the castle, team controls, or the thumb-reachable bottom rail. */
+.cute-hub-lobby:before,.cute-hub-lobby:after { content:""; position:absolute; z-index:1; top:105px; bottom:76px; width:10px; pointer-events:none; opacity:.8; background:linear-gradient(90deg,rgba(255,248,207,.72),rgba(32,166,144,.26),rgba(106,67,33,.34)); box-shadow:inset 1px 0 rgba(255,255,234,.8),inset -1px 0 rgba(113,70,36,.5); }
+.cute-hub-lobby:before { left:0; border-radius:0 9px 9px 0; }.cute-hub-lobby:after { right:0; border-radius:9px 0 0 9px; transform:scaleX(-1); }
+
+/* Orange is the established expedition and current-kingdom action color. */
+.cute-expedition-button { border-color:#7d4224; color:#fffbea; background:linear-gradient(180deg,#f39149,#d55329); box-shadow:inset 0 2px #ffd88d,0 4px 0 #8c3924,0 7px 12px rgba(80,42,27,.28); }.cute-expedition-button:before { background:rgba(255,238,165,.62); }.cute-expedition-button i { color:#8a3f25; background:#ffd26f; box-shadow:inset 0 2px #fff6bd,0 1px 0 #a34f2c; }.cute-expedition-button small { color:#ffe9ba; }.cute-expedition-button em { color:#814221; background:#ffe6a6; }.cute-expedition-button b { font-family:"Mochiy Pop One","Noto Sans TC",sans-serif; font-size:14px; letter-spacing:.015em; }.cute-expedition-button:active { box-shadow:inset 0 2px #ffd88d,0 1px 0 #8c3924; }
+.kingdom-footer-nav .cute-nav-kingdom { border-color:#6f3d25; background:linear-gradient(180deg,#ec914b,#cc4d2c); box-shadow:inset 0 2px #ffd993,0 4px 0 #803721,0 7px 12px rgba(76,40,23,.26); text-shadow:0 1px #823720; }.kingdom-footer-nav .cute-nav-kingdom:active { box-shadow:inset 0 2px #ffd993,0 1px 0 #803721; }
+
+/* Keep the five-path navigation dense and legible: the four utility emblems deliberately
+   use most of each column, while the raised Kingdom control remains the visual anchor. */
+.kingdom-footer-nav { grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.42fr) minmax(0,1fr) minmax(0,1fr); inline-size:100%; width:100%; max-width:100%; min-width:0; padding-right:3px; padding-left:3px; overflow:hidden; contain:inline-size; }
+.kingdom-footer-nav button { width:100%; min-width:0; max-width:100%; min-height:62px; overflow:visible; }.kingdom-footer-nav .nav-emblem { width:42px; height:42px; max-width:100%; }.kingdom-footer-nav .cute-nav-shop .nav-emblem,.kingdom-footer-nav .cute-nav-dungeon .nav-emblem { color:inherit; background:transparent; }
 .kingdom-footer-nav .cute-nav-kingdom { min-height:68px; margin-top:-13px; padding-top:4px; border:3px solid #6f3d25; border-radius:16px 16px 9px 9px; color:#fffbe3; background:linear-gradient(180deg,#ec914b,#cc4d2c); box-shadow:inset 0 2px #ffd993,0 4px 0 #803721,0 7px 12px rgba(76,40,23,.26); text-shadow:0 1px #823720; }
-.kingdom-footer-nav .cute-nav-kingdom .nav-emblem { width:49px; height:49px; }.kingdom-footer-nav .cute-nav-kingdom:active { transform:translateY(3px) scale(.97); box-shadow:inset 0 2px #ffd993,0 1px 0 #803721; }
+.kingdom-footer-nav .cute-nav-kingdom .nav-emblem { width:51px; height:51px; }.kingdom-footer-nav .cute-nav-kingdom:active { transform:translateY(3px) scale(.97); box-shadow:inset 0 2px #ffd993,0 1px 0 #803721; }
+.kingdom-footer-nav .cute-nav-heroes .nav-emblem img,.kingdom-footer-nav .cute-nav-equipment .nav-emblem img,.kingdom-footer-nav .cute-nav-shop .nav-emblem img,.kingdom-footer-nav .cute-nav-dungeon .nav-emblem img { transform:scale(1.24); transform-origin:center; }
 .courtyard-dropdown { position:absolute; z-index:12; top:50px; right:12px; display:grid; width:136px; gap:3px; padding:6px; border:3px solid #765036; border-radius:13px 8px 13px 13px; background:linear-gradient(180deg,#fff8d5,#eac889); box-shadow:inset 0 1px rgba(255,255,242,.9),0 4px 0 #815037,0 9px 17px rgba(56,37,24,.25); animation:courtyardDropdownIn .16s var(--ease-out) both; }
 .courtyard-dropdown:before { content:""; position:absolute; top:-8px; right:14px; width:13px; height:13px; border-top:3px solid #765036; border-left:3px solid #765036; background:#fff8d5; transform:rotate(45deg); }
 .courtyard-dropdown button { position:relative; z-index:1; display:flex; align-items:center; gap:6px; min-height:30px; padding:5px 7px; border:1px solid rgba(126,81,45,.42); border-radius:8px; color:#60432e; background:rgba(255,250,220,.72); font-size:9px; font-weight:950; text-align:left; }
