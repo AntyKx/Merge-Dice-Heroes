@@ -1,16 +1,12 @@
-/* Design reminder: lobby heroes are tactical paper-stage pieces, not mascots; miniature bases and
-   clear class emblems must remain visible against the bright royal-blue castle background. */
 /* Design reminder: frameless three-hero march tableau on the castle approach. Heroes remain whole, animated, and never obscured by controls. Marchers hold a fixed stance (no left/right drift) so the trio reads as "ready to depart" rather than shuffling in place. */
-.team-edit-formation { position:relative; z-index:3; display:grid; width:min(414px,94vw); min-height:146px; margin:0 0 8px 15px; padding:0; border:0; color:#5d3925; background:transparent; box-shadow:none; isolation:isolate; text-align:center; }
-.team-edit-formation__marchers { position:relative; display:flex; align-items:end; justify-content:center; width:100%; height:146px; padding-right:48px; }
-.team-edit-formation__marcher { position:relative; display:grid; place-items:end center; width:122px; height:138px; margin:0 -11px; filter:drop-shadow(0 3px 1px rgba(62,46,33,.26)); transform-origin:center bottom; }
-.team-edit-formation__marcher.marcher-2 { z-index:2; width:136px; height:148px; margin-bottom:2px; }
+.team-edit-formation { position:relative; z-index:3; display:grid; width:min(392px,92vw); min-height:125px; margin:0 0 12px 24px; padding:0; border:0; color:#5d3925; background:transparent; box-shadow:none; isolation:isolate; text-align:center; }
+.team-edit-formation__marchers { position:relative; display:flex; align-items:end; justify-content:center; width:100%; height:125px; padding-right:46px; }
+.team-edit-formation__marcher { position:relative; display:grid; place-items:end center; width:104px; height:118px; margin:0 -9px; filter:drop-shadow(0 3px 1px rgba(62,46,33,.26)); transform-origin:center bottom; }
+.team-edit-formation__marcher.marcher-2 { z-index:2; width:116px; height:126px; margin-bottom:2px; }
 .team-edit-formation__marcher.marcher-1 { z-index:1; }.team-edit-formation__marcher.marcher-3 { z-index:1; }
-.team-edit-formation__marcher .hero-portrait { position:relative; z-index:1; width:100%; height:100%; overflow:visible; border:0 !important; border-radius:0 !important; background:transparent !important; box-shadow:none; }
+.team-edit-formation__marcher .hero-portrait { width:100%; height:100%; overflow:visible; border:0 !important; border-radius:0 !important; background:transparent !important; box-shadow:none; }
 .team-edit-formation__marcher .hero-portrait:after { display:none; }
-/* The sheets contain generous transparent breathing room. Scale the rendered sprite itself,
-   not only its slot, so the three heroes visibly read as the expedition party on the lobby. */
-.team-edit-formation__marcher .hero-portrait .frame-hero-sprite { transform:translateY(4%) scale(1.3) !important; transform-origin:center bottom; filter:drop-shadow(0 2px 1px rgba(54,31,18,.22)); }
+.team-edit-formation__marcher .hero-portrait .frame-hero-sprite { transform:translateY(0) !important; transform-origin:center bottom; filter:drop-shadow(0 2px 1px rgba(54,31,18,.22)); }
 .team-edit-formation__marcher.is-empty { display:grid; width:57px; height:64px; margin:0 10px 5px; place-items:center; border:2px dashed rgba(111,73,42,.63); border-radius:50%; color:#fff4c6; background:rgba(114,77,47,.26); box-shadow:inset 0 1px rgba(255,255,221,.5); }
 .team-edit-formation__marcher.is-empty:before { content:"編組"; font-size:7px; font-weight:950; text-shadow:0 1px #805137; }
 .team-edit-formation__leader-crown { position:absolute; z-index:5; top:0; left:50%; display:grid; width:32px; height:28px; place-items:center; transform:translateX(-50%); filter:drop-shadow(0 1px 0 rgba(103,58,26,.45)); }
