@@ -12,9 +12,14 @@ The raw per-frame source PNGs are still sitting in 素材/英雄圖/<hero>/indiv
 (untracked, kept out of git only because of size/CJK-path concerns, per
 MEMORY.md). This script recomposites them into the exact single-file,
 single-column, N-frames-stacked-vertically PNG that GameScreen.tsx's
-HeroFrameSprite component expects, sized down for actual on-screen display
-(the biggest use is ~130px), and writes them into client/public/manus-storage/
-so Vite bundles them as ordinary static files -- no runtime proxy needed.
+HeroFrameSprite component expects, and writes them into
+client/public/hero-sheets/ so Vite bundles them as ordinary static files --
+no runtime proxy needed.
+
+Frame size is 400x350 (2x downscale from the 800x700 source, half-res) --
+raised from an original 200x175 once the home-screen lobby formation and
+other display contexts started rendering heroes past ~150px tall, where the
+4x-downscaled version visibly softened.
 
 Usage: python3 scripts/build_hero_sheets.py
 """
@@ -23,7 +28,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "素材" / "英雄圖"
-OUT = ROOT / "client" / "public" / "manus-storage"
+OUT = ROOT / "client" / "public" / "hero-sheets"
 
 # heroId -> (source folder name, individual-frame filename prefix)
 HEROES = {
@@ -43,7 +48,7 @@ HEROES = {
 # idle:{start:0,count:6} attack:{start:6,count:5} skill:{start:11,count:3} move:{start:14,count:6}
 ACTIONS = [("idle", 6), ("attack", 5), ("skill", 3), ("move", 6)]
 
-FRAME_W, FRAME_H = 200, 175  # 8:7, matches the 800x700 source canvas, downscaled 4x for web delivery
+FRAME_W, FRAME_H = 400, 350  # 8:7, matches the 800x700 source canvas, downscaled 2x for web delivery
 
 OUT.mkdir(parents=True, exist_ok=True)
 manifest = {}
@@ -72,6 +77,6 @@ for hero_id, (folder, prefix) in HEROES.items():
     print(f"{hero_id}: wrote {out_name} ({sheet.size[0]}x{sheet.size[1]}, {size_kb:.0f} KB)")
 
 print()
-print("EXTERNAL_HERO_SHEET_URLS entries:")
+print("HERO_SHEET_URLS entries:")
 for hero_id, name in manifest.items():
-    print(f'  {hero_id}: "/manus-storage/{name}",')
+    print(f'  {hero_id}: "/hero-sheets/{name}",')
