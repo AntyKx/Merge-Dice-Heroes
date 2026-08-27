@@ -11,7 +11,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import "./battleScreenV2.css";
-import { ChevronDown, ChevronLeft, Coins, Dices, Gift, Heart, Lock, Pause, Play, RotateCcw, Shield, Sparkles, Swords, X, Zap } from "lucide-react";
+import { ChevronDown, ChevronLeft, Coins, Dices, Gift, Lock, Pause, Play, RotateCcw, Shield, Sparkles, Swords, X, Zap } from "lucide-react";
 import { ENEMIES, HEROES } from "@/game/config";
 import { HERO_BOARD_LAYOUT } from "@/game/heroBoardLayout";
 import { HERO_FRAME_SHEETS, HeroFrameSprite } from "@/game/heroSprites";
@@ -124,10 +124,8 @@ function Bsv2Header({ run }: { run: RunState }) {
   const togglePause = useGameStore((state) => state.togglePause);
   const isPaused = useGameStore((state) => state.isPaused);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const ratio = run.castle.hp / run.castle.maxHp;
   return <header className="bsv2-header">
     <button className="bsv2-icon-btn" onClick={() => openScreen("title")} aria-label="離開本局"><ChevronLeft size={18} /></button>
-    <div className="bsv2-castle"><Heart size={14} fill="currentColor" /><div><span>城堡</span><strong>{Math.max(0, Math.round(run.castle.hp))}/{run.castle.maxHp}</strong></div><i><b style={{ width: `${Math.max(0, ratio) * 100}%` }} /></i></div>
     <div className="bsv2-wave"><small>WAVE</small><strong>{String(run.wave).padStart(2, "0")}</strong><span>/ {TOTAL_WAVES}</span></div>
     <button className={`bsv2-icon-btn bsv2-history-toggle ${historyOpen ? "is-open" : ""}`} onClick={() => setHistoryOpen((open) => !open)} aria-label="查看本局骰型歷程" aria-expanded={historyOpen}><Dices size={16} /></button>
     {run.phase === "COMBAT_RUNNING" && <button className="bsv2-icon-btn" onClick={togglePause} aria-label={isPaused ? "繼續" : "暫停"}>{isPaused ? <Play size={17} fill="currentColor" /> : <Pause size={17} fill="currentColor" />}</button>}
