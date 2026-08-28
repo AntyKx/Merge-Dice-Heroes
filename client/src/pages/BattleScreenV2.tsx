@@ -624,6 +624,26 @@ function useCombatLoop() {
 export default function BattleScreenV2() {
   const run = useGameStore((state) => state.run);
   useCombatLoop();
+  // TitleScreen (GameScreen.tsx) locks the page against browser drag/bounce
+  // while it's mounted and unlocks on unmount -- since it unmounts the moment
+  // the player enters battle, this screen needs the exact same lock itself, or
+  // the whole page becomes a normal draggable/bouncing webpage during combat.
+  useEffect(() => {
+    // Skip elements inside .bsv2-modal (reward/talent choice, dice history, etc.)
+    // so their own overflow-y:auto scrolling still works -- only the page itself
+    // should be pinned.
+    const stopPan = (event: TouchEvent) => { if (!(event.target as Element | null)?.closest(".bsv2-modal, .bsv2-dice-history")) event.preventDefault(); };
+    window.addEventListener("touchmove", stopPan, { passive: false });
+    const root = document.documentElement;
+    const body = document.body;
+    root.classList.add("lobby-viewport-lock");
+    body.classList.add("lobby-viewport-lock");
+    return () => {
+      window.removeEventListener("touchmove", stopPan);
+      root.classList.remove("lobby-viewport-lock");
+      body.classList.remove("lobby-viewport-lock");
+    };
+  }, []);
   if (!run) return null;
 
   const boardInteractive = run.phase === "PREPARATION";

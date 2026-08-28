@@ -63,7 +63,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 0 10px 14px;
+  padding: 0 10px max(22px, env(safe-area-inset-bottom));
 }
 
 .bsv2-screen button { font-family: inherit; cursor: pointer; }
@@ -816,9 +816,13 @@
   width: 152%;
   padding: 0;
   pointer-events: auto;
+  /* The %-based `top` above lands this right at the screen's physical bottom
+     edge (thumb-unreachable, overlaps device gesture bars) -- pull it up by a
+     fixed amount clear of that, independent of the board's own scale. */
+  transform: translateY(calc(-30px - env(safe-area-inset-bottom)));
 }
-.bsv2-board-embedded .bsv2-mode-buttons { justify-content: center; gap: 4px; }
-.bsv2-board-embedded .bsv2-mode-buttons button { min-height: 24px; padding: 3px 7px; font-size: 9px; }
+.bsv2-board-embedded .bsv2-mode-buttons { justify-content: center; gap: 6px; }
+.bsv2-board-embedded .bsv2-mode-buttons button { min-height: 32px; padding: 5px 9px; font-size: 10px; }
 .bsv2-battle-stage.is-combined-scene .bsv2-enemy-marker {
   transition: top 280ms linear, left 180ms linear, width 180ms ease-out;
   will-change: top, transform;
