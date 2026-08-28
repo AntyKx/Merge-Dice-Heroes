@@ -105,7 +105,6 @@
 .bsv2-stage-copy small { font-size: 9px; color: var(--bsv2-muted); }
 .bsv2-boss-warning { position: absolute; z-index: 5; left: 50%; top: 47px; transform: translateX(-50%); padding: 5px 10px; display: flex; align-items: center; gap: 5px; border-radius: 10px; color: #fff5df; font-size: 10px; font-weight: 900; background: rgba(136,66,80,.88); animation: bsv2WarningPulse 1s infinite alternate; }
 @keyframes bsv2WarningPulse { to { transform: translateX(-50%) scale(1.03); filter: brightness(1.1); } }
-.bsv2-castle-gate { position: absolute; z-index: 3; bottom: 8px; left: 50%; transform: translateX(-50%); padding: 5px 10px; display: flex; align-items: center; gap: 4px; border-radius: 10px; color: #fff4d6; background: rgba(49,111,116,.88); box-shadow: 0 2px 0 rgba(27,80,90,.7); font-size: 10px; font-weight: 900; }
 .bsv2-wave-forecast { position: absolute; z-index: 6; top: 8px; right: 7px; width: 78px; display: grid; gap: 3px; pointer-events: none; }
 .bsv2-wave-forecast section { padding: 4px 5px; border: 1px solid rgba(255,243,204,.52); border-radius: 7px; color: #fff8e7; background: rgba(14,22,34,.74); box-shadow: 0 1px 3px rgba(0,0,0,.32); backdrop-filter: blur(3px); }
 .bsv2-wave-forecast section.is-boss { border-color: rgba(226,100,90,.9); background: rgba(97,38,48,.8); }
@@ -283,9 +282,6 @@
 .bsv2-mode-hint { gap: 6px; font-size: 10px; }
 .bsv2-confirm-btn { min-height: 27px; padding: 4px 9px; border-radius: 7px; font-size: 10px; }
 .bsv2-panel { gap: 6px; padding: 8px; border-radius: 10px; }
-.bsv2-preparation .bsv2-energy-row { min-height: 20px; font-size: 11px; }
-.bsv2-preparation .bsv2-action-row { gap: 5px; }
-.bsv2-preparation .bsv2-primary-btn, .bsv2-preparation .bsv2-secondary-btn { min-width: 0; min-height: 34px; padding: 6px 8px; border-radius: 8px; font-size: 11px; }
 .bsv2-battle-log { align-self: flex-start; position: relative; z-index: 3; margin-top: -2px; }
 .bsv2-battle-log > button { display: flex; align-items: center; gap: 4px; min-height: 24px; padding: 3px 7px; border: 1px solid rgba(255,255,255,.12); border-radius: 7px; color: var(--bsv2-muted); background: rgba(255,255,255,.04); font-size: 9px; }
 .bsv2-battle-log > button svg:last-child { transition: transform 160ms ease; }
@@ -312,8 +308,6 @@
   .bsv2-legacy-board-heading small { font-size: 7px; }
   .bsv2-mode-buttons button { min-height: 25px; padding: 3px 7px; font-size: 9px; }
   .bsv2-panel { gap: 5px; padding: 6px; border-radius: 9px; }
-  .bsv2-preparation .bsv2-energy-row { min-height: 18px; font-size: 10px; }
-  .bsv2-preparation .bsv2-primary-btn, .bsv2-preparation .bsv2-secondary-btn { min-height: 31px; padding: 5px 7px; font-size: 10px; }
   .bsv2-dice-row { gap: 5px; }
   .bsv2-die { width: 38px; height: 38px; }
   .bsv2-primary-btn, .bsv2-secondary-btn { min-height: 32px; padding: 6px 9px; font-size: 11px; }
@@ -337,7 +331,6 @@
   .bsv2-wave-forecast section { padding: 2px 3px; border-radius: 5px; }
   .bsv2-wave-forecast span { font-size: 6px; }
   .bsv2-wave-forecast i, .bsv2-wave-forecast b { font-size: 5px; }
-  .bsv2-castle-gate { bottom: 4px; padding: 3px 7px; border-radius: 7px; font-size: 8px; }
   .bsv2-legacy-board-skin { padding: 3px; border-radius: 10px; }
   .bsv2-legacy-board-heading { min-height: 17px; padding: 1px 2px; }
   .bsv2-legacy-board-heading span { font-size: 9px; }
@@ -351,9 +344,6 @@
   .bsv2-mode-hint { display: none; }
   .bsv2-confirm-btn { min-height: 22px; padding: 2px 7px; font-size: 8px; }
   .bsv2-panel { gap: 4px; padding: 5px; border-radius: 7px; }
-  .bsv2-preparation .bsv2-energy-row { min-height: 16px; font-size: 9px; }
-  .bsv2-preparation .bsv2-action-row { gap: 4px; }
-  .bsv2-preparation .bsv2-primary-btn, .bsv2-preparation .bsv2-secondary-btn { min-height: 27px; padding: 4px 6px; border-radius: 6px; font-size: 9px; }
   .bsv2-battle-log { display: none; }
 }
 
@@ -398,7 +388,6 @@
 .bsv2-battle-stage.is-combined-scene .bsv2-route-hint { inset: 12px 0 0; gap: 10px; }
 .bsv2-battle-stage.is-combined-scene .bsv2-route-hint i { animation-name: bsv2CombinedRouteFlow; }
 @keyframes bsv2CombinedRouteFlow { 0% { transform: translateY(-6px); opacity: 0; } 18% { opacity: .95; } 82% { opacity: .95; } 100% { transform: translateY(190px); opacity: 0; } }
-.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate { z-index: 3; bottom: 58%; }
 .bsv2-board-embedded {
   position: absolute;
   z-index: 4;
@@ -436,13 +425,6 @@
   pointer-events: auto;
 }
 .bsv2-board-embedded .bsv2-cell { pointer-events: auto; }
-.bsv2-board-embedded .bsv2-board-toolbar {
-  width: 100%;
-  flex: 0 0 auto;
-  padding: 0;
-  pointer-events: auto;
-}
-.bsv2-board-embedded .bsv2-mode-buttons { justify-content: center; }
 .bsv2-board-embedded .bsv2-pending-zone { position: absolute; z-index: 7; top: 0; left: 50%; max-width: 92%; transform: translateX(-50%); pointer-events: auto; }
 
 @media (max-width: 480px) {
@@ -458,7 +440,6 @@
 @media (max-width: 480px) and (max-height: 760px) {
   .bsv2-battle-stage.is-combined-scene { height: 64dvh; min-height: 382px; flex-basis: 64dvh; }
   .bsv2-board-embedded { top: 36%; right: 4%; bottom: 2.5%; left: 4%; }
-  .bsv2-board-embedded .bsv2-mode-buttons button { min-height: 22px; padding: 2px 6px; font-size: 8px; }
 }
 
 /* Forest castle scene final board layer: override the earlier legacy skin after
@@ -557,13 +538,6 @@
 .bsv2-battle-stage.is-combined-scene .bsv2-route-hint { inset: 5px 0 0; gap: 5px; }
 .bsv2-battle-stage.is-combined-scene .bsv2-route-hint i { animation-name: bsv2PortraitRouteFlow; }
 @keyframes bsv2PortraitRouteFlow { 0% { transform: translateY(-5px); opacity: 0; } 18% { opacity: .92; } 82% { opacity: .92; } 100% { transform: translateY(130px); opacity: 0; } }
-.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate {
-  z-index: 3;
-  bottom: 8%;
-  padding: 3px 7px;
-  font-size: 8px;
-  background: rgba(49,111,116,.73);
-}
 .bsv2-board-embedded {
   position: absolute;
   z-index: 4;
@@ -808,21 +782,6 @@
 .bsv2-board-embedded .bsv2-cell-shield { top: 5%; right: 5%; }
 .bsv2-board-embedded .bsv2-cell-hp { right: 10%; bottom: 6%; left: 10%; height: 4px; }
 .bsv2-board-embedded .bsv2-pending-zone { z-index: 8; pointer-events: auto; }
-.bsv2-board-embedded .bsv2-board-toolbar {
-  position: absolute;
-  z-index: 9;
-  top: 218%;
-  left: -26%;
-  width: 152%;
-  padding: 0;
-  pointer-events: auto;
-  /* The %-based `top` above lands this right at the screen's physical bottom
-     edge (thumb-unreachable, overlaps device gesture bars) -- pull it up by a
-     fixed amount clear of that, independent of the board's own scale. */
-  transform: translateY(calc(-30px - env(safe-area-inset-bottom)));
-}
-.bsv2-board-embedded .bsv2-mode-buttons { justify-content: center; gap: 6px; }
-.bsv2-board-embedded .bsv2-mode-buttons button { min-height: 32px; padding: 5px 9px; font-size: 10px; }
 .bsv2-battle-stage.is-combined-scene .bsv2-enemy-marker {
   transition: top 280ms linear, left 180ms linear, width 180ms ease-out;
   will-change: top, transform;
@@ -883,7 +842,6 @@
   gap: 0;
 }
 .bsv2-battle-stage.is-combined-scene .bsv2-route-hint { inset: 4px 0 0; gap: 5px; }
-.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate { bottom: 7%; }
 .bsv2-board-embedded {
   position: absolute;
   z-index: 4;
@@ -973,21 +931,6 @@
   overflow: hidden;
   box-sizing: border-box;
 }
-.bsv2-board-embedded .bsv2-board-toolbar { top: 212%; z-index: 12; }
-/* 戰鬥手機版：不可隱藏合成確認列；否則選滿三名英雄後無法按下「合成升階」。 */
-.bsv2-board-embedded .bsv2-board-toolbar .bsv2-mode-hint {
-  display: flex;
-  min-height: 23px;
-  padding: 2px 4px;
-  border: 1px solid rgba(255,222,119,.42);
-  border-radius: 6px;
-  background: rgba(15,39,53,.93);
-  color: #fff0b0;
-  box-shadow: 0 1px 4px rgba(3,18,28,.45);
-}
-.bsv2-board-embedded .bsv2-board-toolbar .bsv2-mode-hint > span { min-width: 0; flex: 1; font-size: 8px; line-height: 1.15; }
-.bsv2-board-embedded .bsv2-board-toolbar .bsv2-confirm-btn { min-width: 56px; min-height: 22px; padding: 2px 6px; font-size: 8px; }
-.bsv2-board-embedded .bsv2-board-toolbar .bsv2-confirm-btn:disabled { opacity: .56; }
 .bsv2-battle-stage.is-combined-scene .bsv2-route-lane.is-active::before {
   content: "";
   position: absolute;
@@ -1021,29 +964,141 @@
   82% { opacity: .96; }
   100% { opacity: 0; transform: translate(-50%, 118px) scale(1.15) rotate(45deg); }
 }
-.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate {
-  /* Fixed px (not %) so it stays clear of the floating .bsv2-bottom-overlay
-     controls regardless of the scene's own cover-cropped height. */
-  bottom: 175px;
-  width: 122px;
-  min-height: 31px;
-  padding: 4px 7px;
-  gap: 5px;
-  border: 1px solid rgba(255,231,144,.88);
-  border-radius: 8px;
-  background: rgba(26,86,90,.91);
-  box-shadow: inset 0 1px rgba(230,255,221,.42), 0 2px 0 rgba(16,53,55,.72), 0 3px 8px rgba(12,32,33,.38);
-}
-.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate>svg { flex: 0 0 auto; color: #ffe68b; filter: drop-shadow(0 1px 1px rgba(5,31,33,.75)); }
-.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate div { display: grid; grid-template-columns: auto 1fr; column-gap: 3px; min-width: 0; flex: 1; }
-.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate span { color: #d9f4e7; font-size: 7px; font-weight: 900; line-height: 1; white-space: nowrap; }
-.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate strong { color: #fff4be; font-size: 9px; line-height: 1; text-align: right; }
-.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate i { grid-column: 1 / -1; display: block; height: 3px; margin-top: 3px; overflow: hidden; border-radius: 999px; background: rgba(7,40,42,.72); }
-.bsv2-battle-stage.is-combined-scene .bsv2-castle-gate i b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#ffdb70,#f09a49); box-shadow: 0 0 4px rgba(255,218,104,.7); }
 @media (max-width: 480px) and (max-height: 760px) {
-  .bsv2-battle-stage.is-combined-scene .bsv2-castle-gate { bottom: 130px; width: 110px; min-height: 27px; padding: 3px 5px; }
-  .bsv2-battle-stage.is-combined-scene .bsv2-castle-gate span { font-size: 6px; }
-  .bsv2-battle-stage.is-combined-scene .bsv2-castle-gate strong { font-size: 8px; }
   .bsv2-battle-stage.is-combined-scene .bsv2-route-lane.is-active::after { font-size: 8px; }
   .bsv2-board-embedded .bsv2-cell-hp { height: 2px; }
 }
+
+/* ---------------------------------------------------------------------
+   Battle Console -- 王國風戰場控制台 (素材/CLAUDE_王國戰場控制台_PROMPT.txt).
+   Fixed to the bottom of the combined scene; expands during PREPARATION,
+   collapses to a slim wall-strip for COMBAT_RUNNING/REWARD_RESOLVE. Both
+   states stay mounted and share one grid cell so the height change never
+   reflows the layout -- only transform/opacity animate, per spec. All
+   sizing below is proportional to the console's own rendered width, not
+   viewport media queries, since a viewport query only matches the real
+   browser window and not this game's own capped-width frame (see the
+   .game-frame note earlier in this file's history). */
+.bsv2-screen--combined .bsv2-battle-log { position: absolute; z-index: 7; top: 56px; left: 10px; }
+
+.battle-console {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 6;
+  display: grid;
+  align-items: end;
+  pointer-events: none;
+}
+.battle-console__expanded, .battle-console__collapsed {
+  grid-area: 1 / 1;
+  align-self: end;
+  transition: transform 300ms cubic-bezier(.2,.8,.2,1), opacity 220ms ease;
+}
+.battle-console.is-expanded .battle-console__expanded { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.battle-console.is-expanded .battle-console__collapsed { opacity: 0; transform: translateY(35%); pointer-events: none; transition-duration: 220ms; }
+.battle-console.is-collapsed .battle-console__expanded { opacity: 0; transform: translateY(28%); pointer-events: none; transition-duration: 250ms; }
+.battle-console.is-collapsed .battle-console__collapsed { opacity: 1; transform: translateY(0); pointer-events: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .battle-console__expanded, .battle-console__collapsed { transition: opacity 160ms ease; }
+}
+
+/* Expanded panel -- castle wall + wooden tactical table, not a flat app card. */
+.battle-console__expanded {
+  position: relative;
+  border-radius: 20px 20px 15px 15px;
+  padding: 28px 10px 10px;
+  background: linear-gradient(180deg, #4a3620 0%, #2f2114 55%, #1d150d 100%);
+  border: 2px solid rgba(227,179,76,.85);
+  box-shadow: inset 0 1px rgba(255,241,199,.16), inset 0 -3px 8px rgba(0,0,0,.4), 0 10px 22px rgba(0,0,0,.45);
+}
+.battle-console__rim {
+  position: absolute;
+  z-index: 1;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(300px, 84%);
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 6px rgba(0,0,0,.4));
+}
+.battle-console__body { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 7px; }
+.battle-console__energy { display: flex; align-items: center; gap: 4px; align-self: flex-end; margin-top: -3px; color: var(--bsv2-muted); font-size: 9px; }
+.battle-console__energy svg { color: var(--bsv2-gold); }
+.battle-console__energy strong { color: var(--bsv2-gold); font-size: 10px; }
+.battle-console__row { display: flex; align-items: stretch; gap: 6px; }
+.battle-console__row--action { align-items: flex-end; gap: 8px; }
+
+.battle-console__chip {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 7px;
+  border: 1px solid rgba(227,179,76,.55);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(31,48,61,.95), rgba(15,26,36,.96));
+  color: #fff;
+  text-align: left;
+  box-shadow: inset 0 1px rgba(255,255,255,.07), 0 2px 0 rgba(0,0,0,.25);
+}
+.battle-console__chip svg { flex: 0 0 auto; color: var(--bsv2-gold); }
+.battle-console__chip > div { display: grid; grid-template-columns: auto 1fr; column-gap: 4px; row-gap: 2px; min-width: 0; flex: 1; }
+.battle-console__chip--hp span { font-size: 8px; color: #b9c8dd; white-space: nowrap; }
+.battle-console__chip--hp strong { font-size: 11px; color: #fff4be; text-align: right; }
+.battle-console__chip--hp i { grid-column: 1 / -1; display: block; height: 4px; border-radius: 999px; overflow: hidden; background: rgba(0,0,0,.4); }
+.battle-console__chip--hp i b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#ffdb70,#f09a49); box-shadow: 0 0 4px rgba(255,218,104,.7); }
+.battle-console__chip--summon span { display: block; font-size: 8px; color: #b9c8dd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.battle-console__chip--summon strong { display: block; font-size: 11px; color: var(--bsv2-gold); }
+.battle-console__chip--summon.is-arcane { border-color: rgba(191,150,255,.6); background: linear-gradient(180deg, rgba(54,32,86,.95), rgba(26,15,44,.96)); }
+.battle-console__chip--summon.is-arcane svg { color: #cdaaff; }
+.battle-console__chip--summon.is-arcane strong { color: #e6d1ff; }
+.battle-console__chip:disabled { opacity: .48; }
+.battle-console__chip:active:not(:disabled) { transform: scale(.97); }
+
+.battle-console__toolbar-slot { flex: 1 1 auto; min-width: 0; }
+.battle-console__toolbar-slot .bsv2-board-toolbar { padding: 0; gap: 5px; }
+.battle-console__toolbar-slot .bsv2-mode-buttons { align-items: flex-end; gap: 8px; }
+/* 戰鬥手機版：不可隱藏合成確認列；否則選滿三名英雄後無法按下「合成升階」。 */
+.battle-console__toolbar-slot .bsv2-mode-hint { display: flex; flex-wrap: wrap; gap: 3px 8px; margin: 0; font-size: 9px; }
+.battle-console__toolbar-slot .bsv2-confirm-btn { min-height: 22px; padding: 3px 8px; font-size: 9px; }
+.battle-console__toolbar-slot .bsv2-merge-notice { margin: 0; font-size: 9px; color: var(--bsv2-teal); }
+.bsv2-mode-buttons button.bsv2-kingdom-badge {
+  position: relative;
+  flex: 0 0 auto;
+  width: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.bsv2-mode-buttons button.bsv2-kingdom-badge img { display: block; width: 100%; height: auto; filter: drop-shadow(0 2px 3px rgba(0,0,0,.45)); transition: transform 120ms ease, filter 120ms ease; }
+.bsv2-mode-buttons button.bsv2-kingdom-badge.is-active img { transform: translateY(-2px); filter: drop-shadow(0 0 6px rgba(126,224,255,.9)) drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
+.bsv2-mode-buttons button.bsv2-kingdom-badge:active:not(:disabled) img { transform: scale(.94); }
+.bsv2-mode-buttons button.bsv2-kingdom-badge:disabled img { opacity: .42; filter: grayscale(.6); }
+.bsv2-kingdom-badge-count { position: absolute; top: -4px; right: -2px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: var(--bsv2-gold); color: #2a1c05; font-size: 9px; font-weight: 900; font-style: normal; display: grid; place-items: center; box-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.bsv2-mode-buttons .bsv2-buy-reposition { align-self: center; margin-left: 0; padding: 5px 8px; border: 1px solid var(--bsv2-gold); border-radius: 999px; background: rgba(227,179,76,.14); color: var(--bsv2-gold); font-size: 9px; font-weight: 800; }
+
+.battle-console__cta { flex: 0 0 auto; width: 34%; max-width: 150px; min-width: 92px; padding: 0; border: 0; background: transparent; align-self: flex-end; }
+.battle-console__cta img { display: block; width: 100%; height: auto; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); transition: transform 100ms ease; }
+.battle-console__cta:active:not(:disabled) img { transform: scale(.94); }
+.battle-console__cta:disabled { opacity: .5; }
+
+/* Collapsed strip -- a thin wall-lip, castle HP + Fate Energy only. */
+.battle-console__collapsed {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  aspect-ratio: 592 / 101;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0 15%;
+}
+.battle-console__collapsed-bg { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+.battle-console__collapsed-chip { position: relative; z-index: 1; display: flex; align-items: center; gap: 4px; color: #fff4d6; font-size: 10px; font-weight: 900; text-shadow: 0 1px 2px rgba(0,0,0,.65); }
+.battle-console__collapsed-chip svg { color: var(--bsv2-gold); }

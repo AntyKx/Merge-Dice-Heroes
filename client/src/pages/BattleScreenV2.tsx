@@ -10,6 +10,7 @@
  * a pixel port of the old screens.
  */
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import "./battleScreenV2.css";
 import { ChevronDown, ChevronLeft, Coins, Dices, Gift, Lock, Pause, Play, RotateCcw, Shield, Sparkles, Swords, X, Zap } from "lucide-react";
 import { ENEMIES, HEROES } from "@/game/config";
@@ -162,7 +163,7 @@ const FOREST_CASTLE_BOARD_URL = "/manus-storage/forest-citadel-board_4039b3e9.we
  * the lane) available before any enemy has actually spawned, using the Wave's
  * activeRoutes rather than live waveRuntime data. Inactive lanes are left
  * un-tinted (no more darkening overlay) so the artwork stays readable underneath. */
-function RouteStrip({ waveDefinition, waveRuntime, wave, castleHp, castleMaxHp, boardOverlay }: { waveDefinition: WaveDefinition | undefined; waveRuntime: WaveRuntimeState | undefined; wave: number; castleHp: number; castleMaxHp: number; boardOverlay?: React.ReactNode }) {
+function RouteStrip({ waveDefinition, waveRuntime, wave, boardOverlay }: { waveDefinition: WaveDefinition | undefined; waveRuntime: WaveRuntimeState | undefined; wave: number; boardOverlay?: React.ReactNode }) {
   const activeRoutes = waveDefinition?.activeRoutes ?? [];
   const liveEnemies = waveRuntime?.routes.flatMap((route) => route.enemies) ?? [];
   const plannedCount = waveDefinition?.batches.reduce((sum, batch) => sum + batch.entries.length, 0) ?? 0;
@@ -177,7 +178,6 @@ function RouteStrip({ waveDefinition, waveRuntime, wave, castleHp, castleMaxHp, 
   };
   const currentSummary = summarizeEnemies(waveDefinition);
   const nextSummary = summarizeEnemies(nextWaveDefinition);
-  const castleRatio = Math.max(0, castleHp / castleMaxHp);
   return <div className={`bsv2-battle-stage bsv2-forest-stage ${boardOverlay ? "is-combined-scene" : ""}`} aria-label="森林城堡戰場">
     <img className="bsv2-scene-art" src={FOREST_CASTLE_BOARD_URL} alt="" aria-hidden="true" />
     <div className="bsv2-stage-copy"><span>第 {wave} 波</span><small>{enemyCount} 名敵人</small></div>
@@ -207,7 +207,6 @@ function RouteStrip({ waveDefinition, waveRuntime, wave, castleHp, castleMaxHp, 
         })}
       </div>
     </div>
-    <div className="bsv2-castle-gate" aria-label={`守望堡生命 ${Math.max(0, Math.round(castleHp))}/${castleMaxHp}`}><Shield size={15} fill="currentColor" /><div><span>守望堡生命</span><strong>{Math.max(0, Math.round(castleHp))}/{castleMaxHp}</strong><i><b style={{ width: `${castleRatio * 100}%` }} /></i></div></div>
     {boardOverlay}
   </div>;
 }
@@ -247,7 +246,7 @@ function HeroCell({ cellKey, hero, selected, mergeCandidate, repositionTarget, h
   </button>;
 }
 
-function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false, visualTestFullBoard = false }: { board: BoardState; interactive: boolean; pendingJackpotTierUp: boolean; embedded?: boolean; visualTestFullBoard?: boolean }) {
+function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false, visualTestFullBoard = false, toolbarSlot = null }: { board: BoardState; interactive: boolean; pendingJackpotTierUp: boolean; embedded?: boolean; visualTestFullBoard?: boolean; toolbarSlot?: HTMLElement | null }) {
   const mergeSelection = useGameStore((state) => state.mergeSelection);
   const repositionHero = useGameStore((state) => state.repositionHero);
   const recycleBoardHero = useGameStore((state) => state.recycleBoardHero);
@@ -394,6 +393,26 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false,
     setMode(null);
     setMergeNotice(run.pendingFreeMerge ? "兩名免費合成完成！" : "三名合成完成！");
   };
+
+  // The mode toggles (合成/調度/回收) render into the Battle Console's toolbar
+  // slot via portal when one is supplied (PREPARATION in the combined scene),
+  // so the buttons live in the fixed-position console instead of being
+  // anchored to the board's own (scaled, cover-cropped) coordinates -- while
+  // the mode/selection state above stays right here next to clickCell, since
+  // it only ever needs to talk to the board.
+  const toolbarNode = interactive && !pendingJackpotTierUp ? <div className="bsv2-board-toolbar">
+    <div className="bsv2-mode-buttons">
+      <button className={`bsv2-kingdom-badge ${mode === "merge" ? "is-active" : ""}`} aria-pressed={mode === "merge"} onClick={() => { setMode(mode === "merge" ? null : "merge"); setSelectedCells([]); setMergeNotice(null); }}><img src="/battle-console/badge-merge.png" alt="合成" /></button>
+      <button className={`bsv2-kingdom-badge ${mode === "reposition" ? "is-active" : ""}`} aria-pressed={mode === "reposition"} disabled={pendingRemaining <= 0} onClick={() => { setMode(mode === "reposition" ? null : "reposition"); setRepositionFrom(null); setMergeNotice(null); }}><img src="/battle-console/badge-reposition.png" alt="調度" /><i className="bsv2-kingdom-badge-count">{pendingRemaining}</i></button>
+      <button className={`bsv2-kingdom-badge ${mode === "recycle" ? "is-active" : ""}`} aria-pressed={mode === "recycle"} onClick={() => setMode(mode === "recycle" ? null : "recycle")}><img src="/battle-console/badge-recycle.png" alt="回收" /></button>
+      {pendingRemaining <= 0 && run.reposition.extraPurchasesThisWave < RUN_ENGINE_CONFIG.fateEnergy.extraRepositionPurchaseLimitPerWave && <button className="bsv2-buy-reposition" disabled={!run || run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost} onClick={buyExtraReposition}>+1 調度 ({RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost})</button>}
+    </div>
+    {mode === "merge" && <div className="bsv2-mode-hint"><span>點選 {cap} 名相同職業、相同 T 階：{selectedCells.length}/{cap} 名{run.pendingFreeMerge ? "（葫蘆免費合成）" : ""}</span><button className="bsv2-confirm-btn" disabled={!canConfirmMerge} onClick={confirmMerge}>{mergeConfirmLabel}</button></div>}
+    {mergeNotice && <p className="bsv2-merge-notice" role="status">{mergeNotice}</p>}
+    {mode === "reposition" && <p className="bsv2-mode-hint">{repositionFrom ? "點選目標格或另一名英雄，立即換位並扣除 1 次。" : "點選一名英雄，再點選目標格即可換位。"}</p>}
+    {mode === "recycle" && <p className="bsv2-mode-hint">點選棋盤英雄立即回收，換取命運能量。</p>}
+  </div> : null;
+
   return <section className={`bsv2-board-section bsv2-forest-board ${embedded ? "bsv2-board-embedded" : ""}`}>
     <div className="bsv2-legacy-board-skin" aria-label="英雄舞台">
     <div className="bsv2-legacy-board-heading"><span><Swords size={15} />英雄舞台</span><small>{interactive ? "召喚、合成與調度英雄" : "英雄在此守住四條防線"}</small></div>
@@ -417,18 +436,7 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false,
     </div>
     </div>
 
-    {interactive && !pendingJackpotTierUp && <div className="bsv2-board-toolbar">
-      <div className="bsv2-mode-buttons">
-        <button className={mode === "merge" ? "is-active" : ""} onClick={() => { setMode(mode === "merge" ? null : "merge"); setSelectedCells([]); setMergeNotice(null); }}><Sparkles size={14} />合成</button>
-        <button className={mode === "reposition" ? "is-active" : ""} disabled={pendingRemaining <= 0} onClick={() => { setMode(mode === "reposition" ? null : "reposition"); setRepositionFrom(null); setMergeNotice(null); }}>調度 {pendingRemaining}</button>
-        <button className={mode === "recycle" ? "is-active" : ""} onClick={() => setMode(mode === "recycle" ? null : "recycle")}><X size={14} />回收</button>
-        {pendingRemaining <= 0 && run.reposition.extraPurchasesThisWave < RUN_ENGINE_CONFIG.fateEnergy.extraRepositionPurchaseLimitPerWave && <button className="bsv2-buy-reposition" disabled={!run || run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost} onClick={buyExtraReposition}>+1 調度 ({RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost})</button>}
-      </div>
-      {mode === "merge" && <div className="bsv2-mode-hint"><span>點選 {cap} 名相同職業、相同 T 階：{selectedCells.length}/{cap} 名{run.pendingFreeMerge ? "（葫蘆免費合成）" : ""}</span><button className="bsv2-confirm-btn" disabled={!canConfirmMerge} onClick={confirmMerge}>{mergeConfirmLabel}</button></div>}
-      {mergeNotice && <p className="bsv2-merge-notice" role="status">{mergeNotice}</p>}
-      {mode === "reposition" && <p className="bsv2-mode-hint">{repositionFrom ? "點選目標格或另一名英雄，立即換位並扣除 1 次。" : "點選一名英雄，再點選目標格即可換位。"}</p>}
-      {mode === "recycle" && <p className="bsv2-mode-hint">點選棋盤英雄立即回收，換取命運能量。</p>}
-    </div>}
+    {toolbarNode && (toolbarSlot ? createPortal(toolbarNode, toolbarSlot) : toolbarNode)}
   </section>;
 }
 
@@ -492,25 +500,55 @@ function Bsv2ComboChoice({ run }: { run: RunState }) {
 }
 
 // ---------------------------------------------------------------------------
-// Preparation panel (Fate Energy summon)
+// Battle Console -- the bottom "kingdom war-room" console (素材/CLAUDE_王國戰場
+// 控制台_PROMPT.txt). Fully expanded during PREPARATION (castle HP, summon
+// actions, the merge/reposition/recycle toolbar portaled in from Bsv2Board,
+// and the Start Battle CTA); slides down to a slim wall-strip for
+// COMBAT_RUNNING/REWARD_RESOLVE so the battlefield gets its vertical space
+// back, then slides back up once PREPARATION returns.
 // ---------------------------------------------------------------------------
 
-function Bsv2Preparation({ run }: { run: RunState }) {
+function BattleConsole({ run, onToolbarSlotChange }: { run: RunState; onToolbarSlotChange: (node: HTMLDivElement | null) => void }) {
   const spendEnergyForRandomSummon = useGameStore((state) => state.spendEnergyForRandomSummon);
   const spendEnergyForChosenSummon = useGameStore((state) => state.spendEnergyForChosenSummon);
   const confirmFormation = useGameStore((state) => state.confirmFormation);
   const [pickingHero, setPickingHero] = useState(false);
+  const isPrep = run.phase === "PREPARATION";
   const ready = run.pending.heroes.length === 0 && !run.pendingHeroChoice && !run.pendingFreeMerge && !run.pendingJackpotTierUp;
   const hasOpeningSummon = run.initialFreeRandomSummonAvailable;
-  return <section className="bsv2-panel bsv2-preparation">
-    <div className="bsv2-energy-row"><Coins size={15} /><span>命運能量</span><strong>{run.fateEnergy.current}/{run.fateEnergy.max}</strong></div>
-    <div className="bsv2-action-row">
-      <button className="bsv2-secondary-btn" disabled={!hasOpeningSummon && run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost} onClick={spendEnergyForRandomSummon}><Zap size={14} />{hasOpeningSummon ? "開局隨機召喚（免費）" : `隨機召喚 (${RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost})`}</button>
-      <button className="bsv2-secondary-btn" disabled={run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost} onClick={() => setPickingHero(true)}><Sparkles size={14} />指定召喚 ({RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost})</button>
+  const castleRatio = Math.max(0, run.castle.hp / run.castle.maxHp);
+  const castleLabel = `${Math.max(0, Math.round(run.castle.hp))}/${run.castle.maxHp}`;
+
+  return <div className={`battle-console ${isPrep ? "is-expanded" : "is-collapsed"}`}>
+    <div className="battle-console__expanded">
+      <img className="battle-console__rim" src="/battle-console/wall-frame-wide.png" alt="" aria-hidden="true" />
+      <div className="battle-console__body">
+        <div className="battle-console__row">
+          <div className="battle-console__chip battle-console__chip--hp" aria-label={`守望堡生命 ${castleLabel}`}>
+            <Shield size={14} fill="currentColor" />
+            <div><span>守望堡生命</span><strong>{castleLabel}</strong><i><b style={{ width: `${castleRatio * 100}%` }} /></i></div>
+          </div>
+          <button className="battle-console__chip battle-console__chip--summon" disabled={!hasOpeningSummon && run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost} onClick={spendEnergyForRandomSummon}>
+            <Zap size={14} /><div><span>{hasOpeningSummon ? "開局隨機召喚" : "隨機召喚"}</span><strong>{hasOpeningSummon ? "免費" : RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost}</strong></div>
+          </button>
+          <button className="battle-console__chip battle-console__chip--summon is-arcane" disabled={run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost} onClick={() => setPickingHero(true)}>
+            <Sparkles size={14} /><div><span>指定召喚</span><strong>{RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost}</strong></div>
+          </button>
+        </div>
+        <div className="battle-console__energy"><Coins size={11} /><span>命運能量</span><strong>{run.fateEnergy.current}/{run.fateEnergy.max}</strong></div>
+        {pickingHero && <div className="bsv2-hero-pick-row">{run.selectedHeroes.map((heroId) => <HeroPickCard key={heroId} heroId={heroId} onClick={() => { spendEnergyForChosenSummon(heroId); setPickingHero(false); }} />)}<button className="bsv2-cancel-pick" onClick={() => setPickingHero(false)}><X size={14} /></button></div>}
+        <div className="battle-console__row battle-console__row--action">
+          <div className="battle-console__toolbar-slot" ref={onToolbarSlotChange} />
+          <button className="battle-console__cta" disabled={!ready} onClick={confirmFormation}><img src="/battle-console/battle-cta-red.png" alt="確認陣型，開戰！" /></button>
+        </div>
+      </div>
     </div>
-    {pickingHero && <div className="bsv2-hero-pick-row">{run.selectedHeroes.map((heroId) => <HeroPickCard key={heroId} heroId={heroId} onClick={() => { spendEnergyForChosenSummon(heroId); setPickingHero(false); }} />)}<button className="bsv2-cancel-pick" onClick={() => setPickingHero(false)}><X size={14} /></button></div>}
-    <button className="bsv2-primary-btn bsv2-battle-btn" disabled={!ready} onClick={confirmFormation}><Swords size={16} />確認陣型，開戰！</button>
-  </section>;
+    <div className="battle-console__collapsed">
+      <img className="battle-console__collapsed-bg" src="/battle-console/wall-frame-long.png" alt="" aria-hidden="true" />
+      <div className="battle-console__collapsed-chip" aria-label={`守望堡生命 ${castleLabel}`}><Shield size={12} fill="currentColor" /><strong>{castleLabel}</strong></div>
+      <div className="battle-console__collapsed-chip" aria-label={`命運能量 ${run.fateEnergy.current}/${run.fateEnergy.max}`}><Coins size={12} /><strong>{run.fateEnergy.current}/{run.fateEnergy.max}</strong></div>
+    </div>
+  </div>;
 }
 
 function Bsv2BattleLog({ message }: { message: string }) {
@@ -624,6 +662,11 @@ function useCombatLoop() {
 export default function BattleScreenV2() {
   const run = useGameStore((state) => state.run);
   useCombatLoop();
+  // Portal target for Bsv2Board's merge/reposition/recycle toolbar (see
+  // BattleConsole/Bsv2Board) -- lets the buttons render fixed to the Battle
+  // Console instead of the board's own scaled/cover-cropped coordinates,
+  // without lifting the mode/selection state out of Bsv2Board.
+  const [toolbarSlot, setToolbarSlot] = useState<HTMLDivElement | null>(null);
   // TitleScreen (GameScreen.tsx) locks the page against browser drag/bounce
   // while it's mounted and unlocks on unmount -- since it unmounts the moment
   // the player enters battle, this screen needs the exact same lock itself, or
@@ -651,19 +694,20 @@ export default function BattleScreenV2() {
   const waveDefinition = WAVE_DEFINITIONS[run.wave - 1];
   const isCombinedScene = run.phase === "PREPARATION" || run.phase === "COMBAT_RUNNING" || run.phase === "REWARD_RESOLVE";
   const boardInScene = isCombinedScene
-    ? <Bsv2Board board={run.board} interactive={boardInteractive} pendingJackpotTierUp={run.pendingJackpotTierUp} embedded visualTestFullBoard={visualTestFullBoard} />
+    ? <Bsv2Board board={run.board} interactive={boardInteractive} pendingJackpotTierUp={run.pendingJackpotTierUp} embedded visualTestFullBoard={visualTestFullBoard} toolbarSlot={toolbarSlot} />
     : undefined;
 
   return <section className={`bsv2-screen ${isCombinedScene ? "bsv2-screen--combined" : ""}`}>
     <Bsv2Header run={run} />
-    <RouteStrip waveDefinition={waveDefinition} waveRuntime={run.waveRuntime} wave={run.wave} castleHp={run.castle.hp} castleMaxHp={run.castle.maxHp} boardOverlay={boardInScene} />
-    <div className="bsv2-bottom-overlay">
-      {run.phase === "WAVE_PREVIEW" && <Bsv2WavePreview run={run} />}
-      {run.phase === "DICE_DECISION" && <Bsv2Dice run={run} />}
-      {run.phase === "DICE_RESOLVE" && <Bsv2ComboChoice run={run} />}
-      {run.phase === "PREPARATION" && <Bsv2Preparation run={run} />}
-      <Bsv2BattleLog message={run.message} />
-    </div>
+    <RouteStrip waveDefinition={waveDefinition} waveRuntime={run.waveRuntime} wave={run.wave} boardOverlay={boardInScene} />
+    <Bsv2BattleLog message={run.message} />
+    {isCombinedScene
+      ? <BattleConsole run={run} onToolbarSlotChange={setToolbarSlot} />
+      : <div className="bsv2-bottom-overlay">
+          {run.phase === "WAVE_PREVIEW" && <Bsv2WavePreview run={run} />}
+          {run.phase === "DICE_DECISION" && <Bsv2Dice run={run} />}
+          {run.phase === "DICE_RESOLVE" && <Bsv2ComboChoice run={run} />}
+        </div>}
     <Bsv2HeroChoiceOverlay run={run} />
     <Bsv2RewardOverlay run={run} />
     <Bsv2PauseOverlay />
