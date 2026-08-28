@@ -629,18 +629,21 @@ export default function BattleScreenV2() {
   const boardInteractive = run.phase === "PREPARATION";
   const visualTestFullBoard = import.meta.env.DEV && new URLSearchParams(window.location.search).has("fullBoardPreview");
   const waveDefinition = WAVE_DEFINITIONS[run.wave - 1];
-  const boardInScene = (run.phase === "PREPARATION" || run.phase === "COMBAT_RUNNING" || run.phase === "REWARD_RESOLVE")
+  const isCombinedScene = run.phase === "PREPARATION" || run.phase === "COMBAT_RUNNING" || run.phase === "REWARD_RESOLVE";
+  const boardInScene = isCombinedScene
     ? <Bsv2Board board={run.board} interactive={boardInteractive} pendingJackpotTierUp={run.pendingJackpotTierUp} embedded visualTestFullBoard={visualTestFullBoard} />
     : undefined;
 
-  return <section className="bsv2-screen">
+  return <section className={`bsv2-screen ${isCombinedScene ? "bsv2-screen--combined" : ""}`}>
     <Bsv2Header run={run} />
     <RouteStrip waveDefinition={waveDefinition} waveRuntime={run.waveRuntime} wave={run.wave} castleHp={run.castle.hp} castleMaxHp={run.castle.maxHp} boardOverlay={boardInScene} />
-    {run.phase === "WAVE_PREVIEW" && <Bsv2WavePreview run={run} />}
-    {run.phase === "DICE_DECISION" && <Bsv2Dice run={run} />}
-    {run.phase === "DICE_RESOLVE" && <Bsv2ComboChoice run={run} />}
-    {run.phase === "PREPARATION" && <Bsv2Preparation run={run} />}
-    <Bsv2BattleLog message={run.message} />
+    <div className="bsv2-bottom-overlay">
+      {run.phase === "WAVE_PREVIEW" && <Bsv2WavePreview run={run} />}
+      {run.phase === "DICE_DECISION" && <Bsv2Dice run={run} />}
+      {run.phase === "DICE_RESOLVE" && <Bsv2ComboChoice run={run} />}
+      {run.phase === "PREPARATION" && <Bsv2Preparation run={run} />}
+      <Bsv2BattleLog message={run.message} />
+    </div>
     <Bsv2HeroChoiceOverlay run={run} />
     <Bsv2RewardOverlay run={run} />
     <Bsv2PauseOverlay />
