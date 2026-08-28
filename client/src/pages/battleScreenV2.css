@@ -805,13 +805,16 @@
    Its road, printed 4×4 cells and castle must scale together; every hero, T marker and HP bar
    remains clipped to the measured painted cell that owns it. */
 .bsv2-battle-stage.is-combined-scene {
-  --scene-ui-reserve: 278px;
+  --scene-ui-reserve: 320px;
   --board-left: 15.4%;
   --board-top: 36.5%;
   --board-width: 67.7%;
   --board-height: 29.2%;
-  width: min(100%, 400px, calc((100dvh - var(--scene-ui-reserve)) / 1.7779));
-  max-width: 400px;
+  /* +16px cancels .bsv2-screen's 8px left/right padding at this breakpoint so the
+     scene can reach the true frame edges (full-bleed) whenever the height budget
+     allows it; margin:auto still centers it when the height formula binds instead. */
+  width: min(calc(100% + 16px), calc((100dvh - var(--scene-ui-reserve)) / 1.7779));
+  max-width: calc(100% + 16px);
   height: auto;
   min-height: 0;
   aspect-ratio: 941 / 1672;
@@ -985,7 +988,7 @@
 .bsv2-battle-stage.is-combined-scene .bsv2-castle-gate strong { color: #fff4be; font-size: 9px; line-height: 1; text-align: right; }
 .bsv2-battle-stage.is-combined-scene .bsv2-castle-gate i { grid-column: 1 / -1; display: block; height: 3px; margin-top: 3px; overflow: hidden; border-radius: 999px; background: rgba(7,40,42,.72); }
 .bsv2-battle-stage.is-combined-scene .bsv2-castle-gate i b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#ffdb70,#f09a49); box-shadow: 0 0 4px rgba(255,218,104,.7); }
-@media (min-height: 820px) { .bsv2-battle-stage.is-combined-scene { --scene-ui-reserve: 278px; } }
+@media (min-height: 820px) { .bsv2-battle-stage.is-combined-scene { --scene-ui-reserve: 320px; } }
 @media (max-width: 480px) and (max-height: 760px) {
   .bsv2-battle-stage.is-combined-scene { --scene-ui-reserve: 185px; border-radius: 14px; }
   .bsv2-battle-stage.is-combined-scene .bsv2-castle-gate { width: 110px; min-height: 27px; padding: 3px 5px; }
