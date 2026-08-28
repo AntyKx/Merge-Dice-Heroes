@@ -422,7 +422,7 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false,
         <button className={mode === "merge" ? "is-active" : ""} onClick={() => { setMode(mode === "merge" ? null : "merge"); setSelectedCells([]); setMergeNotice(null); }}><Sparkles size={14} />合成</button>
         <button className={mode === "reposition" ? "is-active" : ""} disabled={pendingRemaining <= 0} onClick={() => { setMode(mode === "reposition" ? null : "reposition"); setRepositionFrom(null); setMergeNotice(null); }}>調度 {pendingRemaining}</button>
         <button className={mode === "recycle" ? "is-active" : ""} onClick={() => setMode(mode === "recycle" ? null : "recycle")}><X size={14} />回收</button>
-        {pendingRemaining <= 0 && <button className="bsv2-buy-reposition" disabled={!run || run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost} onClick={buyExtraReposition}>+1 調度 ({RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost})</button>}
+        {pendingRemaining <= 0 && run.reposition.extraPurchasesThisWave < RUN_ENGINE_CONFIG.fateEnergy.extraRepositionPurchaseLimitPerWave && <button className="bsv2-buy-reposition" disabled={!run || run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost} onClick={buyExtraReposition}>+1 調度 ({RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost})</button>}
       </div>
       {mode === "merge" && <div className="bsv2-mode-hint"><span>點選 {cap} 名相同職業、相同 T 階：{selectedCells.length}/{cap} 名{run.pendingFreeMerge ? "（葫蘆免費合成）" : ""}</span><button className="bsv2-confirm-btn" disabled={!canConfirmMerge} onClick={confirmMerge}>{mergeConfirmLabel}</button></div>}
       {mergeNotice && <p className="bsv2-merge-notice" role="status">{mergeNotice}</p>}

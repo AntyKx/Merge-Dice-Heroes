@@ -380,6 +380,10 @@ export interface RepositionState {
   baseAllowance: number;
   /** Config: does unused allowance carry over to next Wave? Default false. */
   carriesOverBetweenWaves: boolean;
+  /** Extra-Reposition purchases (Fate Energy) made this Wave -- capped at
+   * fateEnergy.extraRepositionPurchaseLimitPerWave, per 二十九. Always resets
+   * to 0 on Wave advance regardless of carriesOverBetweenWaves. */
+  extraPurchasesThisWave: number;
 }
 
 // ---------------------------------------------------------------------------

@@ -47,7 +47,7 @@ import {
   placeOnBoard,
   routeNewSummon,
 } from "./rules/pending";
-import { canAfford, gainEnergy, recycleRewardFor, spendEnergy } from "./rules/energy";
+import { canAfford, canBuyExtraReposition, gainEnergy, recycleRewardFor, spendEnergy } from "./rules/energy";
 import { advanceAutoSkill, resetSkillRuntime } from "./rules/skill";
 import { getBasicAttackDamage, getEffectiveAttackInterval, getTierStatMultiplier, resolveEffect } from "./rules/combat";
 import type { CombatEffectContext, CombatEffectResult } from "./rules/combat";
@@ -124,7 +124,7 @@ export function createRun({ selectedHeroes, leaderHeroId, adapter }: CreateRunPa
     pending: { heroes: [] },
     dice: { values: [1, 1, 1, 1, 1], locked: [false, false, false, false, false], rerollsLeft: maxRerolls, maxRerolls, isRolling: false },
     fateEnergy: { current: 0, max: RUN_ENGINE_CONFIG.fateEnergy.max },
-    reposition: { usedThisWave: 0, baseAllowance: RUN_ENGINE_CONFIG.repositionBaseAllowancePerWave, carriesOverBetweenWaves: RUN_ENGINE_CONFIG.repositionCarriesOverBetweenWaves },
+    reposition: { usedThisWave: 0, baseAllowance: RUN_ENGINE_CONFIG.repositionBaseAllowancePerWave, carriesOverBetweenWaves: RUN_ENGINE_CONFIG.repositionCarriesOverBetweenWaves, extraPurchasesThisWave: 0 },
     castle: { hp: baseCastleHp, maxHp: baseCastleHp },
     talents: [],
     blessings: [],
@@ -190,6 +190,15 @@ export function confirmFate(run: RunState): RunState {
  * MVP auto-places at the first empty cell as a reasonable default; a UI can
  * instead call routeNewSummon()/placeOnBoard() itself to offer a real picker
  * without needing any change here. */
+/** True unless the Pending Zone is already at capacity with no board room --
+ * callers that are about to spend a limited resource (Fate Energy, the
+ * one-time free summon, a THREE_KIND choice) must check this BEFORE spending,
+ * per 十六's "禁止直接吃掉英雄...應暫停召喚結算" -- a blocked summon must
+ * never silently consume the resource for nothing. */
+function canSummonNow(run: RunState): boolean {
+  return routeNewSummon(run.board, run.pending, RUN_ENGINE_CONFIG.pendingZoneCapacity) !== "blockedPendingFull";
+}
+
 function resolveSummon(run: RunState, heroId: HeroId, tier: HeroTier, adapter: MetaProgressionAdapter): RunState {
   const instance = createHeroInstance(heroId, tier, adapter);
   const routing = routeNewSummon(run.board, run.pending, RUN_ENGINE_CONFIG.pendingZoneCapacity);
@@ -239,6 +248,7 @@ export function chooseComboEffect(run: RunState, kind: DiceComboKind, adapter: M
 
 export function chooseSummonHero(run: RunState, heroId: HeroId, adapter: MetaProgressionAdapter): RunState {
   if (run.phase !== "PREPARATION" || !run.pendingHeroChoice || !run.selectedHeroes.includes(heroId)) return run;
+  if (!canSummonNow(run)) return { ...run, message: "待命區已滿，請先安置或處理待命英雄，才能繼續召喚。" };
   return { ...resolveSummon(run, heroId, 1, adapter), pendingHeroChoice: false };
 }
 
@@ -263,6 +273,7 @@ export function chooseJackpotTierUpTarget(run: RunState, cellKey: ReturnType<typ
 
 export function spendEnergyForRandomSummon(run: RunState, adapter: MetaProgressionAdapter, random: () => number = Math.random): RunState {
   if (run.phase !== "PREPARATION") return run;
+  if (!canSummonNow(run)) return { ...run, message: "待命區已滿，請先安置或處理待命英雄，才能繼續召喚。" };
   if (run.initialFreeRandomSummonAvailable) {
     const summoned = summonRandomFromRoster(run, adapter, random);
     return { ...summoned, initialFreeRandomSummonAvailable: false, message: "開局免費隨機召喚完成！" };
@@ -274,6 +285,7 @@ export function spendEnergyForRandomSummon(run: RunState, adapter: MetaProgressi
 
 export function spendEnergyForChosenSummon(run: RunState, heroId: HeroId, adapter: MetaProgressionAdapter): RunState {
   if (run.phase !== "PREPARATION" || !run.selectedHeroes.includes(heroId) || !canAfford(run.fateEnergy, RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost)) return run;
+  if (!canSummonNow(run)) return { ...run, message: "待命區已滿，請先安置或處理待命英雄，才能繼續召喚。" };
   const spent = { ...run, fateEnergy: spendEnergy(run.fateEnergy, RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost) };
   return resolveSummon(spent, heroId, 1, adapter);
 }
@@ -326,11 +338,11 @@ export function repositionHero(run: RunState, fromCellKey: ReturnType<typeof boa
 }
 
 export function buyExtraReposition(run: RunState): RunState {
-  if (run.phase !== "PREPARATION" || !canAfford(run.fateEnergy, RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost)) return run;
+  if (run.phase !== "PREPARATION" || !canBuyExtraReposition(run.fateEnergy, run.reposition.extraPurchasesThisWave, RUN_ENGINE_CONFIG.fateEnergy)) return run;
   return {
     ...run,
     fateEnergy: spendEnergy(run.fateEnergy, RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost),
-    reposition: { ...run.reposition, baseAllowance: run.reposition.baseAllowance + 1 },
+    reposition: { ...run.reposition, baseAllowance: run.reposition.baseAllowance + 1, extraPurchasesThisWave: run.reposition.extraPurchasesThisWave + 1 },
   };
 }
 
@@ -588,38 +600,43 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
 // ---------------------------------------------------------------------------
 
 /** Hero recovery between Waves (十八): survivors restore a % of lost HP, downed
- * heroes revive at a % of max HP -- both reset to full Shield/no Buffs, per the
- * existing game/engine/combat.ts's own between-wave recovery semantics. */
+ * heroes revive at a % of max HP -- both reset to full Shield/no Buffs. Auto
+ * Skill progress/cooldown is also reset here (十四: "不要把 3/4 Attack Counter
+ * 剩餘 0.4 秒 CD 帶去下一 Wave -- 每個 Wave 開始重新計算"), via the same
+ * resetSkillRuntime() createHeroInstance() itself uses for a fresh summon. */
 function recoverHeroesBetweenWaves(board: BoardState): BoardState {
   const { heroRecovery } = RUN_ENGINE_CONFIG;
   const cells = Object.fromEntries(Object.entries(board.cells).map(([key, hero]) => {
     if (!hero) return [key, hero];
+    const definition = HERO_DEFINITIONS[hero.heroId];
+    const skill = definition ? resetSkillRuntime(hero.instanceId, definition.autoSkill.trigger) : hero.skill;
     if (hero.status === "downed") {
       const hp = Math.round(hero.maxHp * heroRecovery.downedReviveMaxHpPct);
-      return [key, { ...hero, hp, status: "active" as const, shield: 0, buffs: [] }];
+      return [key, { ...hero, hp, status: "active" as const, shield: 0, buffs: [], skill, attackCooldownRemainingSeconds: 0 }];
     }
     const lost = hero.maxHp - hero.hp;
     const hp = Math.min(hero.maxHp, hero.hp + Math.round(lost * heroRecovery.survivorLostHpRestorePct));
-    return [key, { ...hero, hp, shield: 0, buffs: [] }];
+    return [key, { ...hero, hp, shield: 0, buffs: [], skill, attackCooldownRemainingSeconds: 0 }];
   }));
   return { cells: cells as BoardState["cells"] };
 }
 
-/** Wave numbers that additionally offer a Core Blessing on top of the per-Wave
- * Talent -- a tentative "every 3rd Wave" cadence per 三十二's own uncertainty
- * about exact timing; trivially Config-tunable once real balancing starts. */
-function isBlessingWave(waveNumber: number): boolean {
-  return waveNumber % 3 === 0;
+/** Wave numbers that offer a Talent choice: every talentWaveInterval-th Wave clear. */
+function isTalentWave(waveNumber: number): boolean {
+  return waveNumber % RUN_ENGINE_CONFIG.talentWaveInterval === 0;
 }
 
-/** COMBAT_END -> REWARD_RESOLVE. MVP simplification: offers a Talent choice after
- * every single Wave clear rather than the doc's tentative "特定波數 (3/6/9...)"
- * cadence (三十/三十一) -- the cadence itself is a Config-tunable follow-up, not a
- * structural change, once real content balancing starts. */
+/** Wave numbers that offer a Core Blessing choice: every blessingWaveInterval-th
+ * Wave clear. */
+function isBlessingWave(waveNumber: number): boolean {
+  return waveNumber % RUN_ENGINE_CONFIG.blessingWaveInterval === 0;
+}
+
+/** COMBAT_END -> REWARD_RESOLVE. */
 export function resolveWaveEnd(run: RunState): RunState {
   if (run.phase !== "COMBAT_END") return run;
   const board = recoverHeroesBetweenWaves(run.board);
-  const talentChoices = generateTalentChoices(TALENT_POOL, run.talents, run.selectedHeroes, run.leader.heroId);
+  const talentChoices = isTalentWave(run.wave) ? generateTalentChoices(TALENT_POOL, run.talents, run.selectedHeroes, run.leader.heroId) : [];
   const blessingChoices = isBlessingWave(run.wave) ? generateBlessingChoices(BLESSING_POOL, run.blessings, run.selectedHeroes, run.leader.heroId) : [];
   return { ...run, phase: "REWARD_RESOLVE", board, talentChoices, blessingChoices, message: "戰場安靜下來。選擇一項強化。" };
 }
@@ -652,7 +669,7 @@ export function advanceToNextWave(run: RunState): RunState {
     wave: nextWave,
     waveRuntime: undefined,
     dice: { ...run.dice, rerollsLeft: maxRerolls, maxRerolls },
-    reposition: { ...run.reposition, usedThisWave: run.reposition.carriesOverBetweenWaves ? run.reposition.usedThisWave : 0 },
+    reposition: { ...run.reposition, usedThisWave: run.reposition.carriesOverBetweenWaves ? run.reposition.usedThisWave : 0, extraPurchasesThisWave: 0 },
     message: `第 ${nextWave} 波即將到來。`,
   };
 }

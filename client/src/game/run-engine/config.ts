@@ -58,10 +58,8 @@ export const RUN_ENGINE_CONFIG = {
     hpPctPerLevel: 0.02,
   },
 
-  talentAcquisitionByWaveLength: {
-    // coreBlessingPicks is a [min, max] range per 三十、獲取量 ("2~3" for the 20-wave case).
-    10: { normalTalentPicks: 5, coreBlessingPicks: [1, 1] as [number, number] },
-    15: { normalTalentPicks: 8, coreBlessingPicks: [2, 2] as [number, number] },
-    20: { normalTalentPicks: 10, coreBlessingPicks: [2, 3] as [number, number] },
-  },
+  /** Reward-offer cadence: a Talent choice every Nth Wave clear, a Core Blessing
+   * choice every Nth Wave clear (both checked against the just-cleared run.wave). */
+  talentWaveInterval: 2,
+  blessingWaveInterval: 5,
 } as const;
