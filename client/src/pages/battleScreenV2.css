@@ -1104,3 +1104,44 @@
 .battle-console__collapsed-bg { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
 .battle-console__collapsed-chip { position: relative; z-index: 1; display: flex; align-items: center; gap: 4px; color: #fff4d6; font-size: 10px; font-weight: 900; text-shadow: 0 1px 2px rgba(0,0,0,.65); }
 .battle-console__collapsed-chip svg { color: var(--bsv2-gold); }
+
+/* Fate dice + combo-choice now roll and resolve on the battlefield itself
+   (floating cards over the combined scene) instead of a separate full-
+   screen panel -- the Battle Console stays collapsed underneath since
+   summon/merge actions aren't relevant until PREPARATION. */
+.bsv2-screen--combined .bsv2-dice,
+.bsv2-screen--combined .bsv2-combo-choice {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  z-index: 8;
+  background: linear-gradient(180deg, rgba(31,40,58,.96), rgba(14,20,31,.97));
+  border: 1px solid rgba(227,179,76,.55);
+  box-shadow: 0 12px 26px rgba(0,0,0,.5);
+  animation: bsv2CardRise 260ms ease-out both;
+}
+.bsv2-screen--combined .bsv2-combo-choice { max-height: min(52dvh, 380px); overflow-y: auto; }
+@keyframes bsv2CardRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Toss-in: each die flies in from off-screen and settles into place. The
+   per-die --toss-x/--toss-rot/--toss-delay custom properties (set inline,
+   per index) scatter and stagger them instead of moving as one flat block.
+   Remounting .bsv2-dice-row (via a key derived from the roll) on every
+   roll/reroll is what replays this -- see Bsv2Dice. */
+.bsv2-die {
+  animation: bsv2DiceToss 520ms cubic-bezier(.25,1.15,.5,1) both;
+  animation-delay: var(--toss-delay, 0ms);
+}
+@keyframes bsv2DiceToss {
+  0% { transform: translateY(-150px) translateX(var(--toss-x, 0px)) rotate(var(--toss-rot, -30deg)) scale(.55); opacity: 0; }
+  55% { opacity: 1; }
+  100% { transform: translateY(0) translateX(0) rotate(0deg) scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bsv2-die { animation: none; }
+  .bsv2-screen--combined .bsv2-dice, .bsv2-screen--combined .bsv2-combo-choice { animation: none; }
+}
