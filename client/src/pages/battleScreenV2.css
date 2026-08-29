@@ -1111,8 +1111,8 @@
 .bsv2-screen--combined .bsv2-dice,
 .bsv2-screen--combined .bsv2-combo-choice {
   position: absolute;
-  left: 10px;
-  right: 10px;
+  left: 4px;
+  right: 4px;
   bottom: calc(92px + env(safe-area-inset-bottom));
   z-index: 8;
   background: linear-gradient(180deg, rgba(31,40,58,.96), rgba(14,20,31,.97));
@@ -1126,22 +1126,38 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Dice card: painted stone/wood banner frame (see 素材/CLAUDE_命運骰盅面板_PROMPT.txt)
-   instead of the flat gradient card. Locked to the artwork's own aspect ratio so
-   background-size:100% 100% never stretches it non-uniformly -- only ever scales
-   both axes by the same factor. Padding is asymmetric to clear the crest that
-   hangs down from the top-center edge and the trinkets in the bottom corners. */
-.bsv2-screen--combined .bsv2-dice {
-  aspect-ratio: 1200 / 408;
+/* Dice card + wave-preview card: painted stone/wood banner frame (see 素材/
+   CLAUDE_命運骰盅面板_PROMPT.txt) instead of the flat gradient card, spanning
+   nearly edge-to-edge (left/right: 4px above). The dice card is locked to the
+   artwork's own aspect ratio so background-size:100% 100% never stretches it
+   non-uniformly; wave-preview's content length varies with the wave (enemy
+   roster can wrap to more than one line), so its height stays content-driven
+   and the same background just stretches uniformly-enough to fill it. Padding
+   is asymmetric on both to clear the crest hanging down from the top-center
+   edge and the trinkets in the bottom corners. */
+.bsv2-screen--combined .bsv2-dice,
+.bsv2-screen--combined .bsv2-wave-preview {
   background: url('/battle-console/dice-panel-frame.png') center / 100% 100% no-repeat;
   border: 0;
   box-shadow: 0 10px 20px rgba(0,0,0,.4);
-  padding: 12.5% 10% 5%;
+}
+.bsv2-screen--combined .bsv2-dice {
+  aspect-ratio: 1200 / 408;
+  padding: 11% 9% 4%;
   gap: 5%;
   justify-content: center;
 }
-.bsv2-screen--combined .bsv2-dice .bsv2-die { width: 34px; height: 34px; font-size: 15px; }
+.bsv2-screen--combined .bsv2-dice .bsv2-die { width: 37px; height: 37px; font-size: 16px; }
 .bsv2-screen--combined .bsv2-dice .bsv2-action-row { justify-content: center; }
+.bsv2-screen--combined .bsv2-wave-preview {
+  padding: 44px 11% 26px;
+  gap: 6px;
+  align-items: center;
+  text-align: center;
+}
+.bsv2-screen--combined .bsv2-wave-preview h2 { font-size: 13px; }
+.bsv2-screen--combined .bsv2-wave-preview .bsv2-wave-enemies { justify-content: center; }
+.bsv2-screen--combined .bsv2-wave-preview .bsv2-primary-btn { flex: 0 0 auto; min-width: 160px; }
 .bsv2-screen--combined .bsv2-dice .bsv2-secondary-btn,
 .bsv2-screen--combined .bsv2-dice .bsv2-primary-btn { min-width: 0; min-height: 26px; padding: 5px 10px; font-size: 10px; }
 
