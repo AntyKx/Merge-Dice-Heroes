@@ -1105,10 +1105,11 @@
 .battle-console__collapsed-chip { position: relative; z-index: 1; display: flex; align-items: center; gap: 4px; color: #fff4d6; font-size: 10px; font-weight: 900; text-shadow: 0 1px 2px rgba(0,0,0,.65); }
 .battle-console__collapsed-chip svg { color: var(--bsv2-gold); }
 
-/* Fate dice + combo-choice now roll and resolve on the battlefield itself
-   (floating cards over the combined scene) instead of a separate full-
-   screen panel -- the Battle Console stays collapsed underneath since
+/* Wave preview + fate dice + combo-choice all roll out on the battlefield
+   itself (floating cards over the combined scene) instead of a separate
+   full-screen panel -- the Battle Console stays collapsed underneath since
    summon/merge actions aren't relevant until PREPARATION. */
+.bsv2-screen--combined .bsv2-wave-preview,
 .bsv2-screen--combined .bsv2-dice,
 .bsv2-screen--combined .bsv2-combo-choice {
   position: absolute;
@@ -1127,21 +1128,41 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Toss-in: each die flies in from off-screen and settles into place. The
-   per-die --toss-x/--toss-rot/--toss-delay custom properties (set inline,
-   per index) scatter and stagger them instead of moving as one flat block.
-   Remounting .bsv2-dice-row (via a key derived from the roll) on every
-   roll/reroll is what replays this -- see Bsv2Dice. */
+/* Toss-in: each die tumbles in from above with a 3D flip, overshoots into a
+   bounce with an impact flash, then settles back to rest. The per-die
+   --toss-x/--toss-rot/--toss-spin/--toss-delay custom properties (set
+   inline, per index) scatter, vary and stagger them instead of moving as
+   one flat, identical block. Remounting .bsv2-dice-row (via a key derived
+   from the roll) on every roll/reroll is what replays this -- see
+   Bsv2Dice. perspective on the row is what makes the rotateX/Y read as a
+   tumble instead of a flat spin. */
+.bsv2-dice-row { perspective: 460px; }
 .bsv2-die {
-  animation: bsv2DiceToss 520ms cubic-bezier(.25,1.15,.5,1) both;
+  animation: bsv2DiceToss 680ms cubic-bezier(.22,.9,.32,1) both;
   animation-delay: var(--toss-delay, 0ms);
 }
 @keyframes bsv2DiceToss {
-  0% { transform: translateY(-150px) translateX(var(--toss-x, 0px)) rotate(var(--toss-rot, -30deg)) scale(.55); opacity: 0; }
-  55% { opacity: 1; }
-  100% { transform: translateY(0) translateX(0) rotate(0deg) scale(1); opacity: 1; }
+  0% {
+    transform: translateY(-180px) translateX(var(--toss-x, 0px)) rotateX(-55deg) rotateY(var(--toss-spin, 55deg)) rotateZ(var(--toss-rot, -30deg)) scale(.5);
+    opacity: 0;
+    box-shadow: 0 0 0 0 rgba(255,225,150,0);
+  }
+  40% { opacity: 1; }
+  68% {
+    transform: translateY(7px) translateX(0) rotateX(14deg) rotateY(-8deg) rotateZ(4deg) scale(1.14);
+    box-shadow: 0 0 16px 5px rgba(255,222,140,.85);
+  }
+  84% {
+    transform: translateY(-4px) rotateX(-5deg) rotateY(3deg) rotateZ(-2deg) scale(.96);
+    box-shadow: 0 0 4px 1px rgba(255,222,140,.3);
+  }
+  100% {
+    transform: translateY(0) translateX(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(255,225,150,0);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .bsv2-die { animation: none; }
-  .bsv2-screen--combined .bsv2-dice, .bsv2-screen--combined .bsv2-combo-choice { animation: none; }
+  .bsv2-screen--combined .bsv2-wave-preview, .bsv2-screen--combined .bsv2-dice, .bsv2-screen--combined .bsv2-combo-choice { animation: none; }
 }

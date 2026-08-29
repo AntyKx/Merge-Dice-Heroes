@@ -472,7 +472,7 @@ function Bsv2Dice({ run }: { run: RunState }) {
   const mid = (run.dice.values.length - 1) / 2;
   return <section className="bsv2-panel bsv2-dice">
     <div className="bsv2-dice-topline"><span>命運骰盅</span><strong>尚可重骰 {run.dice.rerollsLeft} 次</strong></div>
-    <div className="bsv2-dice-row" key={rollKey}>{run.dice.values.map((value, index) => <button key={index} className={`bsv2-die ${run.dice.locked[index] ? "is-locked" : ""}`} style={{ "--toss-delay": `${index * 55}ms`, "--toss-x": `${(index - mid) * 16}px`, "--toss-rot": `${(index % 2 === 0 ? -1 : 1) * (28 + index * 6)}deg` } as React.CSSProperties} onClick={() => toggleDiceLock(index)} aria-label={`骰子 ${index + 1}：${value}`}><b>{value}</b>{run.dice.locked[index] && <i><Lock size={10} /></i>}</button>)}</div>
+    <div className="bsv2-dice-row" key={rollKey}>{run.dice.values.map((value, index) => <button key={index} className={`bsv2-die ${run.dice.locked[index] ? "is-locked" : ""}`} style={{ "--toss-delay": `${index * 70}ms`, "--toss-x": `${(index - mid) * 18}px`, "--toss-rot": `${(index % 2 === 0 ? -1 : 1) * (28 + index * 6)}deg`, "--toss-spin": `${(index % 2 === 0 ? 1 : -1) * (50 + index * 10)}deg` } as React.CSSProperties} onClick={() => toggleDiceLock(index)} aria-label={`骰子 ${index + 1}：${value}`}><b>{value}</b>{run.dice.locked[index] && <i><Lock size={10} /></i>}</button>)}</div>
     <div className="bsv2-action-row">
       <button className="bsv2-secondary-btn" disabled={run.dice.rerollsLeft <= 0} onClick={rerollDice}><RotateCcw size={15} />重骰</button>
       <button className="bsv2-primary-btn" onClick={confirmFate}><Sparkles size={15} />確認命運</button>
@@ -697,11 +697,11 @@ export default function BattleScreenV2() {
   const boardInteractive = run.phase === "PREPARATION";
   const visualTestFullBoard = import.meta.env.DEV && new URLSearchParams(window.location.search).has("fullBoardPreview");
   const waveDefinition = WAVE_DEFINITIONS[run.wave - 1];
-  // DICE_DECISION/DICE_RESOLVE join the combined scene too (素材/CLAUDE_王國戰場控制台
-  // follow-up: fate dice are rolled and resolved on the battlefield itself instead of a
-  // separate full-screen panel) -- WAVE_PREVIEW stays its own screen since its enemy
-  // roster is reading-heavy and benefits from the full-screen layout.
-  const isCombinedScene = run.phase === "PREPARATION" || run.phase === "COMBAT_RUNNING" || run.phase === "REWARD_RESOLVE" || run.phase === "DICE_DECISION" || run.phase === "DICE_RESOLVE";
+  // WAVE_PREVIEW/DICE_DECISION/DICE_RESOLVE all join the combined scene now (素材/
+  // CLAUDE_王國戰場控制台 follow-ups): the whole "roll fate, resolve it, see what's
+  // coming" sequence happens as floating cards over the live battlefield instead of
+  // swapping to a separate full-screen dark panel.
+  const isCombinedScene = run.phase === "PREPARATION" || run.phase === "COMBAT_RUNNING" || run.phase === "REWARD_RESOLVE" || run.phase === "WAVE_PREVIEW" || run.phase === "DICE_DECISION" || run.phase === "DICE_RESOLVE";
   const boardInScene = isCombinedScene
     ? <Bsv2Board board={run.board} interactive={boardInteractive} pendingJackpotTierUp={run.pendingJackpotTierUp} embedded visualTestFullBoard={visualTestFullBoard} toolbarSlot={toolbarSlot} />
     : undefined;
@@ -713,12 +713,11 @@ export default function BattleScreenV2() {
     {isCombinedScene
       ? <>
           <BattleConsole run={run} onToolbarSlotChange={setToolbarSlot} />
+          {run.phase === "WAVE_PREVIEW" && <Bsv2WavePreview run={run} />}
           {run.phase === "DICE_DECISION" && <Bsv2Dice run={run} />}
           {run.phase === "DICE_RESOLVE" && <Bsv2ComboChoice run={run} />}
         </>
-      : <div className="bsv2-bottom-overlay">
-          {run.phase === "WAVE_PREVIEW" && <Bsv2WavePreview run={run} />}
-        </div>}
+      : <div className="bsv2-bottom-overlay" />}
     <Bsv2HeroChoiceOverlay run={run} />
     <Bsv2RewardOverlay run={run} />
     <Bsv2PauseOverlay />
