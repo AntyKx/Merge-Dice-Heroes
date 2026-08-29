@@ -525,14 +525,14 @@ function BattleConsole({ run, onToolbarSlotChange }: { run: RunState; onToolbarS
       <div className="battle-console__body">
         <div className="battle-console__row">
           <div className="battle-console__chip battle-console__chip--hp" aria-label={`守望堡生命 ${castleLabel}`}>
-            <Shield size={14} fill="currentColor" />
+            <Shield size={17} fill="currentColor" />
             <div><span>守望堡生命</span><strong>{castleLabel}</strong><i><b style={{ width: `${castleRatio * 100}%` }} /></i></div>
           </div>
           <button className="battle-console__chip battle-console__chip--summon" disabled={!hasOpeningSummon && run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost} onClick={spendEnergyForRandomSummon}>
-            <Zap size={14} /><div><span>{hasOpeningSummon ? "開局隨機召喚" : "隨機召喚"}</span><strong>{hasOpeningSummon ? "免費" : RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost}</strong></div>
+            <Zap size={17} /><div><span>{hasOpeningSummon ? "開局隨機召喚" : "隨機召喚"}</span><strong>{hasOpeningSummon ? "免費" : RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost}</strong></div>
           </button>
           <button className="battle-console__chip battle-console__chip--summon is-arcane" disabled={run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost} onClick={() => setPickingHero(true)}>
-            <Sparkles size={14} /><div><span>指定召喚</span><strong>{RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost}</strong></div>
+            <Sparkles size={17} /><div><span>指定召喚</span><strong>{RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost}</strong></div>
           </button>
         </div>
         <div className="battle-console__energy"><Coins size={11} /><span>命運能量</span><strong>{run.fateEnergy.current}/{run.fateEnergy.max}</strong></div>
