@@ -471,10 +471,9 @@ function Bsv2Dice({ run }: { run: RunState }) {
   const rollKey = `${run.dice.rerollsLeft}-${run.dice.values.join("")}`;
   const mid = (run.dice.values.length - 1) / 2;
   return <section className="bsv2-panel bsv2-dice">
-    <div className="bsv2-dice-topline"><span>命運骰盅</span><strong>尚可重骰 {run.dice.rerollsLeft} 次</strong></div>
     <div className="bsv2-dice-row" key={rollKey}>{run.dice.values.map((value, index) => <button key={index} className={`bsv2-die ${run.dice.locked[index] ? "is-locked" : ""}`} style={{ "--toss-delay": `${index * 70}ms`, "--toss-x": `${(index - mid) * 18}px`, "--toss-rot": `${(index % 2 === 0 ? -1 : 1) * (28 + index * 6)}deg`, "--toss-spin": `${(index % 2 === 0 ? 1 : -1) * (50 + index * 10)}deg` } as React.CSSProperties} onClick={() => toggleDiceLock(index)} aria-label={`骰子 ${index + 1}：${value}`}><b>{value}</b>{run.dice.locked[index] && <i><Lock size={10} /></i>}</button>)}</div>
     <div className="bsv2-action-row">
-      <button className="bsv2-secondary-btn" disabled={run.dice.rerollsLeft <= 0} onClick={rerollDice}><RotateCcw size={15} />重骰</button>
+      <button className="bsv2-secondary-btn" disabled={run.dice.rerollsLeft <= 0} onClick={rerollDice}><RotateCcw size={15} />重骰 ({run.dice.rerollsLeft})</button>
       <button className="bsv2-primary-btn" onClick={confirmFate}><Sparkles size={15} />確認命運</button>
     </div>
   </section>;

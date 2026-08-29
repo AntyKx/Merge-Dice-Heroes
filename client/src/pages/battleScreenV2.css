@@ -218,8 +218,6 @@
 .bsv2-boss-flag { display: flex; align-items: center; gap: 4px; margin: 0; font-size: 11px; color: var(--bsv2-danger); }
 
 /* Dice */
-.bsv2-dice-topline { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: var(--bsv2-muted); }
-.bsv2-dice-topline strong { color: var(--bsv2-gold); font-size: 12px; }
 .bsv2-dice-row { display: flex; gap: 6px; justify-content: center; }
 .bsv2-die { position: relative; width: 40px; height: 40px; border-radius: 9px; border: 1.5px solid var(--bsv2-border); background: var(--bsv2-panel-alt); color: var(--bsv2-ink); display: grid; place-items: center; font-size: 17px; font-weight: 800; }
 .bsv2-die.is-locked { border-color: var(--bsv2-gold); background: rgba(227,179,76,.15); color: var(--bsv2-gold); }
@@ -1127,6 +1125,25 @@
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Dice card: painted stone/wood banner frame (see 素材/CLAUDE_命運骰盅面板_PROMPT.txt)
+   instead of the flat gradient card. Locked to the artwork's own aspect ratio so
+   background-size:100% 100% never stretches it non-uniformly -- only ever scales
+   both axes by the same factor. Padding is asymmetric to clear the crest that
+   hangs down from the top-center edge and the trinkets in the bottom corners. */
+.bsv2-screen--combined .bsv2-dice {
+  aspect-ratio: 1200 / 408;
+  background: url('/battle-console/dice-panel-frame.png') center / 100% 100% no-repeat;
+  border: 0;
+  box-shadow: 0 10px 20px rgba(0,0,0,.4);
+  padding: 12.5% 10% 5%;
+  gap: 5%;
+  justify-content: center;
+}
+.bsv2-screen--combined .bsv2-dice .bsv2-die { width: 34px; height: 34px; font-size: 15px; }
+.bsv2-screen--combined .bsv2-dice .bsv2-action-row { justify-content: center; }
+.bsv2-screen--combined .bsv2-dice .bsv2-secondary-btn,
+.bsv2-screen--combined .bsv2-dice .bsv2-primary-btn { min-width: 0; min-height: 26px; padding: 5px 10px; font-size: 10px; }
 
 /* Toss-in: each die tumbles in from above with a 3D flip, overshoots into a
    bounce with an impact flash, then settles back to rest. The per-die
