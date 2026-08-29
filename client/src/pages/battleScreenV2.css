@@ -1111,8 +1111,8 @@
 .bsv2-screen--combined .bsv2-dice,
 .bsv2-screen--combined .bsv2-combo-choice {
   position: absolute;
-  left: 4px;
-  right: 4px;
+  left: 0;
+  right: 0;
   bottom: calc(92px + env(safe-area-inset-bottom));
   z-index: 8;
   background: linear-gradient(180deg, rgba(31,40,58,.96), rgba(14,20,31,.97));
