@@ -62,4 +62,14 @@ export const RUN_ENGINE_CONFIG = {
    * choice every Nth Wave clear (both checked against the just-cleared run.wave). */
   talentWaveInterval: 2,
   blessingWaveInterval: 5,
+
+  /** How far along a Route (0-1, same units as HeroDefinition.rangeAlongRoute) an
+   * EnemyDefinition.tags-"ranged" enemy must have travelled before it starts
+   * striking a hero directly, bypassing Block entirely (orchestrator.ts's Combat
+   * tick step 5.5) -- represents it closing to its own effective shooting range,
+   * not "reaching the castle". Deliberately smaller than a melee tank's own
+   * ~0.72-0.75 Block-engage threshold (1 - knight/deathKnight's rangeAlongRoute)
+   * so ranged enemies start threatening the back row well before a front-line
+   * tank would ever be forced to fight them. */
+  rangedEnemyEngageRangeAlongRoute: 0.45,
 } as const;

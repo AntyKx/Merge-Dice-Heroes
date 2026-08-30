@@ -57,7 +57,7 @@ import { markBurstReady, consumeBurst, isBurstReadyToFire } from "./rules/leader
 import { applyCastleDamage, isRunFailure } from "./rules/castle";
 import { createEnemyInstance, flattenSpawnSchedule, getDueSpawns, partitionReachedCastle, updateEnemyMovement } from "./rules/wave";
 import { allOccupiedCells } from "./rules/board";
-import { getEnemyTargetPool, getSupportTargets } from "./rules/targeting";
+import { getEnemyTargetPool, getSupportTargets, pickRangedAttackTarget } from "./rules/targeting";
 import { getBlockZones, getEffectiveBlockCapacity, computeBlockAssignments } from "./rules/block";
 import type { BlockProvider, BlockTarget } from "./rules/block";
 import { removeExpiredStatusEffects, totalMagnitudeCapped, upsertStatusEffect } from "./rules/status";
@@ -443,9 +443,9 @@ function heroSpeedMultiplier(hero: HeroInstance): number {
 
 // ---------------------------------------------------------------------------
 // Combat tick -- the per-frame Wave loop (Spawn -> Block -> Move -> Castle ->
-// Blocked-enemy-counterattack -> Hero Basic Attack + Auto Skill + Trait ->
-// cleanup -> Leader Burst firing -> failure/clear detection), per 玩法核心.txt
-// 七/八/九/十/十四/十九/二十/三十三.
+// Blocked-enemy-counterattack -> Ranged-enemy-direct-strike -> Hero Basic Attack
+// + Auto Skill + Trait -> cleanup -> Leader Burst firing -> failure/clear
+// detection), per 玩法核心.txt 七/八/九/十/十四/十九/二十/三十三.
 //
 // Explicitly OUT of scope for this pass (documented, not silently skipped):
 // Boss phase-trigger scripting (BossEncounterDefinition.phases), "explodes on
@@ -483,7 +483,14 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
       const blockRule = { ...definition.blockRule, ...definition.tiers[hero.tier].behavior.blockRule };
       const capacity = getEffectiveBlockCapacity(cell, blockRule);
       if (capacity <= 0) return [];
-      return [{ instanceId: hero.instanceId, zones: getBlockZones(cell, blockRule), capacity } satisfies BlockProvider];
+      // Gate Block engagement by the SAME "how far along the Route can this hero
+      // reach" concept as its own attacks (九), so a melee tank can't be dragged
+      // into fighting -- and taking counterattack damage from -- an enemy that
+      // only just spawned and merely shares its DefenseZone (previously, Block
+      // assignment only checked zone membership, never distance, which is why a
+      // tank could get hit by monsters still far up the lane -- see 玩法核心.txt 八).
+      const engageMinPathProgress = 1 - definition.rangeAlongRoute;
+      return [{ instanceId: hero.instanceId, zones: getBlockZones(cell, blockRule), capacity, engageMinPathProgress } satisfies BlockProvider];
     });
   const blockTargets: BlockTarget[] = routes.flatMap((route) => route.enemies).map((enemy) => ({
     instanceId: enemy.instanceId,
@@ -519,7 +526,30 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
     }),
   }));
 
-  // 6. Hero Basic Attack + Auto Skill trigger + Trait.
+  // 6. "Ranged"-tagged enemies (enemies.ts tags) strike a hero directly once
+  // close enough, completely independent of Block -- Block only ever stops an
+  // enemy's forward movement (step 2/3), it was never the only thing gating who
+  // an enemy can hit. This is what makes a ranged/back-row hero actually
+  // threatened: it targets the BACK-most occupied row in a matching DefenseZone
+  // (pickRangedAttackTarget), i.e. it shoots past whichever hero is Blocking it.
+  // A dedicated cooldown field keeps this cadence independent from the Block
+  // counterattack above, so a blocked-AND-ranged enemy still fires both.
+  routes = routes.map((route) => ({
+    ...route,
+    enemies: route.enemies.map((enemy) => {
+      const definition = ENEMY_DEFINITIONS[enemy.defId];
+      if (!definition?.tags.includes("ranged")) return enemy;
+      if (enemy.pathProgress < RUN_ENGINE_CONFIG.rangedEnemyEngageRangeAlongRoute) return enemy;
+      const cooldown = enemy.rangedAttackCooldownRemainingSeconds - delta;
+      if (cooldown > 0) return { ...enemy, rangedAttackCooldownRemainingSeconds: cooldown };
+      const target = pickRangedAttackTarget(board, enemy.occupiedRoutes);
+      if (!target) return { ...enemy, rangedAttackCooldownRemainingSeconds: 0 };
+      board = damageHero(board, target.instanceId, definition.baseAttack);
+      return { ...enemy, rangedAttackCooldownRemainingSeconds: definition.attackIntervalSeconds };
+    }),
+  }));
+
+  // 7. Hero Basic Attack + Auto Skill trigger + Trait.
   const damageMultiplier = getEquipmentDamageMultiplier(run.equipment) * run.waveCombatBuff.damageMultiplier * (1 + (leaderPassiveDelta(leader).damageMultiplier ?? 0));
   allOccupiedCells(board).forEach(({ cellKey, cell, hero }) => {
     if (hero.status !== "active") return;
@@ -573,12 +603,12 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
     if (afterEffects) board = { cells: { ...board.cells, [cellKey]: { ...afterEffects, attackCooldownRemainingSeconds: attackCooldown, skill: skillState.state } } };
   });
 
-  // 7. Cleanup -- remove dead enemies, drop expired buffs/debuffs.
+  // 8. Cleanup -- remove dead enemies, drop expired buffs/debuffs.
   const now = Date.now();
   routes = routes.map((route) => ({ ...route, enemies: route.enemies.filter((enemy) => enemy.hp > 0).map((enemy) => ({ ...enemy, debuffs: removeExpiredStatusEffects(enemy.debuffs, now) })) }));
   board = { cells: Object.fromEntries(Object.entries(board.cells).map(([key, hero]) => [key, hero ? { ...hero, buffs: removeExpiredStatusEffects(hero.buffs, now) } : hero])) as BoardState["cells"] };
 
-  // 8. Leader Burst firing -- buff/shield kind fires the instant it's ready;
+  // 9. Leader Burst firing -- buff/shield kind fires the instant it's ready;
   // attack-skill kind waits for the first enemy of the Wave to actually spawn
   // (三十三: buff/shield at Combat Start, attack-skill on first-batch-arrival).
   if (isBurstReadyToFire(leader) && (leader.burst.kind === "buffShield" || waveRuntime.spawnedCount > 0)) {
@@ -592,7 +622,7 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
   waveRuntime = { ...waveRuntime, routes };
   const next: RunState = { ...run, board, castle, leader, waveRuntime };
 
-  // 9. Failure takes priority over a same-tick clear.
+  // 10. Failure takes priority over a same-tick clear.
   if (isRunFailure(castle)) return { ...next, phase: "RUN_LOSE", message: "城堡崩塌了……調整陣容，再試一次！" };
 
   const waveFullySpawned = waveRuntime.spawnedCount >= waveRuntime.spawnQueue.length;

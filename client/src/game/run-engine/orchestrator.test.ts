@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { RUN_ENGINE_CONFIG } from "./config";
+import { ENEMY_DEFINITIONS } from "./enemies";
+import { HERO_DEFINITIONS } from "./heroes";
+import { resetSkillRuntime } from "./rules/skill";
+import type { EnemyInstance, HeroInstance } from "./types";
+import type { HeroId } from "../types";
 import type { MetaProgressionAdapter } from "./metaAdapter";
 import {
   acknowledgeWavePreview,
@@ -33,6 +38,15 @@ const fakeAdapter: MetaProgressionAdapter = {
   getHeroSnapshot: (heroId) => ({ heroId, level: 1, starRank: 1, signatureWeaponUnlocked: false }),
   getEquipmentLoadout: () => ({ attackMultiplier: 0, castleBonus: 0, extraRerolls: 0 }),
 };
+
+function makeHero(instanceId: string, heroId: HeroId): HeroInstance {
+  const definition = HERO_DEFINITIONS[heroId]!;
+  return {
+    instanceId, heroId, tier: 1, hp: definition.baseHp, maxHp: definition.baseHp, shield: 0, cell: null, status: "active", buffs: [],
+    skill: resetSkillRuntime(instanceId, definition.autoSkill.trigger),
+    attackCooldownRemainingSeconds: 0,
+  };
+}
 
 /** Drives Dice -> Preparation and places a single hero at board zone 2 (Wave 1's
  * only activeRoute, per waves.ts) so its coverage actually reaches the spawned
@@ -249,6 +263,53 @@ describe("orchestrator end-to-end Wave lifecycle", () => {
 
     expect(run.phase).toBe("REWARD_RESOLVE");
     expect(run.castle.hp).toBeLessThan(run.castle.maxHp);
+  });
+
+  it("「ranged」標籤敵人一旦推進到交戰距離，會無視 Block 直接打到後排英雄——這正是原本「後排英雄永遠不會被任何怪物攻擊到」的缺口", () => {
+    let run = createRun({ selectedHeroes: ["knight"], leaderHeroId: "knight", adapter: fakeAdapter });
+    run = acknowledgeWavePreview(run, fixedRandom);
+    run = confirmFate(run);
+    // NONE keeps the board empty via the normal flow -- both heroes below are
+    // hand-placed afterwards so this test controls their exact cells/hp directly.
+    run = chooseComboEffect(run, "NONE", fakeAdapter, fixedRandom);
+    run = confirmFormation(run);
+    expect(run.phase).toBe("COMBAT_RUNNING");
+
+    const tank = makeHero("tank-1", "knight");
+    const mage = makeHero("mage-1", "fireMage");
+    const archer: EnemyInstance = {
+      instanceId: "archer-1",
+      defId: "goblinArcher",
+      hp: ENEMY_DEFINITIONS.goblinArcher.baseHp,
+      maxHp: ENEMY_DEFINITIONS.goblinArcher.baseHp,
+      occupiedRoutes: [2],
+      pathProgress: 0.9, // past both Knight's ~0.75 Block-engage threshold and the 0.45 ranged threshold
+      blockedBy: "tank-1", // already engaged with the tank -- proves the snipe fires independently of Block
+      debuffs: [],
+      attackCooldownRemainingSeconds: 999, // suppress this tick's Block counterattack so the test isolates the ranged snipe
+      rangedAttackCooldownRemainingSeconds: 0,
+    };
+    run = {
+      ...run,
+      board: { cells: { "2-front": tank, "2-back": mage } },
+      waveRuntime: {
+        ...run.waveRuntime!,
+        spawnedCount: run.waveRuntime!.spawnQueue.length, // no more natural Wave 1 spawns this tick
+        routes: run.waveRuntime!.routes.map((route) => (route.routeId === 2 ? { ...route, enemies: [archer] } : { ...route, enemies: [] })),
+      },
+    };
+
+    const tankHpBefore = run.board.cells["2-front"]!.hp;
+    const mageHpBefore = run.board.cells["2-back"]!.hp;
+    run = advanceCombat(run, 0.1, fixedRandom);
+
+    // Block itself still holds (the tank keeps fighting it) -- but the mage in
+    // the same DefenseZone's back row also takes damage this same tick, which
+    // was impossible before this fix (only the blockedBy hero could ever be hit).
+    const archerAfter = run.waveRuntime?.routes.find((route) => route.routeId === 2)?.enemies.find((enemy) => enemy.instanceId === "archer-1");
+    expect(archerAfter?.blockedBy).toBe("tank-1");
+    expect(run.board.cells["2-front"]!.hp).toBe(tankHpBefore);
+    expect(run.board.cells["2-back"]!.hp).toBe(mageHpBefore - ENEMY_DEFINITIONS.goblinArcher.baseAttack);
   });
 
   it("重骰只影響玩家點選（取消 locked）的骰子，其餘維持原值；未選取任何骰子時重骰為無效操作", () => {

@@ -35,6 +35,13 @@ export interface BlockProvider {
   /** Already resolved via getEffectiveBlockCapacity() -- this module stays
    * HeroDefinition-agnostic, matching the merge.ts buildUpgraded pattern. */
   capacity: number;
+  /** Minimum BlockTarget.pathProgress before this provider may claim a target --
+   * mirrors HeroDefinition.rangeAlongRoute's own minPathProgress gate for attacks
+   * (targeting.ts's getEnemyTargetPool), so a melee tank can't "reach out" and
+   * grab/counter-fight an enemy that's still far up the Route just because it
+   * shares a DefenseZone. Optional and defaults to 0 (no gate) so callers/tests
+   * that don't care about engage range can omit it entirely. */
+  engageMinPathProgress?: number;
 }
 
 export interface BlockTarget {
@@ -66,9 +73,10 @@ export function computeBlockAssignments(providers: BlockProvider[], targets: Blo
       });
 
     zoneTargets.forEach((target) => {
+      const canClaim = (candidate: BlockProvider) => (remainingCapacity.get(candidate.instanceId) ?? 0) >= target.blockCost && target.pathProgress >= (candidate.engageMinPathProgress ?? 0);
       const stickyProviderId = previousAssignments.get(target.instanceId);
-      const sticky = stickyProviderId ? zoneProviders.find((candidate) => candidate.instanceId === stickyProviderId && (remainingCapacity.get(candidate.instanceId) ?? 0) >= target.blockCost) : undefined;
-      const provider = sticky ?? zoneProviders.find((candidate) => (remainingCapacity.get(candidate.instanceId) ?? 0) >= target.blockCost);
+      const sticky = stickyProviderId ? zoneProviders.find((candidate) => candidate.instanceId === stickyProviderId && canClaim(candidate)) : undefined;
+      const provider = sticky ?? zoneProviders.find(canClaim);
       if (!provider) return;
       remainingCapacity.set(provider.instanceId, (remainingCapacity.get(provider.instanceId) ?? 0) - target.blockCost);
       assignments.set(target.instanceId, provider.instanceId);

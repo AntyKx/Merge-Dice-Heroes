@@ -8,7 +8,7 @@
  */
 import type { AttackCoverageRule, BoardCell, BoardState, DefenseZone, EnemyInstance, HeroInstance, RouteState, SupportRangeRule } from "../types";
 import { ALL_DEFENSE_ZONES, BOARD_ROWS, boardCellKey } from "../types";
-import { zonesWithinSpan } from "./board";
+import { allOccupiedCells, zonesWithinSpan } from "./board";
 
 type CellKey = ReturnType<typeof boardCellKey>;
 
@@ -44,6 +44,18 @@ export function getEnemyTargetPool(cell: BoardCell, coverage: AttackCoverageRule
 
 function rowIndex(row: BoardCell["row"]): number {
   return BOARD_ROWS.indexOf(row);
+}
+
+/** Who a "ranged"-tagged enemy (EnemyDefinition.tags) snipes when it strikes a
+ * hero directly, bypassing Block entirely -- Block only ever stops an enemy's
+ * forward movement (rules/block.ts), it never gates who else is a valid target.
+ * Prefers the BACK-most occupied row among the enemy's occupiedRoutes zones (the
+ * point of a ranged threat is reaching past whoever is tanking up front);
+ * undefined if no active hero currently occupies any of those zones. */
+export function pickRangedAttackTarget(board: BoardState, zones: DefenseZone[]): HeroInstance | undefined {
+  const candidates = allOccupiedCells(board).filter(({ cell, hero }) => hero.status === "active" && zones.includes(cell.zone));
+  if (!candidates.length) return undefined;
+  return [...candidates].sort((a, b) => rowIndex(b.cell.row) - rowIndex(a.cell.row))[0].hero;
 }
 
 /** Board cells (with their occupying hero) reachable by a Support at `cell` per its

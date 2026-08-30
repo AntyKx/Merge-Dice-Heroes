@@ -33,7 +33,7 @@ export function getDueSpawns(waveRuntime: WaveRuntimeState): { dueSpawns: Schedu
 }
 
 export function createEnemyInstance(definition: EnemyDefinition, routes: ScheduledSpawn["routes"], instanceId: string): EnemyInstance {
-  return { instanceId, defId: definition.id, hp: definition.baseHp, maxHp: definition.baseHp, occupiedRoutes: routes, pathProgress: 0, debuffs: [], attackCooldownRemainingSeconds: 0 };
+  return { instanceId, defId: definition.id, hp: definition.baseHp, maxHp: definition.baseHp, occupiedRoutes: routes, pathProgress: 0, debuffs: [], attackCooldownRemainingSeconds: 0, rangedAttackCooldownRemainingSeconds: 0 };
 }
 
 /** Advances only the UNBLOCKED enemies on a Route -- blocked ones are stationary

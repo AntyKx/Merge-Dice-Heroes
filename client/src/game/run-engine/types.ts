@@ -237,6 +237,13 @@ export interface EnemyInstance {
    * 他的英雄 -> 英雄正常與其戰鬥" (八). Defaults to 0 at spawn (ready to swing the
    * instant it's blocked). */
   attackCooldownRemainingSeconds: number;
+  /** Independent cooldown for "ranged"-tagged enemies' direct-strike-a-hero attack
+   * (orchestrator.ts's Combat tick step 5.5), which bypasses Block entirely --
+   * kept separate from attackCooldownRemainingSeconds so a ranged enemy that's
+   * ALSO currently blockedBy a tank still fires both attacks on their own
+   * independent cadences instead of one starving the other. Only ever ticks once
+   * pathProgress has crossed RUN_ENGINE_CONFIG.rangedEnemyEngageRangeAlongRoute. */
+  rangedAttackCooldownRemainingSeconds: number;
 }
 
 export interface RouteState {

@@ -78,4 +78,25 @@ describe("computeBlockAssignments", () => {
     const assignments = computeBlockAssignments(providers, targets, previous);
     expect(assignments.get("e1")).toBe("knight-b");
   });
+
+  it("engageMinPathProgress：敵人尚未推進到交戰距離內，即使同防區、Block 有容量也不會被阻擋（原本只看防區不看距離的缺口）", () => {
+    const providers = [{ instanceId: "knight", zones: [1 as const], capacity: 1, engageMinPathProgress: 0.75 }];
+    const targets = [{ instanceId: "far", occupiedZones: [1 as const], blockCost: 1, pathProgress: 0.3 }];
+    const assignments = computeBlockAssignments(providers, targets);
+    expect(assignments.has("far")).toBe(false);
+  });
+
+  it("engageMinPathProgress：敵人一旦推進到門檻以上就會被正常阻擋", () => {
+    const providers = [{ instanceId: "knight", zones: [1 as const], capacity: 1, engageMinPathProgress: 0.75 }];
+    const targets = [{ instanceId: "close", occupiedZones: [1 as const], blockCost: 1, pathProgress: 0.8 }];
+    const assignments = computeBlockAssignments(providers, targets);
+    expect(assignments.get("close")).toBe("knight");
+  });
+
+  it("engageMinPathProgress 省略時預設為 0（不加任何距離限制），維持既有呼叫端的行為", () => {
+    const providers = [{ instanceId: "knight", zones: [1 as const], capacity: 1 }];
+    const targets = [{ instanceId: "e1", occupiedZones: [1 as const], blockCost: 1, pathProgress: 0 }];
+    const assignments = computeBlockAssignments(providers, targets);
+    expect(assignments.get("e1")).toBe("knight");
+  });
 });

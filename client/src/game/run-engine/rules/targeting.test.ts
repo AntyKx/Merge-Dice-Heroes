@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { BoardState, EnemyInstance, HeroInstance, RouteState } from "../types";
 import { boardCellKey } from "../types";
-import { getAttackCoverage, getEnemyTargetPool, getSupportTargets } from "./targeting";
+import { getAttackCoverage, getEnemyTargetPool, getSupportTargets, pickRangedAttackTarget } from "./targeting";
 
 function makeEnemy(instanceId: string, occupiedRoutes: EnemyInstance["occupiedRoutes"], pathProgress: number): EnemyInstance {
   return { instanceId, defId: "slime", hp: 10, maxHp: 10, occupiedRoutes, pathProgress, debuffs: [] };
@@ -88,5 +88,43 @@ describe("getSupportTargets", () => {
   it("auraAll 涵蓋全場（不含自己）", () => {
     const targets = getSupportTargets(self, board, { kind: "auraAll" }).map((entry) => entry.hero.instanceId).sort();
     expect(targets).toEqual(["adjacent-row", "adjacent-zone", "far"]);
+  });
+});
+
+describe("pickRangedAttackTarget", () => {
+  it("同防區有多排英雄時，優先選最後排（穿過前排坦克打後排的重點）", () => {
+    const board: BoardState = {
+      cells: {
+        [boardCellKey({ zone: 2, row: "front" })]: makeHero("tank"),
+        [boardCellKey({ zone: 2, row: "back" })]: makeHero("mage"),
+      },
+    };
+    expect(pickRangedAttackTarget(board, [2])?.instanceId).toBe("mage");
+  });
+
+  it("後排沒有人時，退而求其次選同防區內較前排的英雄", () => {
+    const board: BoardState = {
+      cells: { [boardCellKey({ zone: 2, row: "front" })]: makeHero("tank") },
+    };
+    expect(pickRangedAttackTarget(board, [2])?.instanceId).toBe("tank");
+  });
+
+  it("寬體敵人佔據多個防區時，任一防區的英雄都算候選", () => {
+    const board: BoardState = {
+      cells: { [boardCellKey({ zone: 3, row: "back" })]: makeHero("healer") },
+    };
+    expect(pickRangedAttackTarget(board, [2, 3])?.instanceId).toBe("healer");
+  });
+
+  it("防區內完全沒有英雄時回傳 undefined", () => {
+    const board: BoardState = { cells: {} };
+    expect(pickRangedAttackTarget(board, [1])).toBeUndefined();
+  });
+
+  it("已倒下的英雄不列入候選", () => {
+    const board: BoardState = {
+      cells: { [boardCellKey({ zone: 2, row: "back" })]: { ...makeHero("downed-mage"), status: "downed" } },
+    };
+    expect(pickRangedAttackTarget(board, [2])).toBeUndefined();
   });
 });
