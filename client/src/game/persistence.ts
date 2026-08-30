@@ -21,6 +21,7 @@ export const defaultProgress: PlayerProgress = {
   equipped: { weapon: "morningBlade", armor: "watcherCloak" },
   daily: { dayKey: todayKey(), battles: 0, merges: 0, victories: 0, claimed: [] }, dungeonClears: {}, shop: defaultShop(),
   lobbyRead: {}, heroProgress: {},
+  chaptersCleared: {}, bestWaveByChapter: {},
   settings: { musicEnabled: false, sfxEnabled: true, vibrationEnabled: true },
 };
 
@@ -40,7 +41,7 @@ export function mergeWithDefaults(parsed: Partial<PlayerProgress> | undefined): 
   // any equipment added to the game since it was last written, instead of
   // being stuck with whatever the roster looked like at first-save time.
   const inventory = Array.from(new Set([...(parsed.inventory ?? []), ...defaultProgress.inventory]));
-  return { ...defaultProgress, ...parsed, inventory, equipmentLevels: { ...defaultProgress.equipmentLevels, ...parsed.equipmentLevels }, equipped: { ...defaultProgress.equipped, ...parsed.equipped }, daily: freshDaily, dungeonClears: { ...defaultProgress.dungeonClears, ...parsed.dungeonClears }, shop: freshShop, lobbyRead, heroProgress: { ...defaultProgress.heroProgress, ...parsed.heroProgress }, settings: { ...defaultProgress.settings, ...parsed.settings } };
+  return { ...defaultProgress, ...parsed, inventory, equipmentLevels: { ...defaultProgress.equipmentLevels, ...parsed.equipmentLevels }, equipped: { ...defaultProgress.equipped, ...parsed.equipped }, daily: freshDaily, dungeonClears: { ...defaultProgress.dungeonClears, ...parsed.dungeonClears }, shop: freshShop, lobbyRead, heroProgress: { ...defaultProgress.heroProgress, ...parsed.heroProgress }, chaptersCleared: { ...defaultProgress.chaptersCleared, ...parsed.chaptersCleared }, bestWaveByChapter: { ...defaultProgress.bestWaveByChapter, ...parsed.bestWaveByChapter }, settings: { ...defaultProgress.settings, ...parsed.settings } };
 }
 
 export function loadProgress(): PlayerProgress {

@@ -34,11 +34,13 @@ import type {
   WaveDefinition,
   WaveRuntimeState,
 } from "@/game/run-engine/types";
-import { WAVE_DEFINITIONS } from "@/game/run-engine/waves";
+import { WAVES_BY_CHAPTER } from "@/game/run-engine/waves";
 import { useGameStore } from "@/game/store";
-import type { DungeonId, HeroId } from "@/game/types";
+import type { ChapterId, DungeonId, HeroId } from "@/game/types";
 
-const TOTAL_WAVES = WAVE_DEFINITIONS.length;
+// All three chapters are 10 Waves each (waves.ts's WAVES_BY_CHAPTER doc comment),
+// so a single module-level constant stays valid without branching per chapterId.
+const TOTAL_WAVES = WAVES_BY_CHAPTER.courtyard.length;
 
 // ---------------------------------------------------------------------------
 // Presentation-only display copy -- talents.ts/blessings.ts stay pure rule data
@@ -163,13 +165,13 @@ const FOREST_CASTLE_BOARD_URL = "/manus-storage/forest-citadel-board_4039b3e9.we
  * the lane) available before any enemy has actually spawned, using the Wave's
  * activeRoutes rather than live waveRuntime data. Inactive lanes are left
  * un-tinted (no more darkening overlay) so the artwork stays readable underneath. */
-function RouteStrip({ waveDefinition, waveRuntime, wave, boardOverlay }: { waveDefinition: WaveDefinition | undefined; waveRuntime: WaveRuntimeState | undefined; wave: number; boardOverlay?: React.ReactNode }) {
+function RouteStrip({ waveDefinition, waveRuntime, wave, chapterId, boardOverlay }: { waveDefinition: WaveDefinition | undefined; waveRuntime: WaveRuntimeState | undefined; wave: number; chapterId: ChapterId; boardOverlay?: React.ReactNode }) {
   const activeRoutes = waveDefinition?.activeRoutes ?? [];
   const liveEnemies = waveRuntime?.routes.flatMap((route) => route.enemies) ?? [];
   const plannedCount = waveDefinition?.batches.reduce((sum, batch) => sum + batch.entries.length, 0) ?? 0;
   const enemyCount = waveRuntime ? liveEnemies.length : plannedCount;
   const isBossWave = !!waveDefinition?.bossEncounter;
-  const nextWaveDefinition = WAVE_DEFINITIONS[wave];
+  const nextWaveDefinition = WAVES_BY_CHAPTER[chapterId][wave];
   const summarizeEnemies = (definition: WaveDefinition | undefined) => {
     const counts = new Map<string, number>();
     definition?.batches.forEach((batch) => batch.entries.forEach((entry) => counts.set(entry.enemyId, (counts.get(entry.enemyId) ?? 0) + 1)));
@@ -446,7 +448,7 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false,
 
 function Bsv2WavePreview({ run }: { run: RunState }) {
   const acknowledgeWavePreview = useGameStore((state) => state.acknowledgeWavePreview);
-  const waveDefinition = WAVE_DEFINITIONS[run.wave - 1];
+  const waveDefinition = WAVES_BY_CHAPTER[run.chapterId][run.wave - 1];
   const counts = new Map<string, number>();
   waveDefinition?.batches.forEach((batch) => batch.entries.forEach((entry) => counts.set(entry.enemyId, (counts.get(entry.enemyId) ?? 0) + 1)));
   return <section className="bsv2-panel bsv2-wave-preview">
@@ -718,7 +720,7 @@ export default function BattleScreenV2() {
 
   const boardInteractive = run.phase === "PREPARATION";
   const visualTestFullBoard = import.meta.env.DEV && new URLSearchParams(window.location.search).has("fullBoardPreview");
-  const waveDefinition = WAVE_DEFINITIONS[run.wave - 1];
+  const waveDefinition = WAVES_BY_CHAPTER[run.chapterId][run.wave - 1];
   // WAVE_PREVIEW/DICE_DECISION/DICE_RESOLVE all join the combined scene now (素材/
   // CLAUDE_王國戰場控制台 follow-ups): the whole "roll fate, resolve it, see what's
   // coming" sequence happens as floating cards over the live battlefield instead of
@@ -730,7 +732,7 @@ export default function BattleScreenV2() {
 
   return <section className={`bsv2-screen ${isCombinedScene ? "bsv2-screen--combined" : ""}`}>
     <Bsv2Header run={run} />
-    <RouteStrip waveDefinition={waveDefinition} waveRuntime={run.waveRuntime} wave={run.wave} boardOverlay={boardInScene} />
+    <RouteStrip waveDefinition={waveDefinition} waveRuntime={run.waveRuntime} wave={run.wave} chapterId={run.chapterId} boardOverlay={boardInScene} />
     <Bsv2BattleLog message={run.message} />
     {isCombinedScene
       ? <>

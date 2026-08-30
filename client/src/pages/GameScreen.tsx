@@ -22,8 +22,8 @@ import { HERO_BOARD_LAYOUT } from "@/game/heroBoardLayout";
 import { HERO_FRAME_SHEETS, HeroFrameSprite, type HeroAnimationAction } from "@/game/heroSprites";
 import { getHeroProgress, heroXpRequirement } from "@/game/heroProgress";
 import { LEADER_CARD_PROFILES } from "@/game/leaderCardProfiles";
-import { useGameStore } from "@/game/store";
-import type { DailyQuestId, EquipmentId, EquipmentSlot, HeroId, ShopOfferId } from "@/game/types";
+import { activeChapterId, CHAPTER_CLEAR_REWARDS, useGameStore } from "@/game/store";
+import type { ChapterId, DailyQuestId, EquipmentId, EquipmentSlot, HeroId, ShopOfferId } from "@/game/types";
 
 const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
@@ -115,21 +115,55 @@ const LOBBY_WEATHER_META: Record<LobbyWeather, { label: string; detail: string }
   night: { label: "星夜王都", detail: "塔燈守望中" },
 };
 
-const STORY_CHAPTER_STAGES = [
-  { id: "gate", label: "城門初試", wave: 1, power: 80, reward: "命運碎晶 ×6", detail: "首通補給：守望素材 ×2", enemy: "史萊姆斥候與木盾哥布林", rule: "熟悉骰子合成與第一列防守節奏。", marker: "shield" },
-  { id: "garden", label: "庭園伏擊", wave: 3, power: 120, reward: "命運碎晶 ×8", detail: "首通補給：鍛造銅礦 ×3", enemy: "疾行狼群與投石小妖", rule: "敵軍速度提高；留意遠程優先目標。", marker: "flame" },
-  { id: "tower", label: "塔樓守望", wave: 5, power: 170, reward: "命運碎晶 ×10", detail: "首通補給：英雄經驗 ×20", enemy: "飛翼守衛與裝甲傀儡", rule: "每回合會出現一名高護甲敵人。", marker: "sparkle" },
-  { id: "bridge", label: "石橋決戰", wave: 7, power: 220, reward: "命運碎晶 ×12", detail: "首通補給：鍛造銅礦 ×6", enemy: "雙刃盜賊與重甲衛兵", rule: "敵人分兩路逼近，建議維持範圍輸出。", marker: "swords" },
-  { id: "boss", label: "命運骰塔之門", wave: 10, power: 300, reward: "命運碎晶 ×18", detail: "章節通關：王都守望印章", enemy: "骰塔守門巨像", rule: "Boss 會在半血時強化衝鋒；保留技能骰。", marker: "crown" },
-] as const;
+type ChapterStageMarker = "shield" | "flame" | "sparkle" | "swords" | "crown";
+interface ChapterStage {
+  id: string;
+  label: string;
+  wave: number;
+  power: number;
+  reward: string;
+  detail: string;
+  enemy: string;
+  rule: string;
+  marker: ChapterStageMarker;
+}
+
+/** Per-chapter stage waypoints (Wave 1/3/5/7/10 of each chapter, per 遠征輿圖 v1)
+ * -- courtyard is the original, unmodified content; battlefield/moonlit describe
+ * the new enemy rosters from run-engine/waves.ts's WAVES_BATTLEFIELD/WAVES_MOONLIT.
+ * `power` is flavor/UI-only (compared against teamPower below), scaled roughly
+ * with each chapter's enemy HP curve. */
+const STORY_CHAPTER_STAGES: Record<ChapterId, readonly ChapterStage[]> = {
+  courtyard: [
+    { id: "gate", label: "城門初試", wave: 1, power: 80, reward: "命運碎晶 ×6", detail: "首通補給：守望素材 ×2", enemy: "史萊姆斥候與木盾哥布林", rule: "熟悉骰子合成與第一列防守節奏。", marker: "shield" },
+    { id: "garden", label: "庭園伏擊", wave: 3, power: 120, reward: "命運碎晶 ×8", detail: "首通補給：鍛造銅礦 ×3", enemy: "疾行狼群與投石小妖", rule: "敵軍速度提高；留意遠程優先目標。", marker: "flame" },
+    { id: "tower", label: "塔樓守望", wave: 5, power: 170, reward: "命運碎晶 ×10", detail: "首通補給：英雄經驗 ×20", enemy: "飛翼守衛與裝甲傀儡", rule: "每回合會出現一名高護甲敵人。", marker: "sparkle" },
+    { id: "bridge", label: "石橋決戰", wave: 7, power: 220, reward: "命運碎晶 ×12", detail: "首通補給：鍛造銅礦 ×6", enemy: "雙刃盜賊與重甲衛兵", rule: "敵人分兩路逼近，建議維持範圍輸出。", marker: "swords" },
+    { id: "boss", label: "命運骰塔之門", wave: 10, power: 300, reward: "命運碎晶 ×18", detail: "章節通關：王都守望印章", enemy: "骰塔守門巨像", rule: "Boss 會在半血時強化衝鋒；保留技能骰。", marker: "crown" },
+  ],
+  battlefield: [
+    { id: "frontier", label: "戰線前哨", wave: 1, power: 130, reward: "命運碎晶 ×9", detail: "首通補給：鍛造銅礦 ×4", enemy: "遊擊霧刺客小隊", rule: "霧地能見度低，遠程敵人會優先狙擊你的英雄。", marker: "shield" },
+    { id: "ironline", label: "鐵衛防線", wave: 3, power: 190, reward: "命運碎晶 ×11", detail: "首通補給：鍛造銅礦 ×5", enemy: "重甲督軍與霧語劍手", rule: "重裝敵人生命更高，建議集中火力擊破。", marker: "flame" },
+    { id: "glacial", label: "寒霜哨站", wave: 5, power: 260, reward: "命運碎晶 ×13", detail: "首通補給：英雄經驗 ×26", enemy: "重甲督軍與霜爆術士", rule: "爆發系敵人單次傷害高，留意城堡血量。", marker: "sparkle" },
+    { id: "mistpass", label: "迷障隘口", wave: 7, power: 330, reward: "命運碎晶 ×15", detail: "首通補給：鍛造銅礦 ×8", enemy: "霧刺客、督軍與冰霜巫祝", rule: "治療系敵人會延長戰鬥時間，優先集火。", marker: "swords" },
+    { id: "fogthrone", label: "霧谷終戰．迷霧領主", wave: 10, power: 450, reward: "命運碎晶 ×30", detail: "章節通關：鍛造銅礦 ×10", enemy: "迷霧領主親臨", rule: "Boss 半血時會鎖格並召喚霧刺客支援，保留應對手段。", marker: "crown" },
+  ],
+  moonlit: [
+    { id: "vigilgate", label: "守夜前哨", wave: 1, power: 190, reward: "命運碎晶 ×12", detail: "首通補給：鍛造銅礦 ×6", enemy: "夜梟遠襲手小隊", rule: "敵方遠程單位傷害更高，優先安排坦克格擋。", marker: "shield" },
+    { id: "siegewall", label: "攻城壁壘", wave: 3, power: 280, reward: "命運碎晶 ×15", detail: "首通補給：鍛造銅礦 ×7", enemy: "破城重炮兵與月刃武者", rule: "重炮兵可直接傷害城堡，務必優先攔截。", marker: "flame" },
+    { id: "moonfall", label: "崩月哨壘", wave: 5, power: 380, reward: "命運碎晶 ×18", detail: "首通補給：英雄經驗 ×32", enemy: "破城重炮兵與崩月投石者", rule: "雙重攻城壓力，城堡減傷裝備此關極吃重。", marker: "sparkle" },
+    { id: "lastcloister", label: "最終迴廊", wave: 7, power: 480, reward: "命運碎晶 ×21", detail: "首通補給：鍛造銅礦 ×10", enemy: "夜梟、重炮兵與聖環禮官", rule: "治療與遠程雙核心，建議優先破除禮官。", marker: "swords" },
+    { id: "silverthrone", label: "銀月終焉．銀月裁決者", wave: 10, power: 650, reward: "命運碎晶 ×48", detail: "章節通關：鍛造銅礦 ×15", enemy: "銀月裁決者親臨", rule: "全戰役唯一 3 階段 Boss，殘局會召喚雙重支援，備妥壓箱底手段。", marker: "crown" },
+  ],
+};
 
 const CHAPTER_MAP_THEMES = [
   { id: "courtyard", label: "王都庭園", title: "命運骰塔之門", backgroundUrl: CUTE_LOBBY_BACKGROUND_URL },
   { id: "battlefield", label: "城外戰線", title: "霧谷前線", backgroundUrl: BACKDROP_URL },
   { id: "moonlit", label: "月影城垣", title: "銀月守望", backgroundUrl: CUTE_LOBBY_BACKGROUND_URL },
-] as const;
+] as const satisfies readonly { id: ChapterId; label: string; title: string; backgroundUrl: string }[];
 
-function StoryStageMarker({ marker }: { marker: (typeof STORY_CHAPTER_STAGES)[number]["marker"] }) {
+function StoryStageMarker({ marker }: { marker: ChapterStageMarker }) {
   if (marker === "flame") return <Flame size={15} />;
   if (marker === "sparkle") return <Sparkles size={15} />;
   if (marker === "swords") return <Swords size={15} />;
@@ -317,16 +351,27 @@ function TitleScreen() {
   const hasDungeonAttempt = DUNGEONS.some((dungeon, index) => (dungeon.unlocked || (index > 0 && (progress.dungeonClears[DUNGEONS[index - 1].id] ?? 0) > 0)) && progress.stamina >= dungeon.energyCost);
   const playerLevel = 1 + Math.floor(progress.wins / 3);
   const levelProgress = (progress.wins % 3) + 1;
-  const storyChapter = 1 + Math.floor(progress.wins / 4);
-  const unlockedChapterCount = Math.max(1, Math.min(CHAPTER_MAP_THEMES.length, storyChapter));
-  const activeChapterIndex = unlockedChapterCount - 1;
+  // Real unlock gate (遠征輿圖 v1): a chapter counts as unlocked once the PREVIOUS
+  // chapter's Wave 10 (its Boss) has actually been cleared -- replaces the old
+  // wins/4 heuristic, which only ever swapped the background art while every
+  // "章" secretly kept fighting the same 10 Waves.
+  const chapterOrder = CHAPTER_MAP_THEMES.map((theme) => theme.id);
+  const activeChapterIdValue = activeChapterId(progress);
+  const activeChapterIndex = chapterOrder.indexOf(activeChapterIdValue);
+  const unlockedChapterCount = activeChapterIndex + 1;
+  const storyChapter = unlockedChapterCount;
   const previewChapter = previewChapterIndex + 1;
-  const chapterCompleted = progress.bestWave >= STORY_CHAPTER_STAGES.at(-1)!.wave;
-  const currentStoryStage = STORY_CHAPTER_STAGES.find((stage) => progress.bestWave < stage.wave) ?? STORY_CHAPTER_STAGES.at(-1)!;
+  const previewChapterId = chapterOrder[previewChapterIndex];
+  const chapterCompleted = !!progress.chaptersCleared[activeChapterIdValue];
+  const activeChapterBestWave = progress.bestWaveByChapter[activeChapterIdValue] ?? 0;
+  const currentStoryStage = STORY_CHAPTER_STAGES[activeChapterIdValue].find((stage) => activeChapterBestWave < stage.wave) ?? STORY_CHAPTER_STAGES[activeChapterIdValue].at(-1)!;
   const chapterTheme = CHAPTER_MAP_THEMES[previewChapterIndex];
   const previewingActiveChapter = previewChapterIndex === activeChapterIndex;
-  const selectedStoryStage = STORY_CHAPTER_STAGES.find((stage) => stage.id === focusedStageId) ?? currentStoryStage;
-  const selectedStageCleared = previewChapterIndex < activeChapterIndex || (previewingActiveChapter && progress.bestWave >= selectedStoryStage.wave);
+  const previewChapterStages = STORY_CHAPTER_STAGES[previewChapterId];
+  const previewChapterBestWave = progress.bestWaveByChapter[previewChapterId] ?? 0;
+  const defaultPreviewStage = previewingActiveChapter ? currentStoryStage : previewChapterStages.at(-1)!;
+  const selectedStoryStage = previewChapterStages.find((stage) => stage.id === focusedStageId) ?? defaultPreviewStage;
+  const selectedStageCleared = previewChapterIndex < activeChapterIndex || (previewingActiveChapter && activeChapterBestWave >= selectedStoryStage.wave);
   const teamPower = selectedHeroes.reduce((total, heroId) => {
     const hero = HEROES[heroId];
     const heroProgress = getHeroProgress(progress.heroProgress[heroId]);
@@ -348,6 +393,9 @@ function TitleScreen() {
       window.clearTimeout(exitTimer);
     };
   }, [chapterCompleted, storyChapter]);
+  // "開始遠征" always launches the player's real active/frontier chapter
+  // (store.ts's activeChapterId(progress)) -- the chapter map below is a
+  // read-only browser, never a launcher (its own header copy says so).
   const launchExpedition = () => { if (departing || selectedHeroes.length !== 3) return; setDeparting(true); window.setTimeout(() => startRun(), 1100); };
   const editFormationHero = (heroId: HeroId) => {
     if (selectedHeroes[focusedFormationSlot] === heroId) {
@@ -363,9 +411,8 @@ function TitleScreen() {
     window.setTimeout(() => setRewardBurstStageId((active) => active === stageId ? null : active), 700);
   };
   const selectChapterPreview = (index: number) => {
-    const unlockWins = index * 4;
     if (index >= unlockedChapterCount) {
-      setLockedChapterMessage(`需累積 ${unlockWins} 場勝利後解鎖第 ${index + 1} 章`);
+      setLockedChapterMessage(`通關「${CHAPTER_MAP_THEMES[index - 1].title}」即可解鎖第 ${index + 1} 章`);
       return;
     }
     setLockedChapterMessage(null);
@@ -398,9 +445,9 @@ function TitleScreen() {
     </header>
     <button className="cute-story-progress cute-story-progress--stage-frame" type="button" onClick={() => { setPreviewChapterIndex(activeChapterIndex); setFocusedStageId(null); setChapterMapOpen(true); }} aria-label={`開啟第 ${storyChapter} 章地圖，目前 ${currentStoryStage.label}`}>
       <img className="cute-story-progress__frame" src={STORY_STAGE_FRAME_URL} alt="" aria-hidden="true" />
-      <div className="cute-story-progress__copy"><span>主線 第 {storyChapter} 章</span><b>命運骰塔之門</b></div>
-      <small>{weatherMeta.label} · WAVE {String(progress.bestWave).padStart(2, "0")}</small>
-      {showChapterStamp && <span className="cute-story-progress__completion-stamp" aria-label="第 1 章完成"><Check size={12} /><b>完成</b></span>}
+      <div className="cute-story-progress__copy"><span>主線 第 {storyChapter} 章</span><b>{CHAPTER_MAP_THEMES[activeChapterIndex].title}</b></div>
+      <small>{weatherMeta.label} · WAVE {String(activeChapterBestWave).padStart(2, "0")}</small>
+      {showChapterStamp && <span className="cute-story-progress__completion-stamp" aria-label={`第 ${storyChapter} 章完成`}><Check size={12} /><b>完成</b></span>}
       <span className="cute-story-progress__hint" aria-hidden="true">點擊查看章節地圖</span>
     </button>
     <main className="cute-hub-standby" aria-label="王都遠征入口">
@@ -446,15 +493,14 @@ function TitleScreen() {
         <div className="chapter-map-thumbnails" aria-label="章節快速跳轉">
           {CHAPTER_MAP_THEMES.map((theme, index) => {
             const locked = index >= unlockedChapterCount;
-            const unlockWins = index * 4;
             const unlocking = unlockingChapterIndex === index;
-            return <button key={theme.id} type="button" className={`${previewChapterIndex === index ? "is-selected " : ""}${locked ? "is-locked " : ""}${unlocking ? "is-unlocking" : ""}`} style={{ "--chapter-thumbnail": `url(${theme.backgroundUrl})` } as React.CSSProperties} onClick={() => selectChapterPreview(index)}><i aria-hidden="true" />{(locked || unlocking) && <em aria-hidden="true"><Lock size={10} /></em>}<span>第 {index + 1} 章</span><small>{locked ? `勝利 ${unlockWins} 場解鎖` : unlocking ? "章節解鎖！" : theme.label}</small></button>;
+            return <button key={theme.id} type="button" className={`${previewChapterIndex === index ? "is-selected " : ""}${locked ? "is-locked " : ""}${unlocking ? "is-unlocking" : ""}`} style={{ "--chapter-thumbnail": `url(${theme.backgroundUrl})` } as React.CSSProperties} onClick={() => selectChapterPreview(index)}><i aria-hidden="true" />{(locked || unlocking) && <em aria-hidden="true"><Lock size={10} /></em>}<span>第 {index + 1} 章</span><small>{locked ? `通關第 ${index} 章解鎖` : unlocking ? "章節解鎖！" : theme.label}</small></button>;
           })}
         </div>
         {lockedChapterMessage && <p className="chapter-map-lock-notice" role="status"><Lock size={12} />{lockedChapterMessage}</p>}
         <div className="chapter-map-sheet__route" aria-label={`第 ${previewChapter} 章關卡節點`}>
-          {STORY_CHAPTER_STAGES.map((stage, index) => {
-            const cleared = previewChapterIndex < activeChapterIndex || (previewingActiveChapter && progress.bestWave >= stage.wave);
+          {previewChapterStages.map((stage, index) => {
+            const cleared = previewChapterIndex < activeChapterIndex || (previewingActiveChapter && previewChapterBestWave >= stage.wave);
             const current = previewingActiveChapter && !cleared && stage.id === currentStoryStage.id;
             const focused = focusedStageId === stage.id;
             const openingReward = rewardBurstStageId === stage.id;
@@ -467,7 +513,7 @@ function TitleScreen() {
           })}
         </div>
         <section className="chapter-stage-detail" aria-live="polite"><span className="chapter-stage-detail__icon"><StoryStageMarker marker={selectedStoryStage.marker} /></span><div><small>WAVE {String(selectedStoryStage.wave).padStart(2, "0")} · {selectedStageCleared ? "已通關" : previewingActiveChapter ? "目前可挑戰" : "章節紀錄"}</small><h3>{selectedStoryStage.label}</h3><p>{selectedStoryStage.enemy}</p><em>{selectedStoryStage.rule}</em></div><aside className={isUnderpowered ? "is-underpowered" : ""}><span>推薦戰力</span><b>{isUnderpowered && <AlertTriangle size={11} />}{selectedStoryStage.power}</b><small>隊伍戰力 {teamPower}<br />首通獎勵 {selectedStoryStage.reward}</small></aside></section>
-        <footer className="chapter-map-sheet__footer"><div><Gift size={17} /><span>章節獎勵：命運碎晶 ×18</span></div>{previewingActiveChapter && chapterCompleted ? <span className="chapter-map__stamp" key={`stamp-${progress.bestWave}`}><Check size={21} /><b>章節完成</b></span> : <span>{previewingActiveChapter ? "完成 WAVE 10 取得守望印章" : "已完成章節紀錄"}</span>}</footer>
+        <footer className="chapter-map-sheet__footer"><div><Gift size={17} /><span>章節獎勵：命運碎晶 ×{CHAPTER_CLEAR_REWARDS[previewChapterId].crystals}</span></div>{previewingActiveChapter && chapterCompleted ? <span className="chapter-map__stamp" key={`stamp-${activeChapterBestWave}`}><Check size={21} /><b>章節完成</b></span> : <span>{previewingActiveChapter ? "完成 WAVE 10 取得守望印章" : "已完成章節紀錄"}</span>}</footer>
       </section>
     </div>}
     {lobbyTab === "menu" && <aside className="courtyard-dropdown" aria-label="王都功能選單"><button onClick={() => setLobbyTab("inbox")}><PackageOpen size={16} /><span>收件匣</span>{claimableQuests > 0 && <i />}</button><button onClick={() => setLobbyTab("settings")}><Settings2 size={16} /><span>設定</span></button><button onClick={() => openScreen("guide")}><Sparkles size={16} /><span>圖鑑</span></button><button onClick={() => setLobbyTab("announcements")}><Info size={16} /><span>公告</span></button></aside>}

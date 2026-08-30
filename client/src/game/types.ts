@@ -7,7 +7,30 @@ export type EnemyId =
   | "shaman"
   | "bomber"
   | "eliteGiant"
-  | "boss";
+  | "boss"
+  // 第二章 城外戰線．霧谷前線 (遠征輿圖 v1)
+  | "mistStalker"
+  | "mistbladeDuelist"
+  | "ironwardenCommander"
+  | "frostShaman"
+  | "frostBomber"
+  | "glacialColossus"
+  | "fogSovereign"
+  // 第三章 月影城垣．銀月守望 (遠征輿圖 v1)
+  | "nightowlSniper"
+  | "moonbladeRonin"
+  | "siegeBombardier"
+  | "haloCleric"
+  | "moonfallCatapult"
+  | "silverMoonEnforcer"
+  | "silverMoonArbiter";
+
+/** Three-chapter campaign per 遠征輿圖 v1 -- ids intentionally match
+ * GameScreen.tsx's pre-existing CHAPTER_MAP_THEMES ids (courtyard/battlefield/
+ * moonlit), which already carried the "霧谷前線"/"銀月守望" titles before any
+ * chapter had real content behind it. */
+export type ChapterId = "courtyard" | "battlefield" | "moonlit";
+export const CHAPTER_IDS: readonly ChapterId[] = ["courtyard", "battlefield", "moonlit"];
 
 export type HeroTier = 1 | 2 | 3;
 export type TalentRarity = "common" | "rare" | "epic";
@@ -329,6 +352,13 @@ export interface PlayerProgress {
   shop: ShopState;
   lobbyRead: Partial<Record<LobbyNoticeId, boolean>>;
   heroProgress: Partial<Record<HeroId, HeroProgress>>;
+  /** True once a chapter's final Wave (its Boss) has been beaten at least once --
+   * the real unlock gate for the NEXT chapter, replacing the old wins/4 heuristic. */
+  chaptersCleared: Partial<Record<ChapterId, boolean>>;
+  /** Best Wave reached PER CHAPTER (Wave numbers reset 1-10 each chapter, so the
+   * single global `bestWave` above can't tell which chapter's stage markers to
+   * show as cleared in the chapter map). */
+  bestWaveByChapter: Partial<Record<ChapterId, number>>;
   settings: {
     musicEnabled: boolean;
     sfxEnabled: boolean;

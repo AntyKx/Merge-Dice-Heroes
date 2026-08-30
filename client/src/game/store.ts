@@ -29,7 +29,22 @@ import {
   toggleDiceLock,
 } from "./run-engine/orchestrator";
 import type { CellKey, DiceComboKind, RunState } from "./run-engine/types";
-import type { DailyQuestId, DungeonId, EquipmentId, EquipmentSlot, HeroId, LobbyNoticeId, PlayerProgress, ShopOfferId } from "./types";
+import { WAVES_BY_CHAPTER } from "./run-engine/waves";
+import { CHAPTER_IDS } from "./types";
+import type { ChapterId, DailyQuestId, DungeonId, EquipmentId, EquipmentSlot, HeroId, LobbyNoticeId, PlayerProgress, ShopOfferId } from "./types";
+
+/** The player's current campaign frontier -- the first not-yet-cleared chapter,
+ * per CHAPTER_IDS' fixed order. The chapter map (GameScreen.tsx) lets a player
+ * BROWSE earlier chapters read-only, but "開始遠征" always launches this one --
+ * there is deliberately no free-form chapter selector in the store. */
+export function activeChapterId(progress: PlayerProgress): ChapterId {
+  let active: ChapterId = CHAPTER_IDS[0];
+  for (let i = 1; i < CHAPTER_IDS.length; i += 1) {
+    if (progress.chaptersCleared[CHAPTER_IDS[i - 1]]) active = CHAPTER_IDS[i];
+    else break;
+  }
+  return active;
+}
 
 export type GameScreen = "title" | "team" | "leader" | "game" | "guide" | "equipment" | "shop" | "daily" | "dungeon" | "profile";
 
@@ -112,6 +127,16 @@ function persist(progress: PlayerProgress) {
   return progress;
 }
 
+/** Chapter-clear crystal/material rewards, tiered per 遠征輿圖 v1's "章節解鎖與
+ * 獎勵" -- deliberately NOT a new equipment-drop path (the existing workshop
+ * upgrade/dismantle loop already covers that); only crystals scale per chapter,
+ * plus a one-time material bonus the FIRST time each chapter's Wave 10 falls. */
+export const CHAPTER_CLEAR_REWARDS: Record<ChapterId, { crystals: number; firstClearMaterials: number }> = {
+  courtyard: { crystals: 18, firstClearMaterials: 0 },
+  battlefield: { crystals: 30, firstClearMaterials: 10 },
+  moonlit: { crystals: 48, firstClearMaterials: 15 },
+};
+
 /** Mirrors the old game/store.ts's maybeRecord(): awards Meta-layer progress
  * (wins/losses/bestWave/crystals/hero XP/dungeon clears) exactly once, on the
  * tick a Run first transitions into RUN_WIN/RUN_LOSE. Dungeon-specific enemy
@@ -121,12 +146,21 @@ function maybeRecordRunResult(previous: RunState | undefined, next: RunState, pr
   if (!previous || previous.phase === next.phase || !["RUN_WIN", "RUN_LOSE"].includes(next.phase)) return progress;
   const victorious = next.phase === "RUN_WIN";
   const dungeon = activeDungeonId ? DUNGEONS.find((candidate) => candidate.id === activeDungeonId) : undefined;
+  // A "chapter clear" is a real Wave-10(+Boss) victory, not just any win -- this
+  // is the actual unlock gate for the NEXT chapter (replaces the old wins/4
+  // heuristic in GameScreen.tsx).
+  const chapterCleared = victorious && next.wave >= WAVES_BY_CHAPTER[next.chapterId].length;
+  const firstChapterClear = chapterCleared && !progress.chaptersCleared[next.chapterId];
+  const chapterReward = CHAPTER_CLEAR_REWARDS[next.chapterId];
   const updated: PlayerProgress = {
     ...progress,
     wins: progress.wins + (victorious ? 1 : 0),
     losses: progress.losses + (victorious ? 0 : 1),
     bestWave: Math.max(progress.bestWave, next.wave),
-    crystals: progress.crystals + (victorious ? (dungeon?.reward.crystals ?? 18) : 0),
+    bestWaveByChapter: { ...progress.bestWaveByChapter, [next.chapterId]: Math.max(progress.bestWaveByChapter[next.chapterId] ?? 0, next.wave) },
+    chaptersCleared: chapterCleared ? { ...progress.chaptersCleared, [next.chapterId]: true } : progress.chaptersCleared,
+    crystals: progress.crystals + (victorious ? (dungeon?.reward.crystals ?? chapterReward.crystals) : 0),
+    materials: progress.materials + (firstChapterClear ? chapterReward.firstClearMaterials : 0),
     inventory: victorious && dungeon?.reward.equipmentId && !progress.inventory.includes(dungeon.reward.equipmentId) ? [...progress.inventory, dungeon.reward.equipmentId] : progress.inventory,
     dungeonClears: victorious && dungeon ? { ...progress.dungeonClears, [dungeon.id]: (progress.dungeonClears[dungeon.id] ?? 0) + 1 } : progress.dungeonClears,
     daily: victorious ? { ...progress.daily, victories: progress.daily.victories + 1 } : progress.daily,
@@ -201,7 +235,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const dungeon = selectedDungeonId ? DUNGEONS.find((candidate) => candidate.id === selectedDungeonId) : undefined;
     if (dungeon && progress.stamina < dungeon.energyCost) return;
     const nextProgress = dungeon ? persist({ ...progress, stamina: progress.stamina - dungeon.energyCost }) : progress;
-    const run = createRun({ selectedHeroes, leaderHeroId: leaderId, adapter: createDefaultMetaAdapter(nextProgress) });
+    const run = createRun({ selectedHeroes, leaderHeroId: leaderId, adapter: createDefaultMetaAdapter(nextProgress), chapterId: activeChapterId(nextProgress) });
     set({ run, progress: nextProgress, selectedDungeonId: undefined, activeDungeonId: dungeon?.id, screen: "game", isPaused: false });
   },
   selectDungeon: (selectedDungeonId) => set((state) => {
@@ -212,7 +246,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!dungeon || !unlocked || state.selectedHeroes.length !== 3 || state.progress.stamina < dungeon.energyCost) return state;
     const progress = persist({ ...state.progress, stamina: state.progress.stamina - dungeon.energyCost });
     return {
-      run: createRun({ selectedHeroes: state.selectedHeroes, leaderHeroId: state.leaderId, adapter: createDefaultMetaAdapter(progress) }),
+      run: createRun({ selectedHeroes: state.selectedHeroes, leaderHeroId: state.leaderId, adapter: createDefaultMetaAdapter(progress), chapterId: activeChapterId(progress) }),
       progress,
       selectedDungeonId: undefined,
       activeDungeonId: dungeon.id,
@@ -259,7 +293,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   }),
   restartRun: () => {
     const { selectedHeroes, leaderId, progress } = get();
-    set({ run: createRun({ selectedHeroes, leaderHeroId: leaderId, adapter: createDefaultMetaAdapter(progress) }), screen: "game", activeDungeonId: undefined, isPaused: false });
+    set({ run: createRun({ selectedHeroes, leaderHeroId: leaderId, adapter: createDefaultMetaAdapter(progress), chapterId: activeChapterId(progress) }), screen: "game", activeDungeonId: undefined, isPaused: false });
   },
   // ---- Run Engine (Phase 9c) ----
   acknowledgeWavePreview: () => set((state) => state.run ? { run: acknowledgeWavePreview(state.run) } : state),

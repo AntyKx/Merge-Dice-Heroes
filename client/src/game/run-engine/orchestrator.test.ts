@@ -399,4 +399,25 @@ describe("orchestrator end-to-end Wave lifecycle", () => {
     // Unlocked: 破陣之拳 (breakersFist) patches extraRangeAlongRoute +0.15.
     expect(unlockedRun.effectiveHeroes.fighter?.rangeAlongRoute).toBeCloseTo(baseRangeAlongRoute + 0.15);
   });
+
+  it("章節 (遠征輿圖 v1)：createRun 預設走第一章，指定 chapterId 會實際換成該章的 Wave 內容", () => {
+    const defaultChapterRun = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter });
+    expect(defaultChapterRun.chapterId).toBe("courtyard");
+
+    let battlefieldRun = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter, chapterId: "battlefield" });
+    expect(battlefieldRun.chapterId).toBe("battlefield");
+    battlefieldRun = acknowledgeWavePreview(battlefieldRun, fixedRandom);
+    battlefieldRun = confirmFate(battlefieldRun);
+    battlefieldRun = chooseComboEffect(battlefieldRun, "NONE", fakeAdapter, fixedRandom);
+    battlefieldRun = confirmFormation(battlefieldRun);
+    // Wave 1 of the "battlefield" chapter spawns mistStalker, never Chapter 1's slime.
+    expect(battlefieldRun.waveRuntime?.spawnQueue.every((spawn) => spawn.enemyId === "mistStalker")).toBe(true);
+  });
+
+  it("章節 (遠征輿圖 v1)：advanceToNextWave 的通關判定依該章自己的 Wave 長度，而非固定 10", () => {
+    let run = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter, chapterId: "moonlit" });
+    run = { ...run, wave: 10, phase: "REWARD_RESOLVE", talentChoices: [], blessingChoices: [] };
+    run = advanceToNextWave(run);
+    expect(run.phase).toBe("RUN_WIN");
+  });
 });

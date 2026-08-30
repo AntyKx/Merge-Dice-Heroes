@@ -13,7 +13,7 @@
  * it made sense (createRun, toggleLock, resolveDice-equivalent, message field)
  * per 玩法核心.txt 一's "請依現有程式風格整合".
  */
-import type { HeroId } from "../types";
+import type { ChapterId, HeroId } from "../types";
 import type {
   BoardCell,
   BoardState,
@@ -32,7 +32,7 @@ import { boardCellKey } from "./types";
 import { RUN_ENGINE_CONFIG } from "./config";
 import { ENEMY_DEFINITIONS } from "./enemies";
 import { HERO_DEFINITIONS, HERO_EFFECT_REGISTRY } from "./heroes";
-import { WAVE_DEFINITIONS } from "./waves";
+import { WAVES_BY_CHAPTER } from "./waves";
 import { LEADER_BURST_REGISTRY, LEADER_PASSIVE_REGISTRY, buildLeaderState } from "./leaders";
 import type { GlobalEffectContext, RunModifiersDelta } from "./leaders";
 import type { MetaProgressionAdapter } from "./metaAdapter";
@@ -140,9 +140,13 @@ export interface CreateRunParams {
   selectedHeroes: HeroId[];
   leaderHeroId: HeroId;
   adapter: MetaProgressionAdapter;
+  /** Which campaign chapter's Wave list this Run plays through. Defaults to the
+   * original ("courtyard") chapter so every existing call site/test keeps
+   * working unchanged. */
+  chapterId?: ChapterId;
 }
 
-export function createRun({ selectedHeroes, leaderHeroId, adapter }: CreateRunParams): RunState {
+export function createRun({ selectedHeroes, leaderHeroId, adapter, chapterId = "courtyard" }: CreateRunParams): RunState {
   const equipment = adapter.getEquipmentLoadout(selectedHeroes);
   const leader = buildLeaderState(leaderHeroId);
   const effectiveHeroes = Object.fromEntries(
@@ -154,6 +158,7 @@ export function createRun({ selectedHeroes, leaderHeroId, adapter }: CreateRunPa
     runId: `run-${Date.now()}`,
     phase: "WAVE_PREVIEW",
     wave: 1,
+    chapterId,
     selectedHeroes,
     effectiveHeroes,
     leader,
@@ -186,8 +191,8 @@ function leaderPassiveDelta(leader: RunState["leader"]): RunModifiersDelta {
   return LEADER_PASSIVE_REGISTRY[leader.passive.effectId]?.() ?? {};
 }
 
-export function getWaveDefinition(wave: number): WaveDefinition | undefined {
-  return WAVE_DEFINITIONS[wave - 1];
+export function getWaveDefinition(chapterId: ChapterId, wave: number): WaveDefinition | undefined {
+  return WAVES_BY_CHAPTER[chapterId][wave - 1];
 }
 
 // ---------------------------------------------------------------------------
@@ -436,7 +441,7 @@ export function buyExtraReposition(run: RunState): RunState {
  * pending choice from a Dice Combo must already be handled. */
 export function confirmFormation(run: RunState): RunState {
   if (run.phase !== "PREPARATION" || !isPendingResolved(run.pending) || run.pendingHeroChoice || run.pendingFreeMerge || run.pendingJackpotTierUp) return run;
-  const waveDefinition = getWaveDefinition(run.wave);
+  const waveDefinition = getWaveDefinition(run.chapterId, run.wave);
   if (!waveDefinition) return run;
   const routes: RouteState[] = ([1, 2, 3, 4] as const).map((routeId) => ({ routeId, active: waveDefinition.activeRoutes.includes(routeId), enemies: [] }));
   const spawnQueue = flattenSpawnSchedule(waveDefinition.batches);
@@ -808,7 +813,7 @@ export function chooseBlessingReward(run: RunState, blessingId: string): RunStat
  * can never be silently skipped. */
 export function advanceToNextWave(run: RunState): RunState {
   if (run.phase !== "REWARD_RESOLVE" || run.talentChoices.length || run.blessingChoices.length) return run;
-  if (run.wave >= WAVE_DEFINITIONS.length) {
+  if (run.wave >= WAVES_BY_CHAPTER[run.chapterId].length) {
     return { ...run, phase: "RUN_WIN", message: "遠征勝利！" };
   }
   const nextWave = run.wave + 1;

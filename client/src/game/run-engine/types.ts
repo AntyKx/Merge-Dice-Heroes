@@ -12,7 +12,7 @@
  * never persisted to the meta layer. Permanent hero growth (Level/XP, future Star/
  * Fragment, future Signature Weapon) lives entirely outside this module.
  */
-import type { EquipmentBonuses, HeroId, DiceCombinationKind } from "../types";
+import type { ChapterId, EquipmentBonuses, HeroId, DiceCombinationKind } from "../types";
 
 // ---------------------------------------------------------------------------
 // Hero: Definition (static) vs Instance (Run-scoped runtime)
@@ -521,6 +521,9 @@ export interface RunState {
   runId: string;
   phase: RunPhase;
   wave: number;
+  /** Which campaign chapter (game/types.ts's ChapterId) this Run plays through --
+   * fixed for the whole Run, set once at createRun. */
+  chapterId: ChapterId;
   selectedHeroes: HeroId[];
   /** HeroDefinition per selected hero with permanent Level scaling AND Signature
    * Weapon patches already baked in (orchestrator.ts's effectiveHeroDefinition),

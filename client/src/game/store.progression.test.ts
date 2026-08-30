@@ -3,10 +3,10 @@ import { defaultProgress } from "./persistence";
 import { HERO_XP_PER_VICTORY } from "./heroProgress";
 import { useGameStore } from "./store";
 
-const freshProgress = () => ({ ...defaultProgress, inventory: [...defaultProgress.inventory], equipmentLevels: { ...defaultProgress.equipmentLevels }, equipped: {}, daily: { ...defaultProgress.daily, claimed: [] }, dungeonClears: {}, shop: { ...defaultProgress.shop, offers: [...defaultProgress.shop.offers], purchased: [] }, lobbyRead: {} });
+const freshProgress = () => ({ ...defaultProgress, inventory: [...defaultProgress.inventory], equipmentLevels: { ...defaultProgress.equipmentLevels }, equipped: {}, daily: { ...defaultProgress.daily, claimed: [] }, dungeonClears: {}, shop: { ...defaultProgress.shop, offers: [...defaultProgress.shop.offers], purchased: [] }, lobbyRead: {}, chaptersCleared: {}, bestWaveByChapter: {} });
 
 beforeEach(() => {
-  useGameStore.setState({ screen: "title", selectedHeroes: ["knight", "fireMage", "ranger"], leaderId: "knight", selectedDungeonId: undefined, activeDungeonId: undefined, run: undefined, progress: freshProgress() });
+  useGameStore.setState({ screen: "title", selectedHeroes: ["knight", "fireMage", "ranger"], leaderId: "knight", selectedChapterId: "courtyard", selectedDungeonId: undefined, activeDungeonId: undefined, run: undefined, progress: freshProgress() });
 });
 
 describe("persistent lobby progression", () => {
@@ -102,5 +102,29 @@ describe("persistent lobby progression", () => {
     expect(useGameStore.getState().leaderId).toBe("ranger");
     useGameStore.getState().chooseLeader("bard");
     expect(useGameStore.getState().leaderId).toBe("ranger");
+  });
+
+  it("campaign chapters (遠征輿圖 v1)：開始遠征永遠打玩家目前的最前緣章節（尚未切換到下一章前仍是第一章）", () => {
+    useGameStore.getState().startRun();
+    expect(useGameStore.getState().run?.chapterId).toBe("courtyard");
+  });
+
+  it("campaign chapters (遠征輿圖 v1)：通關整章 Wave10 後記錄 chaptersCleared、依章節分級鑽石，且首通額外給材料，下一局自動打下一章", () => {
+    useGameStore.setState({ progress: { ...freshProgress(), chaptersCleared: { courtyard: true } } });
+    useGameStore.getState().startRun();
+    const activeRun = useGameStore.getState().run!;
+    expect(activeRun.chapterId).toBe("battlefield");
+    const initialCrystals = useGameStore.getState().progress.crystals;
+    const initialMaterials = useGameStore.getState().progress.materials;
+    useGameStore.setState({ run: { ...activeRun, wave: 10, phase: "REWARD_RESOLVE", talentChoices: [], blessingChoices: [] } });
+    useGameStore.getState().advanceToNextWave();
+    const state = useGameStore.getState();
+    expect(state.run?.phase).toBe("RUN_WIN");
+    expect(state.progress.chaptersCleared.battlefield).toBe(true);
+    expect(state.progress.crystals).toBe(initialCrystals + 30);
+    expect(state.progress.materials).toBe(initialMaterials + 10);
+    expect(state.progress.bestWaveByChapter.battlefield).toBe(10);
+    useGameStore.getState().startRun();
+    expect(useGameStore.getState().run?.chapterId).toBe("moonlit");
   });
 });

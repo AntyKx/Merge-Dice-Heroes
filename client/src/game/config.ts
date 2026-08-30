@@ -219,6 +219,24 @@ export const ENEMIES: Record<EnemyId, EnemyDefinition> = {
   bomber: { id: "bomber", name: "爆彈怪", color: "#d8794f", hp: 42, speed: 0.052, attack: 10, attackInterval: 1.1, castleDamage: 2, tags: ["bomber"] },
   eliteGiant: { id: "eliteGiant", name: "苔岩巨人", color: "#66835f", hp: 320, speed: 0.022, attack: 15, attackInterval: 1.45, castleDamage: 4, tags: ["elite"] },
   boss: { id: "boss", name: "碎骰巨靈", color: "#5c4b9d", hp: 720, speed: 0.018, attack: 19, attackInterval: 1.3, castleDamage: 6, tags: ["boss", "elite"] },
+  // 第二章 城外戰線．霧谷前線 -- name/color only (run-engine/enemies.ts carries the
+  // authoritative stats these fight with; this record is a display-name dictionary
+  // for the old engine that BattleScreenV2 also reuses purely for label/tint lookup).
+  mistStalker: { id: "mistStalker", name: "遊擊霧刺客", color: "#6f96a8", hp: 62, speed: 0.05, attack: 12, attackInterval: 1.0, castleDamage: 1, range: 0.46, tags: ["ranged"] },
+  mistbladeDuelist: { id: "mistbladeDuelist", name: "霧語劍手", color: "#7d8fa0", hp: 58, speed: 0.06, attack: 11, attackInterval: 0.9, castleDamage: 1, tags: [] },
+  ironwardenCommander: { id: "ironwardenCommander", name: "重甲督軍", color: "#56708a", hp: 135, speed: 0.026, attack: 13, attackInterval: 1.35, castleDamage: 2, tags: ["shield"] },
+  frostShaman: { id: "frostShaman", name: "冰霜巫祝", color: "#6fb0c2", hp: 70, speed: 0.028, attack: 6, attackInterval: 1.5, castleDamage: 1, tags: ["healer"] },
+  frostBomber: { id: "frostBomber", name: "霜爆術士", color: "#3f7a8a", hp: 68, speed: 0.048, attack: 15, attackInterval: 1.15, castleDamage: 2, tags: ["bomber"] },
+  glacialColossus: { id: "glacialColossus", name: "冰甲巨像", color: "#4a8fa3", hp: 480, speed: 0.02, attack: 22, attackInterval: 1.4, castleDamage: 4, tags: ["elite"] },
+  fogSovereign: { id: "fogSovereign", name: "迷霧領主", color: "#2c6e80", hp: 1150, speed: 0.017, attack: 27, attackInterval: 1.25, castleDamage: 7, tags: ["boss", "elite"] },
+  // 第三章 月影城垣．銀月守望
+  nightowlSniper: { id: "nightowlSniper", name: "夜梟遠襲手", color: "#8a7fb3", hp: 100, speed: 0.045, attack: 20, attackInterval: 1.05, castleDamage: 2, range: 0.46, tags: ["ranged"] },
+  moonbladeRonin: { id: "moonbladeRonin", name: "月刃武者", color: "#7566a8", hp: 95, speed: 0.065, attack: 18, attackInterval: 0.85, castleDamage: 2, tags: [] },
+  siegeBombardier: { id: "siegeBombardier", name: "破城重炮兵", color: "#5c4d8a", hp: 150, speed: 0.03, attack: 24, attackInterval: 1.2, castleDamage: 3, tags: ["bomber"] },
+  haloCleric: { id: "haloCleric", name: "聖環禮官", color: "#a89dd0", hp: 110, speed: 0.026, attack: 8, attackInterval: 1.5, castleDamage: 1, tags: ["healer"] },
+  moonfallCatapult: { id: "moonfallCatapult", name: "崩月投石者", color: "#6c5aa0", hp: 120, speed: 0.04, attack: 26, attackInterval: 1.25, castleDamage: 3, tags: [] },
+  silverMoonEnforcer: { id: "silverMoonEnforcer", name: "銀月執法者", color: "#5a4b8c", hp: 720, speed: 0.019, attack: 32, attackInterval: 1.35, castleDamage: 5, tags: ["elite"] },
+  silverMoonArbiter: { id: "silverMoonArbiter", name: "銀月裁決者", color: "#4a3c78", hp: 1800, speed: 0.016, attack: 38, attackInterval: 1.2, castleDamage: 9, tags: ["boss", "elite"] },
 };
 
 export const DICE_COMBINATIONS: Record<DiceCombinationKind, DiceCombination> = {
