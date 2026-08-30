@@ -181,10 +181,36 @@ export const DAILY_QUESTS: DailyQuestDefinition[] = [
   { id: "victory", title: "完成 1 局遠征", target: 1, description: "守住命運舞台。", rewardCrystals: 50 },
 ];
 
+// 深域狩令 v1 -- each Trial draws its enemy roster from a specific campaign
+// chapter (chapterId + startWave into that chapter's WAVES_BY_CHAPTER list),
+// not from wherever the player's own story progress happens to be. Rewards are
+// deliberately all Relic-slot equipment (EQUIPMENT[...].slot === "relic") --
+// dungeons are the Relic farm; Weapon/Armor come from the story track and shop.
+//
+// enemyRule multipliers + unlock ORDER below were adjusted after an automated
+// playtest (client/src/game/run-engine/__dungeonSim.test.ts, deleted after use
+// -- a route-aware auto-play policy driving the real orchestrator functions
+// across a Lv1-20 curve, 5 seeds each). Two findings drove the changes:
+// (1) hpMultiplier alone barely moves outcomes once a Trial starts "cold"
+//     (Tier 1, no board built up) partway into a chapter -- moonlit's own
+//     baseline stats are already so far above courtyard's that even an
+//     UNMODIFIED (hpMultiplier 1.0, or lower) moonlit Wave 6-10 stretch still
+//     lost almost every simulated run; (2) riftEcho/shadowTrial's original
+//     hpMultiplier (1.6/1.45) meaningfully outperformed frostAltar's original
+//     1.25 in relative difficulty once compared on the same level curve, so
+//     the two battlefield-sourced Trials (frostAltar, riftEcho) were reordered
+//     ahead of the moonlit-sourced ones (shadowTrial, endlessNight) to match
+//     actual measured difficulty rather than the original design-doc order.
+// shadowTrial remains the least-validated entry -- even after softening it
+// only won ~2/5 simulated runs at Lv.20 (the top of the tested range) with an
+// admittedly weak, unequipped, imperfect-merge auto-play policy; treat its
+// numbers as a starting point that still wants a real human playtest.
 export const DUNGEONS: DungeonDefinition[] = [
-  { id: "ruinCorridor", title: "廢墟迴廊", description: "敵軍攻速提高的遺跡戰場。", energyCost: 5, recommendedPower: 180, startWave: 3, reward: { crystals: 45, equipmentId: "watcherCloak", label: "守望者披風素材" }, enemyRule: { label: "急行軍：敵軍移速 +30%", hpMultiplier: 1, speedMultiplier: 1.3 }, unlocked: true },
-  { id: "frostAltar", title: "霜凍祭壇", description: "寒霜壓境的高難度試煉。", energyCost: 8, recommendedPower: 320, startWave: 6, reward: { crystals: 70, equipmentId: "fateDiceBox", label: "霜華紋章" }, enemyRule: { label: "霜甲：敵軍生命 +25%、移速 -10%", hpMultiplier: 1.25, speedMultiplier: 0.9 }, unlocked: false },
-  { id: "shadowTrial", title: "暮影試煉", description: "精英敵人的連戰舞台。", energyCost: 10, recommendedPower: 480, startWave: 9, reward: { crystals: 100, label: "暗影系列素材" }, enemyRule: { label: "影獵：敵軍生命 +45%、移速 +15%", hpMultiplier: 1.45, speedMultiplier: 1.15 }, unlocked: false },
+  { id: "ruinCorridor", title: "廢墟迴廊", description: "敵軍攻速提高的遺跡戰場。", energyCost: 5, recommendedPower: 180, chapterId: "courtyard", startWave: 3, reward: { crystals: 45, equipmentId: "nimbleToolkit", label: "巧手匠具素材" }, enemyRule: { label: "急行軍：敵軍移速 +30%", hpMultiplier: 1, speedMultiplier: 1.3 }, unlocked: true },
+  { id: "frostAltar", title: "霜凍祭壇", description: "沿用霧谷前線霜霧兵種的高難度試煉。", energyCost: 8, recommendedPower: 320, chapterId: "battlefield", startWave: 6, reward: { crystals: 70, equipmentId: "conscriptionOrder", label: "徵兵令素材" }, enemyRule: { label: "霜甲：敵軍生命 +5%、移速 -10%", hpMultiplier: 1.05, speedMultiplier: 0.9 }, unlocked: false },
+  { id: "riftEcho", title: "裂隙迴聲", description: "霧谷深處的空間裂隙，敵軍在此變得格外難纏。", energyCost: 10, recommendedPower: 450, chapterId: "battlefield", startWave: 8, reward: { crystals: 110, equipmentId: "twinFateDice", label: "命運雙子骰素材" }, enemyRule: { label: "裂隙迴響：敵軍生命 +35%、移速 +10%", hpMultiplier: 1.35, speedMultiplier: 1.1 }, unlocked: false },
+  { id: "shadowTrial", title: "暮影試煉", description: "銀月守望精英連戰的終焉舞台。", energyCost: 12, recommendedPower: 550, chapterId: "moonlit", startWave: 9, reward: { crystals: 130, equipmentId: "gamblersReckoning", label: "賭徒的算計素材" }, enemyRule: { label: "影獵：敵軍生命 +10%、移速 +5%", hpMultiplier: 1.10, speedMultiplier: 1.05 }, unlocked: false },
+  { id: "endlessNight", title: "永夜終焉", description: "只留下銀月裁決者一人的無盡夜幕，獻給準備好的王都勇者。", energyCost: 14, recommendedPower: 650, chapterId: "moonlit", startWave: 10, reward: { crystals: 160, equipmentId: "fusionCatalyst", label: "熔合催化劑素材" }, enemyRule: { label: "永夜：敵軍生命 +60%、移速 +20%", hpMultiplier: 1.6, speedMultiplier: 1.2 }, unlocked: false },
 ];
 
 export const EMPTY_EQUIPMENT_BONUSES: EquipmentBonuses = {

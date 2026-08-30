@@ -420,4 +420,37 @@ describe("orchestrator end-to-end Wave lifecycle", () => {
     run = advanceToNextWave(run);
     expect(run.phase).toBe("RUN_WIN");
   });
+
+  it("副本 (深域狩令 v1)：createRun 的 startWave 會實際成為起始波數，並解析出該波的敵人", () => {
+    const run = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter, chapterId: "battlefield", startWave: 6 });
+    expect(run.wave).toBe(6);
+    expect(run.phase).toBe("WAVE_PREVIEW");
+  });
+
+  it("副本 (深域狩令 v1)：enemyRule.hpMultiplier 會實際放大出怪的 hp/maxHp", () => {
+    let buffed = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter, enemyRule: { hpMultiplier: 1.5, speedMultiplier: 1 } });
+    buffed = acknowledgeWavePreview(buffed, fixedRandom);
+    buffed = confirmFate(buffed);
+    buffed = chooseComboEffect(buffed, "NONE", fakeAdapter, fixedRandom);
+    buffed = confirmFormation(buffed);
+    // Wave 1 of courtyard is all "slime" (baseHp 34).
+    buffed = advanceCombat(buffed, 0.01, fixedRandom);
+    const spawnedEnemy = buffed.waveRuntime?.routes.flatMap((route) => route.enemies)[0];
+    expect(spawnedEnemy?.maxHp).toBeCloseTo(34 * 1.5);
+  });
+
+  it("副本 (深域狩令 v1)：enemyRule.speedMultiplier 會實際影響敵人移動速度", () => {
+    function pathProgressAfterOneTick(speedMultiplier: number): number {
+      let run = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter, enemyRule: { hpMultiplier: 1, speedMultiplier } });
+      run = acknowledgeWavePreview(run, fixedRandom);
+      run = confirmFate(run);
+      run = chooseComboEffect(run, "NONE", fakeAdapter, fixedRandom);
+      run = confirmFormation(run);
+      run = advanceCombat(run, 1, fixedRandom);
+      return run.waveRuntime?.routes.flatMap((route) => route.enemies)[0]?.pathProgress ?? 0;
+    }
+    const normalProgress = pathProgressAfterOneTick(1);
+    const doubledProgress = pathProgressAfterOneTick(2);
+    expect(doubledProgress).toBeCloseTo(normalProgress * 2, 5);
+  });
 });

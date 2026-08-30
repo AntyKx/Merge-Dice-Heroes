@@ -524,6 +524,12 @@ export interface RunState {
   /** Which campaign chapter (game/types.ts's ChapterId) this Run plays through --
    * fixed for the whole Run, set once at createRun. */
   chapterId: ChapterId;
+  /** Dungeon Trial enemy modifier (深域狩令 v1) -- undefined for a normal campaign
+   * Run. hpMultiplier scales EnemyInstance.hp/maxHp at spawn (rules/wave.ts's
+   * createEnemyInstance); speedMultiplier scales movement speed alongside the
+   * existing debuff-based enemySpeedMultiplier (orchestrator.ts's Route movement
+   * step) -- both default to 1 (no change) when this is unset. */
+  enemyRule?: { hpMultiplier: number; speedMultiplier: number };
   selectedHeroes: HeroId[];
   /** HeroDefinition per selected hero with permanent Level scaling AND Signature
    * Weapon patches already baked in (orchestrator.ts's effectiveHeroDefinition),

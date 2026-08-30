@@ -144,9 +144,14 @@ export interface CreateRunParams {
    * original ("courtyard") chapter so every existing call site/test keeps
    * working unchanged. */
   chapterId?: ChapterId;
+  /** Dungeon Trial: which Wave of `chapterId` to start at (default 1, i.e. the
+   * normal campaign start). */
+  startWave?: number;
+  /** Dungeon Trial enemy modifier -- see RunState.enemyRule's doc comment. */
+  enemyRule?: { hpMultiplier: number; speedMultiplier: number };
 }
 
-export function createRun({ selectedHeroes, leaderHeroId, adapter, chapterId = "courtyard" }: CreateRunParams): RunState {
+export function createRun({ selectedHeroes, leaderHeroId, adapter, chapterId = "courtyard", startWave = 1, enemyRule }: CreateRunParams): RunState {
   const equipment = adapter.getEquipmentLoadout(selectedHeroes);
   const leader = buildLeaderState(leaderHeroId);
   const effectiveHeroes = Object.fromEntries(
@@ -157,8 +162,9 @@ export function createRun({ selectedHeroes, leaderHeroId, adapter, chapterId = "
   return {
     runId: `run-${Date.now()}`,
     phase: "WAVE_PREVIEW",
-    wave: 1,
+    wave: startWave,
     chapterId,
+    enemyRule,
     selectedHeroes,
     effectiveHeroes,
     leader,
@@ -561,7 +567,7 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
   dueSpawns.forEach((spawn) => {
     const definition = ENEMY_DEFINITIONS[spawn.enemyId];
     if (!definition) return;
-    const enemy = createEnemyInstance(definition, spawn.routes, `${spawn.enemyId}-${Math.floor(random() * 1e9)}`);
+    const enemy = createEnemyInstance(definition, spawn.routes, `${spawn.enemyId}-${Math.floor(random() * 1e9)}`, run.enemyRule?.hpMultiplier ?? 1);
     const homeRoute = spawn.routes[0];
     routes = routes.map((route) => (route.routeId === homeRoute ? { ...route, enemies: [...route.enemies, enemy] } : route));
   });
@@ -599,8 +605,10 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
   const assignments = computeBlockAssignments(blockProviders, blockTargets, previousAssignments);
   routes = routes.map((route) => ({ ...route, enemies: route.enemies.map((enemy) => ({ ...enemy, blockedBy: assignments.get(enemy.instanceId) })) }));
 
-  // 3. Movement -- only unblocked enemies advance, slowed by any Slow debuff.
-  routes = routes.map((route) => updateEnemyMovement(route, delta, new Set(assignments.keys()), (enemy) => (ENEMY_DEFINITIONS[enemy.defId]?.speed ?? 0) * enemySpeedMultiplier(enemy)));
+  // 3. Movement -- only unblocked enemies advance, slowed by any Slow debuff and
+  // scaled by the Dungeon Trial's speedMultiplier, if any (深域狩令 v1).
+  const dungeonSpeedMultiplier = run.enemyRule?.speedMultiplier ?? 1;
+  routes = routes.map((route) => updateEnemyMovement(route, delta, new Set(assignments.keys()), (enemy) => (ENEMY_DEFINITIONS[enemy.defId]?.speed ?? 0) * enemySpeedMultiplier(enemy) * dungeonSpeedMultiplier));
 
   // 4. Enemies reaching the castle deal CastleDamage and leave the Route.
   routes = routes.map((route) => {

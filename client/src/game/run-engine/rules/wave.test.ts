@@ -40,6 +40,14 @@ describe("createEnemyInstance", () => {
     expect(enemy.occupiedRoutes).toEqual([2, 3]);
     expect(enemy.hp).toBe(320);
   });
+
+  it("hpMultiplier（深域狩令 Dungeon Trial）會同時縮放 hp 與 maxHp，預設為 1 不影響一般主線", () => {
+    const definition: EnemyDefinition = { id: "slime", width: 1, blockCost: 1, castleDamage: 1, siege: false, tags: [], baseHp: 100, baseAttack: 7, attackIntervalSeconds: 1.2, speed: 0.04 };
+    expect(createEnemyInstance(definition, [1], "e-2").hp).toBe(100);
+    const buffed = createEnemyInstance(definition, [1], "e-3", 1.25);
+    expect(buffed.hp).toBe(125);
+    expect(buffed.maxHp).toBe(125);
+  });
 });
 
 describe("updateEnemyMovement", () => {

@@ -246,7 +246,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!dungeon || !unlocked || state.selectedHeroes.length !== 3 || state.progress.stamina < dungeon.energyCost) return state;
     const progress = persist({ ...state.progress, stamina: state.progress.stamina - dungeon.energyCost });
     return {
-      run: createRun({ selectedHeroes: state.selectedHeroes, leaderHeroId: state.leaderId, adapter: createDefaultMetaAdapter(progress), chapterId: activeChapterId(progress) }),
+      run: createRun({ selectedHeroes: state.selectedHeroes, leaderHeroId: state.leaderId, adapter: createDefaultMetaAdapter(progress), chapterId: dungeon.chapterId, startWave: dungeon.startWave, enemyRule: dungeon.enemyRule }),
       progress,
       selectedDungeonId: undefined,
       activeDungeonId: dungeon.id,

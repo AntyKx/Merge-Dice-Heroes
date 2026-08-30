@@ -32,8 +32,12 @@ export function getDueSpawns(waveRuntime: WaveRuntimeState): { dueSpawns: Schedu
   return { dueSpawns, nextSpawnedCount: cursor };
 }
 
-export function createEnemyInstance(definition: EnemyDefinition, routes: ScheduledSpawn["routes"], instanceId: string): EnemyInstance {
-  return { instanceId, defId: definition.id, hp: definition.baseHp, maxHp: definition.baseHp, occupiedRoutes: routes, pathProgress: 0, debuffs: [], attackCooldownRemainingSeconds: 0, rangedAttackCooldownRemainingSeconds: 0 };
+/** hpMultiplier defaults to 1 (the normal campaign case) -- Dungeon Trials
+ * (DungeonRunModifier.hpMultiplier, threaded through RunState.enemyRule) are
+ * the only caller that passes something else. */
+export function createEnemyInstance(definition: EnemyDefinition, routes: ScheduledSpawn["routes"], instanceId: string, hpMultiplier = 1): EnemyInstance {
+  const maxHp = definition.baseHp * hpMultiplier;
+  return { instanceId, defId: definition.id, hp: maxHp, maxHp, occupiedRoutes: routes, pathProgress: 0, debuffs: [], attackCooldownRemainingSeconds: 0, rangedAttackCooldownRemainingSeconds: 0 };
 }
 
 /** Advances only the UNBLOCKED enemies on a Route -- blocked ones are stationary

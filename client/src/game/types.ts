@@ -50,7 +50,7 @@ export type EquipmentId =
   | "farsightLens" | "quiverResupply"
   | "choristersStaff" | "vowScripture";
 export type DailyQuestId = "battle" | "merge" | "victory";
-export type DungeonId = "ruinCorridor" | "frostAltar" | "shadowTrial";
+export type DungeonId = "ruinCorridor" | "frostAltar" | "shadowTrial" | "riftEcho" | "endlessNight";
 export type ShopOfferId = "forgeBundle" | "morningBladeOffer" | "watcherCloakOffer" | "fateDiceBoxOffer";
 export type GamePhase =
   | "PREPARING"
@@ -329,6 +329,9 @@ export interface DungeonDefinition {
   description: string;
   energyCost: number;
   recommendedPower: number;
+  /** Which campaign chapter's enemy roster/Wave content this Trial draws from
+   * (深域狩令 v1) -- independent of the player's own story progress. */
+  chapterId: ChapterId;
   startWave: number;
   reward: { crystals: number; equipmentId?: EquipmentId; label: string };
   enemyRule: { label: string; hpMultiplier: number; speedMultiplier: number };
