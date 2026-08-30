@@ -20,6 +20,8 @@ import type {
   CastleState,
   DiceComboKind,
   EnemyInstance,
+  EquipmentLoadout,
+  HeroDefinition,
   HeroInstance,
   HeroTier,
   RouteState,
@@ -35,7 +37,28 @@ import { LEADER_BURST_REGISTRY, LEADER_PASSIVE_REGISTRY, buildLeaderState } from
 import type { GlobalEffectContext, RunModifiersDelta } from "./leaders";
 import type { MetaProgressionAdapter } from "./metaAdapter";
 import { applyLevelScaling } from "./metaAdapter";
-import { getEquipmentCastleBonus, getEquipmentDamageMultiplier, getEquipmentExtraRerolls } from "./rules/equipment";
+import { SIGNATURE_WEAPONS } from "./signatureWeapons";
+import {
+  getEquipmentAttackSpeedMultiplier,
+  getEquipmentBossDamageMultiplier,
+  getEquipmentCastleBonus,
+  getEquipmentChainLightningProcChance,
+  getEquipmentCritChance,
+  getEquipmentCritDamageFactor,
+  getEquipmentDamageMultiplier,
+  getEquipmentDamageReductionPct,
+  getEquipmentExtraRerolls,
+  getEquipmentFateEnergyMaxBonus,
+  getEquipmentFreeMergeChance,
+  getEquipmentHpMultiplier,
+  getEquipmentComboUpgradeChance,
+  getEquipmentProtectedDieCount,
+  getEquipmentRecoveryPctBonus,
+  getEquipmentRepositionBonus,
+  getEquipmentSummonCostReduction,
+  getEquipmentTankBlockCapacityBonus,
+  getEquipmentWaveStartShieldPct,
+} from "./rules/equipment";
 import { applySignatureWeapon } from "./rules/signatureWeapon";
 import { getEligibleComboEffects, randomDie, rerollUnlocked, toggleDiceLock as toggleDiceLockRule } from "./rules/dice";
 import { canMerge, resolveMerge } from "./rules/merge";
@@ -49,7 +72,7 @@ import {
 } from "./rules/pending";
 import { canAfford, canBuyExtraReposition, gainEnergy, recycleRewardFor, spendEnergy } from "./rules/energy";
 import { advanceAutoSkill, resetSkillRuntime } from "./rules/skill";
-import { getBasicAttackDamage, getEffectiveAttackInterval, getTierStatMultiplier, resolveEffect } from "./rules/combat";
+import { getBasicAttackDamage, getEffectiveAttackInterval, getTierStatMultiplier, resolveEffect, rollCritMultiplier } from "./rules/combat";
 import type { CombatEffectContext, CombatEffectResult } from "./rules/combat";
 import { generateTalentChoices, applyTalentChoice } from "./rules/talent";
 import { generateBlessingChoices, applyBlessingChoice } from "./rules/blessing";
@@ -70,19 +93,29 @@ import { BLESSING_POOL } from "./blessings";
 
 let heroInstanceSequence = 0;
 
-function effectiveHeroDefinition(heroId: HeroId, adapter: MetaProgressionAdapter) {
+function effectiveHeroDefinition(heroId: HeroId, adapter: MetaProgressionAdapter): HeroDefinition {
   const base = HERO_DEFINITIONS[heroId];
   if (!base) throw new Error(`Unknown HeroId for run-engine: ${heroId}`);
   const snapshot = adapter.getHeroSnapshot(heroId);
   const { baseAttack, baseHp } = applyLevelScaling(base, snapshot);
-  const withSignature = applySignatureWeapon(base, snapshot.signatureWeaponUnlocked, undefined);
+  const withSignature = applySignatureWeapon(base, snapshot.signatureWeaponUnlocked, SIGNATURE_WEAPONS[heroId]);
   return { ...withSignature, baseAttack, baseHp };
 }
 
-function createHeroInstance(heroId: HeroId, tier: HeroTier, adapter: MetaProgressionAdapter): HeroInstance {
+/** The one place every in-run lookup should go for "this hero's current
+ * definition" -- falls back to the raw roster entry only defensively (should
+ * never actually miss, since createRun populates run.effectiveHeroes for
+ * every selectedHeroes entry up front). Reading HERO_DEFINITIONS directly
+ * anywhere else silently drops both permanent Level scaling and Signature
+ * Weapon patches for everything except a freshly-summoned hero's maxHp. */
+function getHeroDefinition(run: RunState, heroId: HeroId): HeroDefinition | undefined {
+  return run.effectiveHeroes[heroId] ?? HERO_DEFINITIONS[heroId];
+}
+
+function createHeroInstance(heroId: HeroId, tier: HeroTier, adapter: MetaProgressionAdapter, equipment: EquipmentLoadout): HeroInstance {
   heroInstanceSequence += 1;
   const definition = effectiveHeroDefinition(heroId, adapter);
-  const maxHp = definition.baseHp * getTierStatMultiplier(definition, tier);
+  const maxHp = definition.baseHp * getTierStatMultiplier(definition, tier) * getEquipmentHpMultiplier(equipment);
   const instanceId = `${heroId}-${heroInstanceSequence}`;
   return {
     instanceId,
@@ -110,8 +143,11 @@ export interface CreateRunParams {
 }
 
 export function createRun({ selectedHeroes, leaderHeroId, adapter }: CreateRunParams): RunState {
-  const equipment = adapter.getEquipmentLoadout();
+  const equipment = adapter.getEquipmentLoadout(selectedHeroes);
   const leader = buildLeaderState(leaderHeroId);
+  const effectiveHeroes = Object.fromEntries(
+    selectedHeroes.filter((heroId) => HERO_DEFINITIONS[heroId]).map((heroId) => [heroId, effectiveHeroDefinition(heroId, adapter)]),
+  ) as Partial<Record<HeroId, HeroDefinition>>;
   const maxRerolls = RUN_ENGINE_CONFIG.diceRerollsPerWave + getEquipmentExtraRerolls(equipment);
   const baseCastleHp = 20 + getEquipmentCastleBonus(equipment) + (leaderPassiveDelta(leader).castleBonus ?? 0);
   return {
@@ -119,12 +155,13 @@ export function createRun({ selectedHeroes, leaderHeroId, adapter }: CreateRunPa
     phase: "WAVE_PREVIEW",
     wave: 1,
     selectedHeroes,
+    effectiveHeroes,
     leader,
     board: { cells: {} },
     pending: { heroes: [] },
-    dice: { values: [1, 1, 1, 1, 1], locked: [true, true, true, true, true], rerollsLeft: maxRerolls, maxRerolls, isRolling: false },
-    fateEnergy: { current: 0, max: RUN_ENGINE_CONFIG.fateEnergy.max },
-    reposition: { usedThisWave: 0, baseAllowance: RUN_ENGINE_CONFIG.repositionBaseAllowancePerWave, carriesOverBetweenWaves: RUN_ENGINE_CONFIG.repositionCarriesOverBetweenWaves, extraPurchasesThisWave: 0 },
+    dice: { values: [1, 1, 1, 1, 1], locked: [true, true, true, true, true], rerollsLeft: maxRerolls, maxRerolls, isRolling: false, protectedIndices: [] },
+    fateEnergy: { current: 0, max: RUN_ENGINE_CONFIG.fateEnergy.max + getEquipmentFateEnergyMaxBonus(equipment) },
+    reposition: { usedThisWave: 0, baseAllowance: RUN_ENGINE_CONFIG.repositionBaseAllowancePerWave + getEquipmentRepositionBonus(equipment), carriesOverBetweenWaves: RUN_ENGINE_CONFIG.repositionCarriesOverBetweenWaves, extraPurchasesThisWave: 0 },
     castle: { hp: baseCastleHp, maxHp: baseCastleHp },
     talents: [],
     blessings: [],
@@ -160,15 +197,24 @@ export function getWaveDefinition(wave: number): WaveDefinition | undefined {
 export function acknowledgeWavePreview(run: RunState, random: () => number = Math.random): RunState {
   if (run.phase !== "WAVE_PREVIEW") return run;
   const values = Array.from({ length: 5 }, () => randomDie(random));
-  return { ...run, phase: "DICE_DECISION", dice: { ...run.dice, values, locked: [true, true, true, true, true] }, message: "第一次擲骰免費。點選想重骰的骰子，或直接確認命運。" };
+  // 命運雙子骰 (twinFateDice): protect the top N highest-value dice from this
+  // first roll from ever being selected for reroll -- fixed at this roll, not
+  // recomputed after a later reroll (binds to your opening fate, not whatever
+  // happens to be highest at any given moment).
+  const protectedCount = Math.min(values.length, getEquipmentProtectedDieCount(run.equipment));
+  const protectedIndices = protectedCount > 0
+    ? values.map((_value, index) => index).sort((a, b) => values[b] - values[a]).slice(0, protectedCount)
+    : [];
+  return { ...run, phase: "DICE_DECISION", dice: { ...run.dice, values, locked: [true, true, true, true, true], protectedIndices }, message: "第一次擲骰免費。點選想重骰的骰子，或直接確認命運。" };
 }
 
 /** Despite the name (kept for the underlying rule fn / RunState field, which
  * predate this UI flip), a die's `locked` flag reads as "kept" -- the UI
  * click target is "select this die to reroll", i.e. it toggles the die INTO
- * the reroll set by clearing `locked`. See rerollDice below. */
+ * the reroll set by clearing `locked`. See rerollDice below. A protected
+ * index (twinFateDice) simply can't be toggled either direction. */
 export function toggleDiceLock(run: RunState, index: number): RunState {
-  if (run.phase !== "DICE_DECISION") return run;
+  if (run.phase !== "DICE_DECISION" || run.dice.protectedIndices.includes(index)) return run;
   return { ...run, dice: { ...run.dice, locked: toggleDiceLockRule(run.dice.locked, index) } };
 }
 
@@ -207,7 +253,7 @@ function canSummonNow(run: RunState): boolean {
 }
 
 function resolveSummon(run: RunState, heroId: HeroId, tier: HeroTier, adapter: MetaProgressionAdapter): RunState {
-  const instance = createHeroInstance(heroId, tier, adapter);
+  const instance = createHeroInstance(heroId, tier, adapter, run.equipment);
   const routing = routeNewSummon(run.board, run.pending, RUN_ENGINE_CONFIG.pendingZoneCapacity);
   if (routing === "blockedPendingFull") return { ...run, message: "待命區已滿，請先安置或處理待命英雄，才能繼續召喚。" };
   if (routing === "addToPending") return { ...run, pending: addToPending(run.pending, instance, RUN_ENGINE_CONFIG.pendingZoneCapacity), message: `${heroId} 進入待命區。` };
@@ -224,16 +270,36 @@ function summonRandomFromRoster(run: RunState, adapter: MetaProgressionAdapter, 
 // Choose a Combo effect (二十七/二十八 -- never auto-picks "the highest")
 // ---------------------------------------------------------------------------
 
+/** Highest-value-first, matching rules/dice.ts's evaluateDiceHand push order --
+ * used only to find "the next kind up" for 賭徒的算計 (gamblersReckoning)
+ * below, never to invent a ranking of its own. */
+const COMBO_PRIORITY: DiceComboKind[] = ["FIVE_KIND", "FOUR_KIND", "FULL_HOUSE", "LARGE_STRAIGHT", "SMALL_STRAIGHT", "THREE_KIND", "TWO_PAIR", "PAIR", "NONE"];
+
 export function chooseComboEffect(run: RunState, kind: DiceComboKind, adapter: MetaProgressionAdapter, random: () => number = Math.random): RunState {
   if (run.phase !== "DICE_RESOLVE") return run;
-  const choice = run.pendingComboChoices.find((entry) => entry.kind === kind);
+  let choice = run.pendingComboChoices.find((entry) => entry.kind === kind);
   if (!choice) return run;
+  // 賭徒的算計 (gamblersReckoning): a chance to resolve as one tier higher --
+  // only among kinds this EXACT dice hand already legitimately qualifies for
+  // (still present in pendingComboChoices), never a kind the hand can't back.
+  let resolvedKind = kind;
+  if (kind !== "NONE") {
+    const comboUpgradeChance = getEquipmentComboUpgradeChance(run.equipment);
+    if (comboUpgradeChance > 0 && random() < comboUpgradeChance) {
+      const currentIndex = COMBO_PRIORITY.indexOf(kind);
+      const upgradedKind = COMBO_PRIORITY.slice(0, currentIndex).reverse().find((candidate) => run.pendingComboChoices.some((entry) => entry.kind === candidate));
+      if (upgradedKind) {
+        choice = run.pendingComboChoices.find((entry) => entry.kind === upgradedKind)!;
+        resolvedKind = upgradedKind;
+      }
+    }
+  }
   let next: RunState = {
     ...run,
     phase: "PREPARATION",
     pendingComboChoices: [],
-    comboHistory: [...run.comboHistory, { kind, wave: run.wave }],
-    message: `骰型成立：${kind}。`,
+    comboHistory: [...run.comboHistory, { kind: resolvedKind, wave: run.wave }],
+    message: resolvedKind !== kind ? `賭徒的算計發動！骰型結算提升為：${resolvedKind}。` : `骰型成立：${resolvedKind}。`,
   };
   const { effect } = choice;
   if (effect.kind === "gainFateEnergy") next = { ...next, fateEnergy: gainEnergy(next.fateEnergy, effect.amount) };
@@ -264,8 +330,8 @@ export function chooseJackpotTierUpTarget(run: RunState, cellKey: ReturnType<typ
   const hero = run.board.cells[cellKey];
   if (!hero || hero.tier === 3) return run;
   const nextTier = (hero.tier + 1) as HeroTier;
-  const definition = HERO_DEFINITIONS[hero.heroId];
-  const maxHp = definition ? definition.baseHp * getTierStatMultiplier(definition, nextTier) : hero.maxHp;
+  const definition = getHeroDefinition(run, hero.heroId);
+  const maxHp = definition ? definition.baseHp * getTierStatMultiplier(definition, nextTier) * getEquipmentHpMultiplier(run.equipment) : hero.maxHp;
   return {
     ...run,
     board: { cells: { ...run.board.cells, [cellKey]: { ...hero, tier: nextTier, maxHp, hp: maxHp } } },
@@ -285,29 +351,42 @@ export function spendEnergyForRandomSummon(run: RunState, adapter: MetaProgressi
     const summoned = summonRandomFromRoster(run, adapter, random);
     return { ...summoned, initialFreeRandomSummonAvailable: false, message: "開局免費隨機召喚完成！" };
   }
-  if (!canAfford(run.fateEnergy, RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost)) return run;
-  const spent = { ...run, fateEnergy: spendEnergy(run.fateEnergy, RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost) };
+  // 徵兵令 (conscriptionOrder): flat Fate Energy discount, floored at 0.
+  const cost = Math.max(0, RUN_ENGINE_CONFIG.fateEnergy.randomSummonCost - getEquipmentSummonCostReduction(run.equipment));
+  if (!canAfford(run.fateEnergy, cost)) return run;
+  const spent = { ...run, fateEnergy: spendEnergy(run.fateEnergy, cost) };
   return summonRandomFromRoster(spent, adapter, random);
 }
 
 export function spendEnergyForChosenSummon(run: RunState, heroId: HeroId, adapter: MetaProgressionAdapter): RunState {
-  if (run.phase !== "PREPARATION" || !run.selectedHeroes.includes(heroId) || !canAfford(run.fateEnergy, RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost)) return run;
+  const cost = Math.max(0, RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost - getEquipmentSummonCostReduction(run.equipment));
+  if (run.phase !== "PREPARATION" || !run.selectedHeroes.includes(heroId) || !canAfford(run.fateEnergy, cost)) return run;
   if (!canSummonNow(run)) return { ...run, message: "待命區已滿，請先安置或處理待命英雄，才能繼續召喚。" };
-  const spent = { ...run, fateEnergy: spendEnergy(run.fateEnergy, RUN_ENGINE_CONFIG.fateEnergy.specifiedSummonCost) };
+  const spent = { ...run, fateEnergy: spendEnergy(run.fateEnergy, cost) };
   return resolveSummon(spent, heroId, 1, adapter);
 }
 
-export function mergeSelection(run: RunState, cellKeys: ReturnType<typeof boardCellKey>[], targetCellKey: ReturnType<typeof boardCellKey>): RunState {
+export function mergeSelection(run: RunState, cellKeys: ReturnType<typeof boardCellKey>[], targetCellKey: ReturnType<typeof boardCellKey>, random: () => number = Math.random): RunState {
   if (run.phase !== "PREPARATION") return run;
   const requiredCount = run.pendingFreeMerge && cellKeys.length === 2 ? 2 : 3;
   if (!canMerge(run.board, cellKeys, requiredCount)) return run;
   const board = resolveMerge(run.board, cellKeys, targetCellKey, (source, nextTier) => {
-    const definition = HERO_DEFINITIONS[source.heroId];
-    const maxHp = definition ? definition.baseHp * getTierStatMultiplier(definition, nextTier) : source.maxHp;
+    const definition = getHeroDefinition(run, source.heroId);
+    const maxHp = definition ? definition.baseHp * getTierStatMultiplier(definition, nextTier) * getEquipmentHpMultiplier(run.equipment) : source.maxHp;
     return { ...source, tier: nextTier, maxHp, hp: maxHp };
   }, requiredCount);
   if (board === run.board) return run;
-  return { ...run, board, pendingFreeMerge: requiredCount === 2 ? false : run.pendingFreeMerge, message: "升階成功！" };
+  const wasFreeMerge = requiredCount === 2;
+  // 熔合催化劑 (fusionCatalyst): a normal 3-hero Merge has a chance to grant a
+  // follow-up free 2-hero Merge -- reuses pendingFreeMerge exactly as Full
+  // House already does, so the board UI needs zero changes to support it.
+  const grantsFollowUpFreeMerge = !wasFreeMerge && random() < getEquipmentFreeMergeChance(run.equipment);
+  return {
+    ...run,
+    board,
+    pendingFreeMerge: wasFreeMerge ? false : grantsFollowUpFreeMerge,
+    message: grantsFollowUpFreeMerge ? "升階成功！熔合催化劑發動，下次合成只需 2 名！" : "升階成功！",
+  };
 }
 
 export function placePendingHero(run: RunState, instanceId: string, cellKey: ReturnType<typeof boardCellKey>): RunState {
@@ -361,8 +440,15 @@ export function confirmFormation(run: RunState): RunState {
   if (!waveDefinition) return run;
   const routes: RouteState[] = ([1, 2, 3, 4] as const).map((routeId) => ({ routeId, active: waveDefinition.activeRoutes.includes(routeId), enemies: [] }));
   const spawnQueue = flattenSpawnSchedule(waveDefinition.batches);
+  // 王室徽甲 (royalWardplate): every board hero starts the Wave's combat with a
+  // Shield worth a fraction of the Castle's max HP.
+  const waveStartShieldPct = getEquipmentWaveStartShieldPct(run.equipment);
+  const board = waveStartShieldPct > 0
+    ? { cells: Object.fromEntries(Object.entries(run.board.cells).map(([key, hero]) => [key, hero ? { ...hero, shield: hero.shield + run.castle.maxHp * waveStartShieldPct } : hero])) as BoardState["cells"] }
+    : run.board;
   return {
     ...run,
+    board,
     phase: "COMBAT_RUNNING",
     waveRuntime: { waveNumber: run.wave, routes, spawnQueue, spawnedCount: 0, elapsedSeconds: 0 },
     message: `第 ${run.wave} 波開戰！`,
@@ -389,11 +475,13 @@ function updateHero(board: BoardState, instanceId: string, updater: (hero: HeroI
 
 /** Damage-to-hero specifically (not part of CombatEffectResult -- that's only for
  * hero-sourced effects landing on enemies/allies) consumes Shield before HP, same
- * absorption order as the old game/engine/combat.ts. */
-function damageHero(board: BoardState, instanceId: string, amount: number): BoardState {
+ * absorption order as the old game/engine/combat.ts. `reductionPct` (迷霧斗篷 etc,
+ * already clamped by getEquipmentDamageReductionPct) is applied before either. */
+function damageHero(board: BoardState, instanceId: string, amount: number, reductionPct = 0): BoardState {
+  const reduced = amount * (1 - reductionPct);
   return updateHero(board, instanceId, (hero) => {
-    const absorbed = Math.min(hero.shield, amount);
-    const hp = Math.max(0, hero.hp - (amount - absorbed));
+    const absorbed = Math.min(hero.shield, reduced);
+    const hp = Math.max(0, hero.hp - (reduced - absorbed));
     return { ...hero, shield: hero.shield - absorbed, hp, status: hp <= 0 ? "downed" : hero.status };
   });
 }
@@ -478,11 +566,15 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
   const blockProviders: BlockProvider[] = allOccupiedCells(board)
     .filter(({ hero }) => hero.status === "active")
     .flatMap(({ cell, hero }) => {
-      const definition = HERO_DEFINITIONS[hero.heroId];
+      const definition = getHeroDefinition(run, hero.heroId);
       if (!definition) return [];
       const blockRule = { ...definition.blockRule, ...definition.tiers[hero.tier].behavior.blockRule };
-      const capacity = getEffectiveBlockCapacity(cell, blockRule);
-      if (capacity <= 0) return [];
+      const baseCapacity = getEffectiveBlockCapacity(cell, blockRule);
+      if (baseCapacity <= 0) return [];
+      // 前線軍旗 (vanguardBanner): only tops up a tank ALREADY block-capable by
+      // position -- it doesn't conjure capacity for a tank parked somewhere
+      // that gets none, e.g. the back row.
+      const capacity = baseCapacity + (definition.role === "tank" ? getEquipmentTankBlockCapacityBonus(run.equipment) : 0);
       // Gate Block engagement by the SAME "how far along the Route can this hero
       // reach" concept as its own attacks (九), so a melee tank can't be dragged
       // into fighting -- and taking counterattack damage from -- an enemy that
@@ -513,6 +605,7 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
   });
 
   // 5. Blocked enemies fight their blocker (八's "被阻擋的怪物攻擊阻擋者").
+  const damageReductionPct = getEquipmentDamageReductionPct(run.equipment);
   routes = routes.map((route) => ({
     ...route,
     enemies: route.enemies.map((enemy) => {
@@ -521,7 +614,7 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
       if (!definition) return enemy;
       const cooldown = enemy.attackCooldownRemainingSeconds - delta;
       if (cooldown > 0) return { ...enemy, attackCooldownRemainingSeconds: cooldown };
-      board = damageHero(board, enemy.blockedBy, definition.baseAttack);
+      board = damageHero(board, enemy.blockedBy, definition.baseAttack, damageReductionPct);
       return { ...enemy, attackCooldownRemainingSeconds: definition.attackIntervalSeconds };
     }),
   }));
@@ -544,16 +637,21 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
       if (cooldown > 0) return { ...enemy, rangedAttackCooldownRemainingSeconds: cooldown };
       const target = pickRangedAttackTarget(board, enemy.occupiedRoutes);
       if (!target) return { ...enemy, rangedAttackCooldownRemainingSeconds: 0 };
-      board = damageHero(board, target.instanceId, definition.baseAttack);
+      board = damageHero(board, target.instanceId, definition.baseAttack, damageReductionPct);
       return { ...enemy, rangedAttackCooldownRemainingSeconds: definition.attackIntervalSeconds };
     }),
   }));
 
   // 7. Hero Basic Attack + Auto Skill trigger + Trait.
   const damageMultiplier = getEquipmentDamageMultiplier(run.equipment) * run.waveCombatBuff.damageMultiplier * (1 + (leaderPassiveDelta(leader).damageMultiplier ?? 0));
+  const equipmentAttackSpeedMultiplier = getEquipmentAttackSpeedMultiplier(run.equipment);
+  const critChance = getEquipmentCritChance(run.equipment);
+  const critDamageFactor = getEquipmentCritDamageFactor(run.equipment);
+  const bossDamageMultiplier = getEquipmentBossDamageMultiplier(run.equipment);
+  const chainLightningProcChance = getEquipmentChainLightningProcChance(run.equipment);
   allOccupiedCells(board).forEach(({ cellKey, cell, hero }) => {
     if (hero.status !== "active") return;
-    const definition = HERO_DEFINITIONS[hero.heroId];
+    const definition = getHeroDefinition(run, hero.heroId);
     if (!definition) return;
     const current = board.cells[cellKey];
     if (!current) return;
@@ -575,9 +673,20 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
     let justAttacked = false;
     if (definition.coverage.kind !== "auraOnly" && attackCooldown <= 0 && enemyTargetPool.length) {
       const target = blockedByMe[0] ?? [...enemyTargetPool].sort((a, b) => b.pathProgress - a.pathProgress)[0];
-      const damage = getBasicAttackDamage(definition, current.tier, damageMultiplier);
+      const targetTags = ENEMY_DEFINITIONS[target.defId]?.tags ?? [];
+      const isPriorityTarget = targetTags.includes("elite") || targetTags.includes("boss");
+      const critFactor = rollCritMultiplier(critChance, critDamageFactor, random);
+      const targetDamageMultiplier = damageMultiplier * (isPriorityTarget ? bossDamageMultiplier : 1) * critFactor;
+      const damage = getBasicAttackDamage(definition, current.tier, targetDamageMultiplier);
       routes = damageRoutes(routes, target.instanceId, damage);
-      attackCooldown = getEffectiveAttackInterval(definition, run.waveCombatBuff.attackSpeedMultiplier * heroSpeedMultiplier(current));
+      // 連鎖雷光杖 (chainlightRod): the landed attack also arcs to a second
+      // target already in this hero's own pool, for half damage -- never
+      // invents a target outside what this hero could already reach.
+      if (chainLightningProcChance > 0 && random() < chainLightningProcChance) {
+        const secondary = enemyTargetPool.find((enemy) => enemy.instanceId !== target.instanceId);
+        if (secondary) routes = damageRoutes(routes, secondary.instanceId, damage * 0.5);
+      }
+      attackCooldown = getEffectiveAttackInterval(definition, run.waveCombatBuff.attackSpeedMultiplier * heroSpeedMultiplier(current) * equipmentAttackSpeedMultiplier);
       justAttacked = true;
     }
     attackCooldown = Math.max(0, attackCooldown);
@@ -640,19 +749,23 @@ export function advanceCombat(run: RunState, delta: number, random: () => number
  * heroes revive at a % of max HP -- both reset to full Shield/no Buffs. Auto
  * Skill progress/cooldown is also reset here (十四: "不要把 3/4 Attack Counter
  * 剩餘 0.4 秒 CD 帶去下一 Wave -- 每個 Wave 開始重新計算"), via the same
- * resetSkillRuntime() createHeroInstance() itself uses for a fresh summon. */
-function recoverHeroesBetweenWaves(board: BoardState): BoardState {
+ * resetSkillRuntime() createHeroInstance() itself uses for a fresh summon.
+ * `recoveryPctBonus` (聖光凝露 etc) adds onto both recovery percentages, each
+ * still capped at 100% of the relevant baseline (can't overheal past full/
+ * can't revive above max). */
+function recoverHeroesBetweenWaves(run: RunState): BoardState {
   const { heroRecovery } = RUN_ENGINE_CONFIG;
-  const cells = Object.fromEntries(Object.entries(board.cells).map(([key, hero]) => {
+  const recoveryBonus = getEquipmentRecoveryPctBonus(run.equipment);
+  const cells = Object.fromEntries(Object.entries(run.board.cells).map(([key, hero]) => {
     if (!hero) return [key, hero];
-    const definition = HERO_DEFINITIONS[hero.heroId];
+    const definition = getHeroDefinition(run, hero.heroId);
     const skill = definition ? resetSkillRuntime(hero.instanceId, definition.autoSkill.trigger) : hero.skill;
     if (hero.status === "downed") {
-      const hp = Math.round(hero.maxHp * heroRecovery.downedReviveMaxHpPct);
+      const hp = Math.round(hero.maxHp * Math.min(1, heroRecovery.downedReviveMaxHpPct + recoveryBonus));
       return [key, { ...hero, hp, status: "active" as const, shield: 0, buffs: [], skill, attackCooldownRemainingSeconds: 0 }];
     }
     const lost = hero.maxHp - hero.hp;
-    const hp = Math.min(hero.maxHp, hero.hp + Math.round(lost * heroRecovery.survivorLostHpRestorePct));
+    const hp = Math.min(hero.maxHp, hero.hp + Math.round(lost * Math.min(1, heroRecovery.survivorLostHpRestorePct + recoveryBonus)));
     return [key, { ...hero, hp, shield: 0, buffs: [], skill, attackCooldownRemainingSeconds: 0 }];
   }));
   return { cells: cells as BoardState["cells"] };
@@ -672,7 +785,7 @@ function isBlessingWave(waveNumber: number): boolean {
 /** COMBAT_END -> REWARD_RESOLVE. */
 export function resolveWaveEnd(run: RunState): RunState {
   if (run.phase !== "COMBAT_END") return run;
-  const board = recoverHeroesBetweenWaves(run.board);
+  const board = recoverHeroesBetweenWaves(run);
   const talentChoices = isTalentWave(run.wave) ? generateTalentChoices(TALENT_POOL, run.talents, run.selectedHeroes, run.leader.heroId) : [];
   const blessingChoices = isBlessingWave(run.wave) ? generateBlessingChoices(BLESSING_POOL, run.blessings, run.selectedHeroes, run.leader.heroId) : [];
   return { ...run, phase: "REWARD_RESOLVE", board, talentChoices, blessingChoices, message: "戰場安靜下來。選擇一項強化。" };

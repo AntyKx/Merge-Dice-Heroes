@@ -42,6 +42,16 @@ const knightIronWill: CombatEffectResolver = (context) => {
   return { shieldToAllies: [{ instanceId: context.self.instanceId, amount: magnitude }] };
 };
 
+/** Signature Weapon "王國之盾" -- same ironWill trigger, self-shield magnitude
+ * scaled ×1.5. (The dossier's original pitch -- sharing the shield with other
+ * heroes in the same DefenseZone -- needs board/zone data CombatEffectContext
+ * doesn't carry; a straight magnitude boost keeps the same "guardian" flavor
+ * without extending the shared context shape for one hero.) */
+const knightKingsguardEmblem: CombatEffectResolver = (context) => {
+  const magnitude = (context.self.tier === 3 ? 6 : 3) * 1.5;
+  return { shieldToAllies: [{ instanceId: context.self.instanceId, amount: magnitude }] };
+};
+
 // ---------------------------------------------------------------------------
 // Death Knight -- offensive front-liner. 十二【Death Knight】
 // ---------------------------------------------------------------------------
@@ -55,6 +65,18 @@ const deathKnightShadowStrike: CombatEffectResolver = (context) => {
   if (!target) return {};
   const amount = context.selfDefinition.baseAttack * getTierStatMultiplier(context.selfDefinition, context.self.tier) * 0.8;
   return { damageToEnemies: [{ instanceId: target.instanceId, amount }] };
+};
+
+/** Signature Weapon "噬魂連斬" -- Shadow Strike (T3-only, unchanged gate) also
+ * splashes 30% of its damage onto a second priority target, if one exists. */
+const deathKnightSoulrendFlourish: CombatEffectResolver = (context) => {
+  if (context.self.tier < 3) return {};
+  const [primary, secondary] = priorityEnemyTargets(context, 2);
+  if (!primary) return {};
+  const amount = context.selfDefinition.baseAttack * getTierStatMultiplier(context.selfDefinition, context.self.tier) * 0.8;
+  const damageToEnemies = [{ instanceId: primary.instanceId, amount }];
+  if (secondary) damageToEnemies.push({ instanceId: secondary.instanceId, amount: amount * 0.3 });
+  return { damageToEnemies };
 };
 
 const deathKnightBloodpact: CombatEffectResolver = (context) => {
@@ -129,6 +151,13 @@ const fireMageFlameBurst: CombatEffectResolver = (context) => {
   };
 };
 
+/** Signature Weapon "熾焰核心" -- Flame Burst's primary+splash damage all ×1.2. */
+const fireMageCinderheartCore: CombatEffectResolver = (context) => {
+  const base = fireMageFlameBurst(context);
+  if (!base.damageToEnemies) return base;
+  return { damageToEnemies: base.damageToEnemies.map((entry) => ({ ...entry, amount: entry.amount * 1.2 })) };
+};
+
 const fireMageIgniteTrait: CombatEffectResolver = (context) => {
   // T3: burning + death-chain explosion, approximated as a DoT-style debuff on the
   // primary target (a real DoT tick belongs to the Phase 9 orchestrator's status
@@ -157,6 +186,15 @@ const frostQueenFreezeTrait: CombatEffectResolver = (context) => {
   if (context.self.tier < 2) return {};
   const count = context.self.tier === 3 ? 4 : 2;
   return { debuffToEnemies: priorityEnemyTargets(context, count).map((target) => ({ instanceId: target.instanceId, statusId: "slow", magnitude: context.self.tier === 3 ? 0.4 : 0.25, durationMs: 2000 })) };
+};
+
+/** Signature Weapon "永冬權杖" -- same freeze trigger, +15% extra Slow magnitude
+ * on every target it debuffs (still passes through rules/status.ts's stacking
+ * Cap downstream, same as the base trait). */
+const frostQueenEternalFrostScepter: CombatEffectResolver = (context) => {
+  const base = frostQueenFreezeTrait(context);
+  if (!base.debuffToEnemies) return base;
+  return { debuffToEnemies: base.debuffToEnemies.map((entry) => ({ ...entry, magnitude: entry.magnitude + 0.15 })) };
 };
 
 // ---------------------------------------------------------------------------
@@ -191,6 +229,17 @@ const engineerBarrage: CombatEffectResolver = (context) => {
   return { damageToEnemies: targets.map((target) => ({ instanceId: target.instanceId, amount })) };
 };
 
+/** Signature Weapon "超載核心" -- Barrage always hits one MORE target than its
+ * current Tier would normally allow (uncapped by Tier, per the dossier),
+ * instead of the base resolver's tier-gated 1/2/3. */
+const engineerOverloadCore: CombatEffectResolver = (context) => {
+  const baseCount = context.self.tier === 1 ? 1 : context.self.tier === 2 ? 2 : 3;
+  const targets = priorityEnemyTargets(context, baseCount + 1);
+  if (!targets.length) return {};
+  const amount = context.selfDefinition.baseAttack * getTierStatMultiplier(context.selfDefinition, context.self.tier) * 0.7;
+  return { damageToEnemies: targets.map((target) => ({ instanceId: target.instanceId, amount })) };
+};
+
 const engineerOverloadTrait: CombatEffectResolver = (context) => {
   // T2: leaves a lingering danger zone (approximated as a debuff on current
   // targets). T3: auto-adds an extra barrage shot -- handled by the caller
@@ -220,6 +269,14 @@ const priestOverhealTrait: CombatEffectResolver = (context) => {
   return { shieldToAllies: [{ instanceId: target.instanceId, amount: overheal }] };
 };
 
+/** Signature Weapon "聖光權杖" -- same T3-only Overheal gate, converted Shield
+ * amount ×1.5. */
+const priestSunlightCrozier: CombatEffectResolver = (context) => {
+  const base = priestOverhealTrait(context);
+  if (!base.shieldToAllies) return base;
+  return { shieldToAllies: base.shieldToAllies.map((entry) => ({ ...entry, amount: entry.amount * 1.5 })) };
+};
+
 // ---------------------------------------------------------------------------
 // Bard -- attack-speed support. 十二【Bard】
 // ---------------------------------------------------------------------------
@@ -237,6 +294,17 @@ const bardResonanceTrait: CombatEffectResolver = (context) => {
   if (!targets.length) return {};
   const amount = context.selfDefinition.baseAttack * getTierStatMultiplier(context.selfDefinition, context.self.tier);
   return { healToAllies: targets.map((target) => ({ instanceId: target.instanceId, amount })) };
+};
+
+/** Signature Weapon "不朽詩篇" -- same T3-only Resonance gate, heal amount
+ * ×1.1, and now also grants a Shield worth 10% of the (boosted) heal to the
+ * same targets, so the pulse leaves lasting protection behind, not just HP. */
+const bardUndyingVerse: CombatEffectResolver = (context) => {
+  const base = bardResonanceTrait(context);
+  if (!base.healToAllies) return base;
+  const healToAllies = base.healToAllies.map((entry) => ({ ...entry, amount: entry.amount * 1.1 }));
+  const shieldToAllies = healToAllies.map((entry) => ({ instanceId: entry.instanceId, amount: entry.amount * 0.1 }));
+  return { healToAllies, shieldToAllies };
 };
 
 // ---------------------------------------------------------------------------
@@ -367,5 +435,14 @@ export const HERO_EFFECT_REGISTRY: CombatEffectRegistry = {
   "priest.overheal": priestOverhealTrait,
   "bard.cadence": bardCadence,
   "bard.resonance": bardResonanceTrait,
+
+  // ---- Signature Weapons (run-engine/signatureWeapons.ts) -----------------
+  "knight.kingsguardEmblem": knightKingsguardEmblem,
+  "deathKnight.soulrendFlourish": deathKnightSoulrendFlourish,
+  "fireMage.cinderheartCore": fireMageCinderheartCore,
+  "frostQueen.eternalFrostScepter": frostQueenEternalFrostScepter,
+  "engineer.overloadCore": engineerOverloadCore,
+  "priest.sunlightCrozier": priestSunlightCrozier,
+  "bard.undyingVerse": bardUndyingVerse,
 };
 

@@ -4,9 +4,20 @@ import { acknowledgeWavePreview, chooseComboEffect, chooseSummonHero, confirmFat
 import { isBurstReadyToFire } from "./rules/leader";
 import type { DiceComboKind, RunState } from "./types";
 
+// Every field orchestrator.ts's equipment getters read must be a real 0, not
+// undefined -- see orchestrator.test.ts's identical EMPTY_LOADOUT for why.
+const EMPTY_LOADOUT = {
+  attackMultiplier: 0, castleBonus: 0, extraRerolls: 0, attackSpeedMultiplier: 0,
+  critChance: 0, critDamageMultiplier: 0, bossDamageMultiplier: 0, hpMultiplier: 0,
+  recoveryPctBonus: 0, shieldOnWaveStartPctCastleHp: 0, damageReductionPct: 0,
+  tankBlockCapacityBonus: 0, repositionBonus: 0, fateEnergyMaxBonus: 0,
+  summonCostReduction: 0, freeMergeChance: 0, comboUpgradeChance: 0,
+  protectedDieCount: 0, chainLightningProcChance: 0,
+};
+
 const adapter: MetaProgressionAdapter = {
   getHeroSnapshot: (heroId) => ({ heroId, level: 1, starRank: 1, signatureWeaponUnlocked: false }),
-  getEquipmentLoadout: () => ({ attackMultiplier: 0, castleBonus: 0, extraRerolls: 0 }),
+  getEquipmentLoadout: () => ({ ...EMPTY_LOADOUT }),
 };
 
 const fixedRandom = () => 0.4;

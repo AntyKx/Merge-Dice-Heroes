@@ -23,7 +23,7 @@ import { HERO_FRAME_SHEETS, HeroFrameSprite, type HeroAnimationAction } from "@/
 import { getHeroProgress, heroXpRequirement } from "@/game/heroProgress";
 import { LEADER_CARD_PROFILES } from "@/game/leaderCardProfiles";
 import { useGameStore } from "@/game/store";
-import type { DailyQuestId, EquipmentSlot, HeroId, ShopOfferId } from "@/game/types";
+import type { DailyQuestId, EquipmentId, EquipmentSlot, HeroId, ShopOfferId } from "@/game/types";
 
 const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
@@ -549,7 +549,7 @@ function DailyScreen() {
 function DungeonScreen() {
   const { progress, selectDungeon } = useGameStore();
   const [showDungeonHelp, setShowDungeonHelp] = useState(() => new URLSearchParams(window.location.search).get("dungeonHelp") === "1");
-  const rewardPreviewIcon = (equipmentId?: "morningBlade" | "watcherCloak" | "fateDiceBox") => equipmentId === "watcherCloak" ? ASTERVOW_UI_ICON_URLS.equipmentArmor : equipmentId === "fateDiceBox" ? ASTERVOW_UI_ICON_URLS.equipmentRelic : ASTERVOW_UI_ICON_URLS.dungeonReward;
+  const rewardPreviewIcon = (equipmentId?: EquipmentId) => equipmentId === "watcherCloak" ? ASTERVOW_UI_ICON_URLS.equipmentArmor : equipmentId === "fateDiceBox" ? ASTERVOW_UI_ICON_URLS.equipmentRelic : ASTERVOW_UI_ICON_URLS.dungeonReward;
   return <section className="lobby-module-screen accent-violet skin-dungeon">
     <ModuleHeader moduleId="dungeon" />
     <section className="dungeon-prep" aria-label="挑戰準備"><header className="dungeon-section-heading"><span>挑戰準備</span><button className={`dungeon-help ${showDungeonHelp ? "is-open" : ""}`} type="button" onClick={() => setShowDungeonHelp((open) => !open)} aria-expanded={showDungeonHelp} aria-controls="dungeon-help-panel" aria-label="查看試煉之門用途">?</button></header><div className="dungeon-energy"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonStamina} alt="" /><b>體力 {progress.stamina} / 20</b><span>每次挑戰消耗對應體力</span></div></section>

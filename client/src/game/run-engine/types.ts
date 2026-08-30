@@ -12,7 +12,7 @@
  * never persisted to the meta layer. Permanent hero growth (Level/XP, future Star/
  * Fragment, future Signature Weapon) lives entirely outside this module.
  */
-import type { HeroId, DiceCombinationKind } from "../types";
+import type { EquipmentBonuses, HeroId, DiceCombinationKind } from "../types";
 
 // ---------------------------------------------------------------------------
 // Hero: Definition (static) vs Instance (Run-scoped runtime)
@@ -344,6 +344,10 @@ export interface DiceState {
   rerollsLeft: number;
   maxRerolls: number;
   isRolling: boolean;
+  /** Indices (into values/locked) a Relic (e.g. 命運雙子骰) protected from being
+   * selected for reroll, fixed at the Wave's first roll and left unchanged
+   * through any subsequent reroll -- see acknowledgeWavePreview/toggleDiceLock. */
+  protectedIndices: number[];
 }
 
 export type DiceComboEffect =
@@ -475,11 +479,11 @@ export interface BlessingDefinition {
 // EquipmentBonuses shape conceptually; the concrete adapter lives in metaAdapter.ts)
 // ---------------------------------------------------------------------------
 
-export interface EquipmentLoadout {
-  attackMultiplier: number;
-  castleBonus: number;
-  extraRerolls: number;
-}
+/** Exactly game/types.ts's EquipmentBonuses -- the run engine only ever sees the
+ * fully-resolved (base + role-leaning, both already summed) flat numbers, never
+ * individual EquipmentDefinition/EquipmentId data. Kept as a type alias, not a
+ * re-declared interface, so the two can never silently drift apart. */
+export type EquipmentLoadout = EquipmentBonuses;
 
 // ---------------------------------------------------------------------------
 // Castle / Run-level state
@@ -518,6 +522,14 @@ export interface RunState {
   phase: RunPhase;
   wave: number;
   selectedHeroes: HeroId[];
+  /** HeroDefinition per selected hero with permanent Level scaling AND Signature
+   * Weapon patches already baked in (orchestrator.ts's effectiveHeroDefinition),
+   * computed once at createRun. Every in-combat/merge/jackpot lookup that needs
+   * "this hero's current definition" should read from here (falling back to the
+   * raw HERO_DEFINITIONS entry) instead of HERO_DEFINITIONS directly -- reading
+   * HERO_DEFINITIONS directly silently drops both Level scaling and Signature
+   * Weapon effects for anything past initial maxHp at summon time. */
+  effectiveHeroes: Partial<Record<HeroId, HeroDefinition>>;
   leader: LeaderState;
   board: BoardState;
   pending: PendingZoneState;

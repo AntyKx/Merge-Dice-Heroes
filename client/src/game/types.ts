@@ -12,7 +12,20 @@ export type EnemyId =
 export type HeroTier = 1 | 2 | 3;
 export type TalentRarity = "common" | "rare" | "epic";
 export type EquipmentSlot = "weapon" | "armor" | "relic";
-export type EquipmentId = "morningBlade" | "watcherCloak" | "fateDiceBox";
+export type EquipmentId =
+  | "morningBlade" | "watcherCloak" | "fateDiceBox"
+  // 共用武器 Shared Weapons
+  | "ironedgeBlade" | "windrushEdge" | "killerInstinctSigil" | "dragonslayersMark" | "chainlightRod"
+  // 共用護甲 Shared Armor
+  | "stalwartBuckler" | "sacredDewVial" | "royalWardplate" | "mistweaveCloak" | "bastionHeart" | "vanguardBanner"
+  // 共用遺物 Shared Relics
+  | "nimbleToolkit" | "gluttonousCoinpurse" | "conscriptionOrder" | "fusionCatalyst" | "twinFateDice" | "gamblersReckoning"
+  // 職業傾向裝備 Role-leaning Equipment
+  | "vengeanceGauntlets" | "bulwarkOfTheVanguard"
+  | "heavystrikeKnuckles" | "warfuryPlate"
+  | "shadowstrikeDagger" | "cloakOfUmbra"
+  | "farsightLens" | "quiverResupply"
+  | "choristersStaff" | "vowScripture";
 export type DailyQuestId = "battle" | "merge" | "victory";
 export type DungeonId = "ruinCorridor" | "frostAltar" | "shadowTrial";
 export type ShopOfferId = "forgeBundle" | "morningBladeOffer" | "watcherCloakOffer" | "fateDiceBoxOffer";
@@ -177,6 +190,59 @@ export interface EquipmentBonuses {
   attackMultiplier: number;
   castleBonus: number;
   extraRerolls: number;
+  /** Weapon -- Attack Speed. */
+  attackSpeedMultiplier: number;
+  /** Weapon -- Critical. Chance in [0,1]. */
+  critChance: number;
+  /** Weapon -- Critical. Bonus damage fraction on a crit (0.5 = +50%). */
+  critDamageMultiplier: number;
+  /** Weapon -- Boss Damage. Bonus fraction vs "elite"/"boss"-tagged enemies. */
+  bossDamageMultiplier: number;
+  /** Armor -- HP. Team max-HP bonus fraction, applied when a hero is created. */
+  hpMultiplier: number;
+  /** Armor -- Recovery. Extra fraction restored on top of RUN_ENGINE_CONFIG.heroRecovery between Waves. */
+  recoveryPctBonus: number;
+  /** Armor -- Shield. Flat fraction of Castle max HP granted as Shield to every board hero when a Wave's combat starts. */
+  shieldOnWaveStartPctCastleHp: number;
+  /** Armor -- Damage Reduction. Fraction of incoming enemy damage negated before Shield/HP absorption. */
+  damageReductionPct: number;
+  /** Armor -- Block. Flat Block-capacity bonus for tank-role heroes already capable of blocking by position. */
+  tankBlockCapacityBonus: number;
+  /** Relic -- Reposition. Flat bonus to the per-Wave Reposition allowance. */
+  repositionBonus: number;
+  /** Relic -- Fate Energy. Flat bonus to the Run's Fate Energy cap. */
+  fateEnergyMaxBonus: number;
+  /** Relic -- Summon. Flat Fate Energy discount on Random Summon (floored at 0). */
+  summonCostReduction: number;
+  /** Relic -- Merge. Chance that completing a normal (3-hero) Merge grants a
+   * follow-up free 2-hero Merge, reusing the same pendingFreeMerge flag Full
+   * House already grants. */
+  freeMergeChance: number;
+  /** Relic -- Combo. Chance the chosen Dice Combo effect resolves as the next
+   * tier up, among the kinds this exact hand already legitimately qualifies for. */
+  comboUpgradeChance: number;
+  /** Relic -- Lock. How many of the highest-value dice from the Wave's first
+   * roll are protected from being selected for reroll. */
+  protectedDieCount: number;
+  /** Weapon -- Combat Style. Chance a landed Basic Attack also strikes a second
+   * target in the same target pool for half damage. */
+  chainLightningProcChance: number;
+}
+
+/** The 5 run-engine hero roles (run-engine/types.ts's HeroRole), duplicated here
+ * deliberately -- this meta/lobby layer intentionally never imports run-engine
+ * internals (see defaultMetaAdapter.ts's boundary doc comment); the two unions
+ * are kept in sync by hand since role-leaning equipment needs to name a role. */
+export type EquipmentRole = "tank" | "melee" | "assassin" | "ranged" | "support";
+
+export interface EquipmentRoleBonus {
+  role: EquipmentRole;
+  /** Applied instead of the item's own (normally empty) bonuses when the current
+   * run's selectedHeroes includes at least one hero of `role`. */
+  bonus: Partial<EquipmentBonuses>;
+  /** Applied when no hero of `role` is in selectedHeroes, so the equip slot is
+   * never a complete waste when the "right" hero isn't in this run. */
+  fallback: Partial<EquipmentBonuses>;
 }
 
 export interface EquipmentDefinition {
@@ -188,6 +254,11 @@ export interface EquipmentDefinition {
   icon: string;
   bonuses: Partial<EquipmentBonuses>;
   upgradeBonus: Partial<EquipmentBonuses>;
+  /** Role-leaning items (素材/軍需官密卷's 職業傾向裝備) carry their whole effect
+   * here instead of in `bonuses`/`upgradeBonus` -- resolved once per run in
+   * defaultMetaAdapter.ts against the run's selectedHeroes, never re-evaluated
+   * mid-combat. Absent for ordinary shared equipment. */
+  roleBonus?: EquipmentRoleBonus;
 }
 
 export interface ShopOfferDefinition {

@@ -34,6 +34,16 @@ export function getEffectiveAttackInterval(definition: HeroDefinition, externalS
   return definition.attackInterval / Math.max(0.1, externalSpeedMultiplier);
 }
 
+/** Returns the damage multiplier a single Basic Attack should apply: either
+ * `critDamageFactor` (already resolved to e.g. 1.5, not the raw +50% fraction --
+ * see rules/equipment.ts's getEquipmentCritDamageFactor) on a crit roll, or 1
+ * otherwise. A pure coin-flip against `critChance` -- no crit-chance-over-100%
+ * carryover/pity system, matching this codebase's "fixed effect, no hidden
+ * meta-RNG" equipment philosophy (素材/玩法核心.txt 三十四). */
+export function rollCritMultiplier(critChance: number, critDamageFactor: number, random: () => number): number {
+  return random() < critChance ? critDamageFactor : 1;
+}
+
 // ---------------------------------------------------------------------------
 // Effect Registry (hero-specific Auto Skill / Trait behavior, filled in per-hero
 // in config/heroes.ts -- never inline here)

@@ -1,4 +1,4 @@
-import { DICE_COMBINATIONS, DUNGEONS, HEROES, TALENTS, WAVES } from "../config";
+import { DICE_COMBINATIONS, DUNGEONS, EMPTY_EQUIPMENT_BONUSES, HEROES, TALENTS, WAVES } from "../config";
 import { makeCombatState, getRunModifiers } from "./combat";
 import { evaluateDice, randomDie, rollUnlockedDice, toggleDiceLock } from "../rules/dice";
 import { createHero, firstEmptySlot, getMergeCandidates, mergeHeroes, summonOnBoard } from "../rules/merge";
@@ -8,9 +8,7 @@ const emptyBoard = () => Array<HeroInstance | null>(16).fill(null);
 
 function generateDice(random: () => number) { return Array.from({ length: 5 }, () => randomDie(random)); }
 
-const emptyEquipmentBonuses: EquipmentBonuses = { attackMultiplier: 0, castleBonus: 0, extraRerolls: 0 };
-
-export function createRun(selectedHeroes: HeroId[], leaderId: HeroId, random: () => number = Math.random, equipmentBonuses: EquipmentBonuses = emptyEquipmentBonuses): RunState {
+export function createRun(selectedHeroes: HeroId[], leaderId: HeroId, random: () => number = Math.random, equipmentBonuses: EquipmentBonuses = EMPTY_EQUIPMENT_BONUSES): RunState {
   return {
     phase: "SELECTING_DICE",
     wave: 1,

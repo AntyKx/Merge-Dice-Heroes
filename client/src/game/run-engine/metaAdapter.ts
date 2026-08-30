@@ -24,7 +24,13 @@ export interface HeroMetaSnapshot {
 
 export interface MetaProgressionAdapter {
   getHeroSnapshot(heroId: HeroId): HeroMetaSnapshot;
-  getEquipmentLoadout(): EquipmentLoadout;
+  /** selectedHeroes is needed to resolve role-leaning equipment (素材/軍需官密卷)
+   * -- an item like 復仇者護手 only grants its full bonus when a tank is among
+   * the run's 3 selected heroes, otherwise it falls back to a smaller
+   * team-wide value. Resolved once here, at Run creation; never re-evaluated
+   * mid-run even if the board composition later changes (heroes can be
+   * recycled/downed, but selectedHeroes itself is fixed for the Run). */
+  getEquipmentLoadout(selectedHeroes: HeroId[]): EquipmentLoadout;
 }
 
 /**

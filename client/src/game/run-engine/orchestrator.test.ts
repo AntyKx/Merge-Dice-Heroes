@@ -34,9 +34,23 @@ import {
  * within the tick budget below), so a constant is fine there too. */
 const fixedRandom = () => 0.4;
 
+// Every field orchestrator.ts's equipment getters read must be a real 0, not
+// undefined -- several are read unconditionally every combat tick (e.g.
+// attackSpeedMultiplier), and `1 + undefined`/`undefined >= x` silently
+// produce NaN/false, which then propagates through the whole Run (a hero
+// whose attack cooldown goes NaN stops attacking forever).
+const EMPTY_LOADOUT = {
+  attackMultiplier: 0, castleBonus: 0, extraRerolls: 0, attackSpeedMultiplier: 0,
+  critChance: 0, critDamageMultiplier: 0, bossDamageMultiplier: 0, hpMultiplier: 0,
+  recoveryPctBonus: 0, shieldOnWaveStartPctCastleHp: 0, damageReductionPct: 0,
+  tankBlockCapacityBonus: 0, repositionBonus: 0, fateEnergyMaxBonus: 0,
+  summonCostReduction: 0, freeMergeChance: 0, comboUpgradeChance: 0,
+  protectedDieCount: 0, chainLightningProcChance: 0,
+};
+
 const fakeAdapter: MetaProgressionAdapter = {
   getHeroSnapshot: (heroId) => ({ heroId, level: 1, starRank: 1, signatureWeaponUnlocked: false }),
-  getEquipmentLoadout: () => ({ attackMultiplier: 0, castleBonus: 0, extraRerolls: 0 }),
+  getEquipmentLoadout: () => ({ ...EMPTY_LOADOUT }),
 };
 
 function makeHero(instanceId: string, heroId: HeroId): HeroInstance {
@@ -333,5 +347,56 @@ describe("orchestrator end-to-end Wave lifecycle", () => {
     expect(run.dice.rerollsLeft).toBe(rerollsBefore - 1);
     // Selection resets to "nothing selected" after the reroll resolves.
     expect(run.dice.locked).toEqual([true, true, true, true, true]);
+  });
+
+  it("命運雙子骰 (protectedDieCount)：首次擲骰後保護的骰子索引無法被選取重骰，其餘骰子不受影響", () => {
+    const gearedAdapter: MetaProgressionAdapter = {
+      getHeroSnapshot: fakeAdapter.getHeroSnapshot,
+      getEquipmentLoadout: () => ({ ...EMPTY_LOADOUT, protectedDieCount: 2 }),
+    };
+    let run = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: gearedAdapter });
+    run = acknowledgeWavePreview(run, fixedRandom); // fixedRandom -> every die rolls 3 (a tie)
+    // A stable sort over an all-tied hand keeps original index order, so the
+    // first `protectedDieCount` indices are protected -- deterministic here.
+    expect(run.dice.protectedIndices).toEqual([0, 1]);
+
+    const beforeToggle = run.dice.locked[0];
+    run = toggleDiceLock(run, 0);
+    expect(run.dice.locked[0]).toBe(beforeToggle); // refused, unchanged
+
+    run = toggleDiceLock(run, 2); // not protected
+    expect(run.dice.locked[2]).toBe(false);
+  });
+
+  it("賭徒的算計 (comboUpgradeChance)：只會升到這手骰子本來就合法的較高一階效果，不會發明不合法的骰型", () => {
+    const gearedAdapter: MetaProgressionAdapter = {
+      getHeroSnapshot: fakeAdapter.getHeroSnapshot,
+      getEquipmentLoadout: () => ({ ...EMPTY_LOADOUT, comboUpgradeChance: 1 }),
+    };
+    let run = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: gearedAdapter });
+    // "2 2 2 5 5" 同時合法於 FULL_HOUSE / THREE_KIND / PAIR / NONE (per rules/dice.ts).
+    run = { ...run, phase: "DICE_DECISION", dice: { ...run.dice, values: [2, 2, 2, 5, 5] } };
+    run = confirmFate(run);
+    expect(run.pendingComboChoices.map((choice) => choice.kind).sort()).toEqual(["FULL_HOUSE", "NONE", "PAIR", "THREE_KIND"].sort());
+
+    run = chooseComboEffect(run, "PAIR", gearedAdapter, fixedRandom);
+    // Upgrades to the NEAREST higher-priority kind the hand also qualifies
+    // for (THREE_KIND), never straight to the top (FULL_HOUSE).
+    expect(run.comboHistory.at(-1)?.kind).toBe("THREE_KIND");
+    expect(run.pendingHeroChoice).toBe(true); // THREE_KIND's effect, not PAIR's summonRandom
+  });
+
+  it("英雄專武 (Signature Weapon) 一旦解鎖，會透過 run.effectiveHeroes 實際套用到該英雄的定義上", () => {
+    const unlockedAdapter: MetaProgressionAdapter = {
+      getHeroSnapshot: (heroId) => ({ heroId, level: 1, starRank: 1, signatureWeaponUnlocked: true }),
+      getEquipmentLoadout: () => ({ ...EMPTY_LOADOUT }),
+    };
+    const lockedRun = createRun({ selectedHeroes: ["fighter"], leaderHeroId: "fighter", adapter: fakeAdapter });
+    const unlockedRun = createRun({ selectedHeroes: ["fighter"], leaderHeroId: "fighter", adapter: unlockedAdapter });
+    const baseRangeAlongRoute = HERO_DEFINITIONS.fighter!.rangeAlongRoute;
+    // Locked: effectiveHeroes should carry the raw (unpatched) definition.
+    expect(lockedRun.effectiveHeroes.fighter?.rangeAlongRoute).toBeCloseTo(baseRangeAlongRoute);
+    // Unlocked: 破陣之拳 (breakersFist) patches extraRangeAlongRoute +0.15.
+    expect(unlockedRun.effectiveHeroes.fighter?.rangeAlongRoute).toBeCloseTo(baseRangeAlongRoute + 0.15);
   });
 });

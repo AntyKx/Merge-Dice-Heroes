@@ -106,7 +106,67 @@ export const EQUIPMENT: Record<EquipmentId, EquipmentDefinition> = {
   morningBlade: { id: "morningBlade", name: "晨星長劍", slot: "weapon", rarity: "稀有", description: "全隊起始攻擊 +8%。", icon: "⚔", bonuses: { attackMultiplier: 0.08 }, upgradeBonus: { attackMultiplier: 0.025 } },
   watcherCloak: { id: "watcherCloak", name: "守望者披風", slot: "armor", rarity: "普通", description: "城堡最大生命 +3。", icon: "◒", bonuses: { castleBonus: 3 }, upgradeBonus: { castleBonus: 1 } },
   fateDiceBox: { id: "fateDiceBox", name: "命運骰匣", slot: "relic", rarity: "史詩", description: "每局額外獲得 1 次重骰。", icon: "⚄", bonuses: { extraRerolls: 1 }, upgradeBonus: { attackMultiplier: 0.02 } },
+
+  // ---- 共用武器 Shared Weapons -----------------------------------------
+  ironedgeBlade: { id: "ironedgeBlade", name: "精鋼利刃", slot: "weapon", rarity: "普通", description: "全隊起始攻擊 +5%。", icon: "⚔", bonuses: { attackMultiplier: 0.05 }, upgradeBonus: { attackMultiplier: 0.015 } },
+  windrushEdge: { id: "windrushEdge", name: "疾風之刃", slot: "weapon", rarity: "稀有", description: "全隊攻擊速度 +8%。", icon: "🗡", bonuses: { attackSpeedMultiplier: 0.08 }, upgradeBonus: { attackSpeedMultiplier: 0.02 } },
+  killerInstinctSigil: { id: "killerInstinctSigil", name: "致命本能徽記", slot: "weapon", rarity: "稀有", description: "全隊暴擊率 +12%，暴擊傷害 +50%。", icon: "☠", bonuses: { critChance: 0.12, critDamageMultiplier: 0.5 }, upgradeBonus: { critChance: 0.03 } },
+  dragonslayersMark: { id: "dragonslayersMark", name: "屠龍者印記", slot: "weapon", rarity: "史詩", description: "對精英／首領造成的傷害 +25%。", icon: "🐉", bonuses: { bossDamageMultiplier: 0.25 }, upgradeBonus: { bossDamageMultiplier: 0.06 } },
+  chainlightRod: { id: "chainlightRod", name: "連鎖雷光杖", slot: "weapon", rarity: "史詩", description: "普攻有 15% 機率額外電擊，造成 50% 傷害。", icon: "⚡", bonuses: { chainLightningProcChance: 0.15 }, upgradeBonus: { chainLightningProcChance: 0.03 } },
+
+  // ---- 共用護甲 Shared Armor --------------------------------------------
+  stalwartBuckler: { id: "stalwartBuckler", name: "堅木盾牌", slot: "armor", rarity: "普通", description: "全隊生命上限 +5%。", icon: "🛡", bonuses: { hpMultiplier: 0.05 }, upgradeBonus: { hpMultiplier: 0.015 } },
+  sacredDewVial: { id: "sacredDewVial", name: "聖光凝露", slot: "armor", rarity: "普通", description: "波間生命恢復比例 +10%。", icon: "💧", bonuses: { recoveryPctBonus: 0.1 }, upgradeBonus: { recoveryPctBonus: 0.02 } },
+  royalWardplate: { id: "royalWardplate", name: "王室徽甲", slot: "armor", rarity: "稀有", description: "每波開始時，全隊獲得等同城堡 5% 生命的護盾。", icon: "🏰", bonuses: { shieldOnWaveStartPctCastleHp: 0.05 }, upgradeBonus: { shieldOnWaveStartPctCastleHp: 0.01 } },
+  mistweaveCloak: { id: "mistweaveCloak", name: "迷霧斗篷", slot: "armor", rarity: "稀有", description: "全隊受到的傷害 -8%。", icon: "🌫", bonuses: { damageReductionPct: 0.08 }, upgradeBonus: { damageReductionPct: 0.02 } },
+  bastionHeart: { id: "bastionHeart", name: "磐石之心", slot: "armor", rarity: "史詩", description: "城堡最大生命 +8。", icon: "◒", bonuses: { castleBonus: 8 }, upgradeBonus: { castleBonus: 2 } },
+  vanguardBanner: { id: "vanguardBanner", name: "前線軍旗", slot: "armor", rarity: "史詩", description: "所有坦克角色的阻擋容量 +1。", icon: "🚩", bonuses: { tankBlockCapacityBonus: 1 }, upgradeBonus: { damageReductionPct: 0.05 } },
+
+  // ---- 共用遺物 Shared Relics --------------------------------------------
+  nimbleToolkit: { id: "nimbleToolkit", name: "巧手匠具", slot: "relic", rarity: "普通", description: "每波調度次數 +1。", icon: "🔧", bonuses: { repositionBonus: 1 }, upgradeBonus: {} },
+  gluttonousCoinpurse: { id: "gluttonousCoinpurse", name: "貪婪錢袋", slot: "relic", rarity: "普通", description: "命運能量上限 +2。", icon: "💰", bonuses: { fateEnergyMaxBonus: 2 }, upgradeBonus: { fateEnergyMaxBonus: 1 } },
+  conscriptionOrder: { id: "conscriptionOrder", name: "徵兵令", slot: "relic", rarity: "稀有", description: "隨機召喚花費 -1 命運能量。", icon: "📜", bonuses: { summonCostReduction: 1 }, upgradeBonus: {} },
+  fusionCatalyst: { id: "fusionCatalyst", name: "熔合催化劑", slot: "relic", rarity: "稀有", description: "普通合成完成後，10% 機率讓下一次合成也只需 2 名。", icon: "🧪", bonuses: { freeMergeChance: 0.1 }, upgradeBonus: { freeMergeChance: 0.025 } },
+  twinFateDice: { id: "twinFateDice", name: "命運雙子骰", slot: "relic", rarity: "稀有", description: "每波第一次擲骰後，自動保護點數最高的骰子不被選取重骰。", icon: "🎲", bonuses: { protectedDieCount: 1 }, upgradeBonus: {} },
+  gamblersReckoning: { id: "gamblersReckoning", name: "賭徒的算計", slot: "relic", rarity: "史詩", description: "骰型結算非「無組合」時，20% 機率視為高一階效果結算。", icon: "🃏", bonuses: { comboUpgradeChance: 0.2 }, upgradeBonus: { comboUpgradeChance: 0.05 } },
+
+  // ---- 職業傾向裝備 Role-leaning Equipment -------------------------------
+  vengeanceGauntlets: { id: "vengeanceGauntlets", name: "復仇者護手", slot: "weapon", rarity: "稀有", description: "坦克角色普攻傷害 +20%（無坦克時全隊 +5%）。", icon: "🥊", bonuses: {}, upgradeBonus: {}, roleBonus: { role: "tank", bonus: { attackMultiplier: 0.2 }, fallback: { attackMultiplier: 0.05 } } },
+  bulwarkOfTheVanguard: { id: "bulwarkOfTheVanguard", name: "巨盾壁壘", slot: "armor", rarity: "稀有", description: "坦克阻擋容量 +1、反擊傷害 -15%（無坦克時全隊生命 +2%）。", icon: "🛡", bonuses: {}, upgradeBonus: {}, roleBonus: { role: "tank", bonus: { tankBlockCapacityBonus: 1, damageReductionPct: 0.15 }, fallback: { hpMultiplier: 0.02 } } },
+  heavystrikeKnuckles: { id: "heavystrikeKnuckles", name: "重擊拳套", slot: "weapon", rarity: "稀有", description: "近戰角色暴擊率 +15%（無近戰時全隊 +3%）。", icon: "👊", bonuses: {}, upgradeBonus: {}, roleBonus: { role: "melee", bonus: { critChance: 0.15 }, fallback: { critChance: 0.03 } } },
+  warfuryPlate: { id: "warfuryPlate", name: "戰意戰甲", slot: "armor", rarity: "普通", description: "近戰角色生命 +10%（無近戰時全隊 +2%）。", icon: "🩸", bonuses: {}, upgradeBonus: {}, roleBonus: { role: "melee", bonus: { hpMultiplier: 0.1 }, fallback: { hpMultiplier: 0.02 } } },
+  shadowstrikeDagger: { id: "shadowstrikeDagger", name: "影襲匕首", slot: "weapon", rarity: "稀有", description: "刺客攻速 +15%（無刺客時全隊 +3%）。", icon: "🗡", bonuses: {}, upgradeBonus: {}, roleBonus: { role: "assassin", bonus: { attackSpeedMultiplier: 0.15, critChance: 0.1 }, fallback: { attackSpeedMultiplier: 0.03 } } },
+  cloakOfUmbra: { id: "cloakOfUmbra", name: "隱匿斗篷", slot: "armor", rarity: "稀有", description: "刺客受到的傷害 -20%（無刺客時全隊 -4%）。", icon: "🌑", bonuses: {}, upgradeBonus: {}, roleBonus: { role: "assassin", bonus: { damageReductionPct: 0.2 }, fallback: { damageReductionPct: 0.04 } } },
+  farsightLens: { id: "farsightLens", name: "千里之眼", slot: "weapon", rarity: "稀有", description: "遠程角色傷害 +10%（無遠程時全隊 +3%）。", icon: "🔭", bonuses: {}, upgradeBonus: {}, roleBonus: { role: "ranged", bonus: { attackMultiplier: 0.1 }, fallback: { attackMultiplier: 0.03 } } },
+  quiverResupply: { id: "quiverResupply", name: "箭袋補給", slot: "relic", rarity: "普通", description: "遠程角色攻速 +10%（無遠程時全隊重骰 +1，僅開局）。", icon: "🏹", bonuses: {}, upgradeBonus: {}, roleBonus: { role: "ranged", bonus: { attackSpeedMultiplier: 0.1 }, fallback: { extraRerolls: 1 } } },
+  choristersStaff: { id: "choristersStaff", name: "頌者法杖", slot: "relic", rarity: "稀有", description: "輔助角色的治療／增益效果量 +25%（無輔助時全隊回復 +3%）。", icon: "✨", bonuses: {}, upgradeBonus: {}, roleBonus: { role: "support", bonus: { recoveryPctBonus: 0.25 }, fallback: { recoveryPctBonus: 0.03 } } },
+  vowScripture: { id: "vowScripture", name: "誓詞聖典", slot: "armor", rarity: "稀有", description: "輔助角色的支援效果加乘（無輔助時城堡血量 +3%）。", icon: "📖", bonuses: {}, upgradeBonus: {}, roleBonus: { role: "support", bonus: { recoveryPctBonus: 0.1, shieldOnWaveStartPctCastleHp: 0.03 }, fallback: { castleBonus: 1 } } },
 };
+
+/** Every stat key EquipmentBonuses can carry -- kept as one list so the merge
+ * helpers below never need updating when a new stat is added, only this array
+ * and the interface itself (types.ts). */
+const EQUIPMENT_BONUS_KEYS = [
+  "attackMultiplier", "castleBonus", "extraRerolls", "attackSpeedMultiplier",
+  "critChance", "critDamageMultiplier", "bossDamageMultiplier", "hpMultiplier",
+  "recoveryPctBonus", "shieldOnWaveStartPctCastleHp", "damageReductionPct",
+  "tankBlockCapacityBonus", "repositionBonus", "fateEnergyMaxBonus",
+  "summonCostReduction", "freeMergeChance", "comboUpgradeChance",
+  "protectedDieCount", "chainLightningProcChance",
+] as const satisfies readonly (keyof EquipmentBonuses)[];
+
+/** Adds every field of `partial` onto `total`, scaled by `scale` (defaults to a
+ * plain add). Exported so defaultMetaAdapter.ts can reuse the exact same
+ * accumulation rule when folding in a role-leaning item's resolved bonus. */
+export function mergeEquipmentBonuses(total: EquipmentBonuses, partial: Partial<EquipmentBonuses> | undefined, scale = 1): EquipmentBonuses {
+  if (!partial) return total;
+  const next = { ...total };
+  EQUIPMENT_BONUS_KEYS.forEach((key) => {
+    const value = partial[key];
+    if (value) next[key] = next[key] + value * scale;
+  });
+  return next;
+}
 
 export const SHOP_OFFERS: Record<ShopOfferId, ShopOfferDefinition> = {
   forgeBundle: { id: "forgeBundle", title: "鍛造銅礦 ×20", description: "可用於升級裝備。", price: 8, icon: "⛏", reward: { materials: 20 } },
@@ -127,13 +187,26 @@ export const DUNGEONS: DungeonDefinition[] = [
   { id: "shadowTrial", title: "暮影試煉", description: "精英敵人的連戰舞台。", energyCost: 10, recommendedPower: 480, startWave: 9, reward: { crystals: 100, label: "暗影系列素材" }, enemyRule: { label: "影獵：敵軍生命 +45%、移速 +15%", hpMultiplier: 1.45, speedMultiplier: 1.15 }, unlocked: false },
 ];
 
-export const EMPTY_EQUIPMENT_BONUSES: EquipmentBonuses = { attackMultiplier: 0, castleBonus: 0, extraRerolls: 0 };
+export const EMPTY_EQUIPMENT_BONUSES: EquipmentBonuses = {
+  attackMultiplier: 0, castleBonus: 0, extraRerolls: 0, attackSpeedMultiplier: 0,
+  critChance: 0, critDamageMultiplier: 0, bossDamageMultiplier: 0, hpMultiplier: 0,
+  recoveryPctBonus: 0, shieldOnWaveStartPctCastleHp: 0, damageReductionPct: 0,
+  tankBlockCapacityBonus: 0, repositionBonus: 0, fateEnergyMaxBonus: 0,
+  summonCostReduction: 0, freeMergeChance: 0, comboUpgradeChance: 0,
+  protectedDieCount: 0, chainLightningProcChance: 0,
+};
 
+/** Sums every equipped item's OWN (role-agnostic) bonuses/upgradeBonus. Items
+ * with a `roleBonus` (see EquipmentDefinition) intentionally leave `bonuses`
+ * empty -- their whole effect is resolved separately, in defaultMetaAdapter.ts,
+ * which is the one place that also knows the run's selectedHeroes. */
 export function getEquipmentBonuses(equipped: Partial<Record<EquipmentSlot, EquipmentId>>, equipmentLevels: Partial<Record<EquipmentId, number>> = {}): EquipmentBonuses {
   return Object.values(equipped).reduce<EquipmentBonuses>((total, id) => {
     if (!id) return total;
-    const equipment = EQUIPMENT[id]; const level = Math.max(1, equipmentLevels[id] ?? 1); const bonuses = equipment.bonuses; const upgrade = equipment.upgradeBonus;
-    return { attackMultiplier: total.attackMultiplier + (bonuses.attackMultiplier ?? 0) + (upgrade.attackMultiplier ?? 0) * (level - 1), castleBonus: total.castleBonus + (bonuses.castleBonus ?? 0) + (upgrade.castleBonus ?? 0) * (level - 1), extraRerolls: total.extraRerolls + (bonuses.extraRerolls ?? 0) + (upgrade.extraRerolls ?? 0) * (level - 1) };
+    const equipment = EQUIPMENT[id];
+    const level = Math.max(1, equipmentLevels[id] ?? 1);
+    const withBase = mergeEquipmentBonuses(total, equipment.bonuses);
+    return mergeEquipmentBonuses(withBase, equipment.upgradeBonus, level - 1);
   }, { ...EMPTY_EQUIPMENT_BONUSES });
 }
 

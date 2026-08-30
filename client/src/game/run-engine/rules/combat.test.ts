@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { HeroDefinition } from "../types";
-import { getBasicAttackDamage, getEffectiveAttackInterval, resolveEffect } from "./combat";
+import { getBasicAttackDamage, getEffectiveAttackInterval, resolveEffect, rollCritMultiplier } from "./combat";
 
 const definition: Partial<HeroDefinition> = {
   baseAttack: 10,
@@ -33,6 +33,21 @@ describe("getEffectiveAttackInterval", () => {
   it("攻速倍率越高，間隔越短", () => {
     expect(getEffectiveAttackInterval(definition as HeroDefinition, 1)).toBe(1);
     expect(getEffectiveAttackInterval(definition as HeroDefinition, 2)).toBe(0.5);
+  });
+});
+
+describe("rollCritMultiplier", () => {
+  it("骰值低於暴擊率時回傳暴擊倍率", () => {
+    expect(rollCritMultiplier(0.5, 1.5, () => 0.3)).toBe(1.5);
+  });
+
+  it("骰值不低於暴擊率時回傳 1（未暴擊）", () => {
+    expect(rollCritMultiplier(0.5, 1.5, () => 0.5)).toBe(1);
+    expect(rollCritMultiplier(0.5, 1.5, () => 0.9)).toBe(1);
+  });
+
+  it("暴擊率為 0 時永不暴擊", () => {
+    expect(rollCritMultiplier(0, 2, () => 0)).toBe(1);
   });
 });
 
