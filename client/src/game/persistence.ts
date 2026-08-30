@@ -24,21 +24,30 @@ export const defaultProgress: PlayerProgress = {
   settings: { musicEnabled: false, sfxEnabled: true, vibrationEnabled: true },
 };
 
+/** Reconciles a persisted save (from localStorage OR a cloud pull -- both are
+ * equally likely to predate the 30-item roster) against defaultProgress, so
+ * neither path can silently revert a returning player to a stale equipment
+ * set. Exported so store.ts's cloud-load callback applies the same merge
+ * instead of trusting cloudProgress verbatim. */
+export function mergeWithDefaults(parsed: Partial<PlayerProgress> | undefined): PlayerProgress {
+  if (!parsed) return defaultProgress;
+  const daily = { ...defaultProgress.daily, ...parsed.daily };
+  const freshDaily = daily.dayKey === todayKey() ? daily : { ...defaultProgress.daily, dayKey: todayKey() };
+  const shop = { ...defaultProgress.shop, ...parsed.shop };
+  const freshShop = shop.dayKey === todayKey() ? shop : defaultShop();
+  const lobbyRead = { ...defaultProgress.lobbyRead, ...parsed.lobbyRead, ...(daily.dayKey !== todayKey() ? { daily: false } : {}), ...(shop.dayKey !== todayKey() ? { shop: false } : {}) };
+  // Union (not override) with the default roster so a returning save picks up
+  // any equipment added to the game since it was last written, instead of
+  // being stuck with whatever the roster looked like at first-save time.
+  const inventory = Array.from(new Set([...(parsed.inventory ?? []), ...defaultProgress.inventory]));
+  return { ...defaultProgress, ...parsed, inventory, equipmentLevels: { ...defaultProgress.equipmentLevels, ...parsed.equipmentLevels }, equipped: { ...defaultProgress.equipped, ...parsed.equipped }, daily: freshDaily, dungeonClears: { ...defaultProgress.dungeonClears, ...parsed.dungeonClears }, shop: freshShop, lobbyRead, heroProgress: { ...defaultProgress.heroProgress, ...parsed.heroProgress }, settings: { ...defaultProgress.settings, ...parsed.settings } };
+}
+
 export function loadProgress(): PlayerProgress {
   try {
     const stored = window.localStorage.getItem(PROGRESS_KEY);
     if (!stored) return defaultProgress;
-    const parsed = JSON.parse(stored) as Partial<PlayerProgress>;
-    const daily = { ...defaultProgress.daily, ...parsed.daily };
-    const freshDaily = daily.dayKey === todayKey() ? daily : { ...defaultProgress.daily, dayKey: todayKey() };
-    const shop = { ...defaultProgress.shop, ...parsed.shop };
-    const freshShop = shop.dayKey === todayKey() ? shop : defaultShop();
-    const lobbyRead = { ...defaultProgress.lobbyRead, ...parsed.lobbyRead, ...(daily.dayKey !== todayKey() ? { daily: false } : {}), ...(shop.dayKey !== todayKey() ? { shop: false } : {}) };
-    // Union (not override) with the default roster so a returning save picks up
-    // any equipment added to the game since it was last written, instead of
-    // being stuck with whatever the roster looked like at first-save time.
-    const inventory = Array.from(new Set([...(parsed.inventory ?? []), ...defaultProgress.inventory]));
-    return { ...defaultProgress, ...parsed, inventory, equipmentLevels: { ...defaultProgress.equipmentLevels, ...parsed.equipmentLevels }, equipped: { ...defaultProgress.equipped, ...parsed.equipped }, daily: freshDaily, dungeonClears: { ...defaultProgress.dungeonClears, ...parsed.dungeonClears }, shop: freshShop, lobbyRead, heroProgress: { ...defaultProgress.heroProgress, ...parsed.heroProgress }, settings: { ...defaultProgress.settings, ...parsed.settings } };
+    return mergeWithDefaults(JSON.parse(stored) as Partial<PlayerProgress>);
   } catch { return defaultProgress; }
 }
 

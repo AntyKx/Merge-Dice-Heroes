@@ -5,7 +5,7 @@ import { DAILY_QUESTS, DUNGEONS, EQUIPMENT, SHOP_OFFERS } from "./config";
 import { createDefaultMetaAdapter } from "./defaultMetaAdapter";
 import { auth, consumePendingRedirectResult, onAuthStateChanged, signInWithGoogle, signOutOfGoogle } from "./firebase";
 import { awardHeroExperience } from "./heroProgress";
-import { defaultProgress, loadProgress, saveProgress } from "./persistence";
+import { defaultProgress, loadProgress, mergeWithDefaults, saveProgress } from "./persistence";
 import {
   acknowledgeWavePreview,
   advanceCombat,
@@ -337,7 +337,7 @@ if (typeof window !== "undefined") {
 
     cloudLoadProgress()
       .then((cloudProgress) => {
-        if (cloudProgress) useGameStore.setState({ progress: persist(cloudProgress) });
+        if (cloudProgress) useGameStore.setState({ progress: persist(mergeWithDefaults(cloudProgress)) });
         else cloudSaveProgress(useGameStore.getState().progress).catch(() => {});
       })
       .catch(() => useGameStore.setState({ cloudSyncError: "雲端讀取失敗，已使用本機進度。" }));
