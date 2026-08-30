@@ -122,7 +122,7 @@ export function createRun({ selectedHeroes, leaderHeroId, adapter }: CreateRunPa
     leader,
     board: { cells: {} },
     pending: { heroes: [] },
-    dice: { values: [1, 1, 1, 1, 1], locked: [false, false, false, false, false], rerollsLeft: maxRerolls, maxRerolls, isRolling: false },
+    dice: { values: [1, 1, 1, 1, 1], locked: [true, true, true, true, true], rerollsLeft: maxRerolls, maxRerolls, isRolling: false },
     fateEnergy: { current: 0, max: RUN_ENGINE_CONFIG.fateEnergy.max },
     reposition: { usedThisWave: 0, baseAllowance: RUN_ENGINE_CONFIG.repositionBaseAllowancePerWave, carriesOverBetweenWaves: RUN_ENGINE_CONFIG.repositionCarriesOverBetweenWaves, extraPurchasesThisWave: 0 },
     castle: { hp: baseCastleHp, maxHp: baseCastleHp },
@@ -160,18 +160,25 @@ export function getWaveDefinition(wave: number): WaveDefinition | undefined {
 export function acknowledgeWavePreview(run: RunState, random: () => number = Math.random): RunState {
   if (run.phase !== "WAVE_PREVIEW") return run;
   const values = Array.from({ length: 5 }, () => randomDie(random));
-  return { ...run, phase: "DICE_DECISION", dice: { ...run.dice, values, locked: [false, false, false, false, false] }, message: "第一次擲骰免費。鎖住想保留的骰子，或直接確認命運。" };
+  return { ...run, phase: "DICE_DECISION", dice: { ...run.dice, values, locked: [true, true, true, true, true] }, message: "第一次擲骰免費。點選想重骰的骰子，或直接確認命運。" };
 }
 
+/** Despite the name (kept for the underlying rule fn / RunState field, which
+ * predate this UI flip), a die's `locked` flag reads as "kept" -- the UI
+ * click target is "select this die to reroll", i.e. it toggles the die INTO
+ * the reroll set by clearing `locked`. See rerollDice below. */
 export function toggleDiceLock(run: RunState, index: number): RunState {
   if (run.phase !== "DICE_DECISION") return run;
   return { ...run, dice: { ...run.dice, locked: toggleDiceLockRule(run.dice.locked, index) } };
 }
 
+/** Only rerolls the dice the player selected (locked === false); every other
+ * die keeps its value. All dice reset to locked (kept/unselected) afterwards
+ * so the next reroll round starts from a clean "nothing selected" slate. */
 export function rerollDice(run: RunState, random: () => number = Math.random): RunState {
-  if (run.phase !== "DICE_DECISION" || run.dice.rerollsLeft <= 0) return run;
+  if (run.phase !== "DICE_DECISION" || run.dice.rerollsLeft <= 0 || run.dice.locked.every(Boolean)) return run;
   const values = rerollUnlocked(run.dice.values, run.dice.locked, random);
-  return { ...run, dice: { ...run.dice, values, rerollsLeft: run.dice.rerollsLeft - 1 }, message: "骰子已重骰——這個動作無法復原。" };
+  return { ...run, dice: { ...run.dice, values, locked: [true, true, true, true, true], rerollsLeft: run.dice.rerollsLeft - 1 }, message: "骰子已重骰——這個動作無法復原。" };
 }
 
 /** "Confirm Fate" per 二十六 -- locks in the final hand and surfaces every

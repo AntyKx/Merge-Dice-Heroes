@@ -15,8 +15,10 @@ import {
   mergeSelection,
   repositionHero,
   resolveWaveEnd,
+  rerollDice,
   spendEnergyForChosenSummon,
   spendEnergyForRandomSummon,
+  toggleDiceLock,
 } from "./orchestrator";
 
 /** Fixed-face fake random -- randomDie(() => 0.4) always rolls a 3, so every Dice
@@ -247,5 +249,28 @@ describe("orchestrator end-to-end Wave lifecycle", () => {
 
     expect(run.phase).toBe("REWARD_RESOLVE");
     expect(run.castle.hp).toBeLessThan(run.castle.maxHp);
+  });
+
+  it("重骰只影響玩家點選（取消 locked）的骰子，其餘維持原值；未選取任何骰子時重骰為無效操作", () => {
+    const sixRandom = () => 0.99; // randomDie(0.99) = 6, distinct from fixedRandom's 3
+    let run = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter });
+    run = acknowledgeWavePreview(run, fixedRandom);
+    expect(run.dice.values).toEqual([3, 3, 3, 3, 3]);
+    // Nothing selected by default -- every die starts "kept" (locked === true).
+    expect(run.dice.locked).toEqual([true, true, true, true, true]);
+
+    const rerollsBefore = run.dice.rerollsLeft;
+    const noopReroll = rerollDice(run, sixRandom);
+    expect(noopReroll.dice.values).toEqual([3, 3, 3, 3, 3]);
+    expect(noopReroll.dice.rerollsLeft).toBe(rerollsBefore);
+
+    run = toggleDiceLock(run, 2);
+    expect(run.dice.locked).toEqual([true, true, false, true, true]);
+
+    run = rerollDice(run, sixRandom);
+    expect(run.dice.values).toEqual([3, 3, 6, 3, 3]);
+    expect(run.dice.rerollsLeft).toBe(rerollsBefore - 1);
+    // Selection resets to "nothing selected" after the reroll resolves.
+    expect(run.dice.locked).toEqual([true, true, true, true, true]);
   });
 });

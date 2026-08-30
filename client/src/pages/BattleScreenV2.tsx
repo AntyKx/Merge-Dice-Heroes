@@ -12,7 +12,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import "./battleScreenV2.css";
-import { ChevronDown, ChevronLeft, Coins, Dices, Gift, Lock, Pause, Play, RotateCcw, Shield, Sparkles, Swords, X, Zap } from "lucide-react";
+import { ChevronDown, ChevronLeft, Coins, Dices, Gift, Pause, Play, RotateCcw, Shield, Sparkles, Swords, X, Zap } from "lucide-react";
 import { ENEMIES, HEROES } from "@/game/config";
 import { HERO_BOARD_LAYOUT } from "@/game/heroBoardLayout";
 import { HERO_FRAME_SHEETS, HeroFrameSprite } from "@/game/heroSprites";
@@ -461,6 +461,22 @@ function Bsv2WavePreview({ run }: { run: RunState }) {
 // Dice + Combo Choice
 // ---------------------------------------------------------------------------
 
+/** Classic 3x3 pip layout per face value, cells numbered row-major 1-9
+ * (1 2 3 / 4 5 6 / 7 8 9). Renders as dots instead of a printed digit. */
+const DIE_PIPS: Record<number, number[]> = {
+  1: [5],
+  2: [3, 7],
+  3: [3, 5, 7],
+  4: [1, 3, 7, 9],
+  5: [1, 3, 5, 7, 9],
+  6: [1, 3, 4, 6, 7, 9],
+};
+
+function DiceFace({ value }: { value: number }) {
+  const active = DIE_PIPS[value] ?? [];
+  return <span className="bsv2-die-face" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => i + 1).map((cell) => <i key={cell} className={active.includes(cell) ? "is-on" : ""} />)}</span>;
+}
+
 function Bsv2Dice({ run }: { run: RunState }) {
   const toggleDiceLock = useGameStore((state) => state.toggleDiceLock);
   const rerollDice = useGameStore((state) => state.rerollDice);
@@ -470,10 +486,17 @@ function Bsv2Dice({ run }: { run: RunState }) {
   // wouldn't retrigger a CSS animation on an already-mounted element.
   const rollKey = `${run.dice.rerollsLeft}-${run.dice.values.join("")}`;
   const mid = (run.dice.values.length - 1) / 2;
+  // A die's `locked` flag reads as "kept" (engine/rule-function naming) --
+  // the player instead clicks to SELECT a die for the next reroll, i.e. the
+  // ones shown highlighted are locked === false. See orchestrator.rerollDice.
+  const hasSelection = run.dice.locked.some((locked) => !locked);
   return <section className="bsv2-panel bsv2-dice">
-    <div className="bsv2-dice-row" key={rollKey}>{run.dice.values.map((value, index) => <button key={index} className={`bsv2-die ${run.dice.locked[index] ? "is-locked" : ""}`} style={{ "--toss-delay": `${index * 70}ms`, "--toss-x": `${(index - mid) * 18}px`, "--toss-rot": `${(index % 2 === 0 ? -1 : 1) * (28 + index * 6)}deg`, "--toss-spin": `${(index % 2 === 0 ? 1 : -1) * (50 + index * 10)}deg` } as React.CSSProperties} onClick={() => toggleDiceLock(index)} aria-label={`骰子 ${index + 1}：${value}`}><b>{value}</b>{run.dice.locked[index] && <i><Lock size={10} /></i>}</button>)}</div>
+    <div className="bsv2-dice-row" key={rollKey}>{run.dice.values.map((value, index) => {
+      const selected = !run.dice.locked[index];
+      return <button key={index} className={`bsv2-die ${selected ? "is-selected" : ""}`} style={{ "--toss-delay": `${index * 70}ms`, "--toss-x": `${(index - mid) * 18}px`, "--toss-rot": `${(index % 2 === 0 ? -1 : 1) * (28 + index * 6)}deg`, "--toss-spin": `${(index % 2 === 0 ? 1 : -1) * (50 + index * 10)}deg` } as React.CSSProperties} onClick={() => toggleDiceLock(index)} aria-pressed={selected} aria-label={`骰子 ${index + 1}：點數 ${value}${selected ? "，已選擇重骰" : ""}`}><DiceFace value={value} />{selected && <i className="bsv2-die-badge"><RotateCcw size={9} /></i>}</button>;
+    })}</div>
     <div className="bsv2-action-row">
-      <button className="bsv2-secondary-btn" disabled={run.dice.rerollsLeft <= 0} onClick={rerollDice}><RotateCcw size={15} />重骰 ({run.dice.rerollsLeft})</button>
+      <button className="bsv2-secondary-btn" disabled={run.dice.rerollsLeft <= 0 || !hasSelection} onClick={rerollDice}><RotateCcw size={15} />重骰 ({run.dice.rerollsLeft})</button>
       <button className="bsv2-primary-btn" onClick={confirmFate}><Sparkles size={15} />確認命運</button>
     </div>
   </section>;

@@ -217,11 +217,18 @@
 .bsv2-wave-enemies { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11px; color: var(--bsv2-muted); }
 .bsv2-boss-flag { display: flex; align-items: center; gap: 4px; margin: 0; font-size: 11px; color: var(--bsv2-danger); }
 
-/* Dice */
+/* Dice -- pip faces (see DiceFace/DIE_PIPS in BattleScreenV2.tsx) instead of a
+   plain digit. Clicking a die SELECTS it for the next reroll (is-selected);
+   unselected dice are the ones kept as-is -- the inverse of the old "click to
+   lock/keep" model, per user feedback that picking what to change reads more
+   naturally than picking what to protect. */
 .bsv2-dice-row { display: flex; gap: 6px; justify-content: center; }
-.bsv2-die { position: relative; width: 40px; height: 40px; border-radius: 9px; border: 1.5px solid var(--bsv2-border); background: var(--bsv2-panel-alt); color: var(--bsv2-ink); display: grid; place-items: center; font-size: 17px; font-weight: 800; }
-.bsv2-die.is-locked { border-color: var(--bsv2-gold); background: rgba(227,179,76,.15); color: var(--bsv2-gold); }
-.bsv2-die i { position: absolute; top: 2px; right: 2px; color: var(--bsv2-gold); }
+.bsv2-die { position: relative; width: 40px; height: 40px; border-radius: 9px; border: 1.5px solid var(--bsv2-border); background: var(--bsv2-panel-alt); color: var(--bsv2-ink); display: grid; place-items: center; }
+.bsv2-die.is-selected { border-color: var(--bsv2-teal); background: rgba(52,193,172,.18); color: var(--bsv2-teal); box-shadow: 0 0 0 2px rgba(52,193,172,.25); }
+.bsv2-die-badge { position: absolute; top: -5px; right: -5px; display: grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; background: var(--bsv2-teal); color: #06251f; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+.bsv2-die-face { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 70%; height: 70%; }
+.bsv2-die-face i { display: block; margin: 12%; border-radius: 50%; background: transparent; }
+.bsv2-die-face i.is-on { background: currentColor; }
 .bsv2-action-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .bsv2-primary-btn, .bsv2-secondary-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; border-radius: 10px; border: none; font-size: 12px; font-weight: 700; }
 .bsv2-primary-btn { flex: 1; min-width: 140px; background: linear-gradient(180deg, var(--bsv2-teal), #1e8c7c); color: #06251f; }
@@ -1147,7 +1154,7 @@
   gap: 5%;
   justify-content: center;
 }
-.bsv2-screen--combined .bsv2-dice .bsv2-die { width: 37px; height: 37px; font-size: 16px; }
+.bsv2-screen--combined .bsv2-dice .bsv2-die { width: 40px; height: 40px; }
 .bsv2-screen--combined .bsv2-dice .bsv2-action-row { justify-content: center; }
 .bsv2-screen--combined .bsv2-wave-preview {
   padding: 44px 11% 26px;
