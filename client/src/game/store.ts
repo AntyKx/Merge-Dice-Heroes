@@ -58,7 +58,6 @@ interface GameStore {
   screen: GameScreen;
   selectedHeroes: HeroId[];
   leaderId: HeroId;
-  selectedDungeonId?: DungeonId;
   activeDungeonId?: DungeonId;
   run?: RunState;
   progress: PlayerProgress;
@@ -137,6 +136,8 @@ export const CHAPTER_CLEAR_REWARDS: Record<ChapterId, { crystals: number; firstC
   moonlit: { crystals: 48, firstClearMaterials: 15 },
 };
 
+const rarityMaterials = (equipmentId: EquipmentId) => EQUIPMENT[equipmentId].rarity === "史詩" ? 24 : EQUIPMENT[equipmentId].rarity === "稀有" ? 16 : 10;
+
 /** Mirrors the old game/store.ts's maybeRecord(): awards Meta-layer progress
  * (wins/losses/bestWave/crystals/hero XP/dungeon clears) exactly once, on the
  * tick a Run first transitions into RUN_WIN/RUN_LOSE. Dungeon-specific enemy
@@ -152,6 +153,14 @@ function maybeRecordRunResult(previous: RunState | undefined, next: RunState, pr
   const chapterCleared = victorious && next.wave >= WAVES_BY_CHAPTER[next.chapterId].length;
   const firstChapterClear = chapterCleared && !progress.chaptersCleared[next.chapterId];
   const chapterReward = CHAPTER_CLEAR_REWARDS[next.chapterId];
+  const dungeonEquipmentId = dungeon?.reward.equipmentId;
+  // Every player already owns all 30 equipment ids from the start (persistence.ts's
+  // STARTER_EQUIPMENT_IDS) -- a Dungeon's "possible drop" can therefore never
+  // actually be ADDED to inventory (the `!includes` branch below is dead in
+  // practice). Grant it as upgrade materials instead (matching how a duplicate
+  // shop purchase already converts into materials elsewhere in this file), so
+  // the reward stays real instead of silently doing nothing.
+  const dungeonMaterials = victorious && dungeonEquipmentId ? rarityMaterials(dungeonEquipmentId) : 0;
   const updated: PlayerProgress = {
     ...progress,
     wins: progress.wins + (victorious ? 1 : 0),
@@ -160,8 +169,8 @@ function maybeRecordRunResult(previous: RunState | undefined, next: RunState, pr
     bestWaveByChapter: { ...progress.bestWaveByChapter, [next.chapterId]: Math.max(progress.bestWaveByChapter[next.chapterId] ?? 0, next.wave) },
     chaptersCleared: chapterCleared ? { ...progress.chaptersCleared, [next.chapterId]: true } : progress.chaptersCleared,
     crystals: progress.crystals + (victorious ? (dungeon?.reward.crystals ?? chapterReward.crystals) : 0),
-    materials: progress.materials + (firstChapterClear ? chapterReward.firstClearMaterials : 0),
-    inventory: victorious && dungeon?.reward.equipmentId && !progress.inventory.includes(dungeon.reward.equipmentId) ? [...progress.inventory, dungeon.reward.equipmentId] : progress.inventory,
+    materials: progress.materials + (firstChapterClear ? chapterReward.firstClearMaterials : 0) + dungeonMaterials,
+    inventory: victorious && dungeonEquipmentId && !progress.inventory.includes(dungeonEquipmentId) ? [...progress.inventory, dungeonEquipmentId] : progress.inventory,
     dungeonClears: victorious && dungeon ? { ...progress.dungeonClears, [dungeon.id]: (progress.dungeonClears[dungeon.id] ?? 0) + 1 } : progress.dungeonClears,
     daily: victorious ? { ...progress.daily, victories: progress.daily.victories + 1 } : progress.daily,
     heroProgress: victorious ? awardHeroExperience(progress.heroProgress, previous.selectedHeroes) : progress.heroProgress,
@@ -171,13 +180,11 @@ function maybeRecordRunResult(previous: RunState | undefined, next: RunState, pr
 
 const dailyValue = (progress: PlayerProgress, questId: DailyQuestId) => questId === "battle" ? progress.daily.battles : questId === "merge" ? progress.daily.merges : progress.daily.victories;
 const SHOP_ROTATIONS: ShopOfferId[][] = [["forgeBundle", "morningBladeOffer", "fateDiceBoxOffer"], ["forgeBundle", "watcherCloakOffer", "morningBladeOffer"], ["fateDiceBoxOffer", "watcherCloakOffer", "forgeBundle"]];
-const rarityMaterials = (equipmentId: EquipmentId) => EQUIPMENT[equipmentId].rarity === "史詩" ? 24 : EQUIPMENT[equipmentId].rarity === "稀有" ? 16 : 10;
 
 export const useGameStore = create<GameStore>((set, get) => ({
   screen: "title",
   selectedHeroes: ["knight", "fireMage", "ranger"],
   leaderId: "knight",
-  selectedDungeonId: undefined,
   activeDungeonId: undefined,
   progress: loadedProgress,
   autoSpeed: 1,
@@ -196,7 +203,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   openScreen: (screen) => set((state) => {
     const noticeId = (["equipment", "shop", "daily", "dungeon"] as string[]).includes(screen) ? screen as LobbyNoticeId : undefined;
     const progress = noticeId && !state.progress.lobbyRead[noticeId] ? persist({ ...state.progress, lobbyRead: { ...state.progress.lobbyRead, [noticeId]: true } }) : state.progress;
-    return { screen, progress, selectedDungeonId: screen === "title" ? undefined : state.selectedDungeonId };
+    return { screen, progress };
   }),
   toggleTeamHero: (heroId) => set((state) => {
     const selectedHeroes = state.selectedHeroes.includes(heroId)
@@ -229,14 +236,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return { selectedHeroes, leaderId };
   }),
   chooseLeader: (leaderId) => set((state) => state.selectedHeroes.includes(leaderId) ? { leaderId } : state),
+  // Launches a normal campaign expedition into the player's active/frontier
+  // chapter. Dungeon Trials are a separate one-shot action (selectDungeon
+  // below) -- there is no "select a Trial, then press Start Expedition"
+  // two-step flow, so this never needs a Dungeon in scope.
   startRun: () => {
-    const { selectedHeroes, leaderId, selectedDungeonId, progress } = get();
+    const { selectedHeroes, leaderId, progress } = get();
     if (selectedHeroes.length !== 3) return;
-    const dungeon = selectedDungeonId ? DUNGEONS.find((candidate) => candidate.id === selectedDungeonId) : undefined;
-    if (dungeon && progress.stamina < dungeon.energyCost) return;
-    const nextProgress = dungeon ? persist({ ...progress, stamina: progress.stamina - dungeon.energyCost }) : progress;
-    const run = createRun({ selectedHeroes, leaderHeroId: leaderId, adapter: createDefaultMetaAdapter(nextProgress), chapterId: activeChapterId(nextProgress) });
-    set({ run, progress: nextProgress, selectedDungeonId: undefined, activeDungeonId: dungeon?.id, screen: "game", isPaused: false });
+    const run = createRun({ selectedHeroes, leaderHeroId: leaderId, adapter: createDefaultMetaAdapter(progress), chapterId: activeChapterId(progress) });
+    set({ run, progress, activeDungeonId: undefined, screen: "game", isPaused: false });
   },
   selectDungeon: (selectedDungeonId) => set((state) => {
     const dungeon = DUNGEONS.find((candidate) => candidate.id === selectedDungeonId);
@@ -248,7 +256,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return {
       run: createRun({ selectedHeroes: state.selectedHeroes, leaderHeroId: state.leaderId, adapter: createDefaultMetaAdapter(progress), chapterId: dungeon.chapterId, startWave: dungeon.startWave, enemyRule: dungeon.enemyRule }),
       progress,
-      selectedDungeonId: undefined,
       activeDungeonId: dungeon.id,
       screen: "game",
       isPaused: false,

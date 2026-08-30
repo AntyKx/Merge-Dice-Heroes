@@ -6,7 +6,7 @@ import { useGameStore } from "./store";
 const freshProgress = () => ({ ...defaultProgress, inventory: [...defaultProgress.inventory], equipmentLevels: { ...defaultProgress.equipmentLevels }, equipped: {}, daily: { ...defaultProgress.daily, claimed: [] }, dungeonClears: {}, shop: { ...defaultProgress.shop, offers: [...defaultProgress.shop.offers], purchased: [] }, lobbyRead: {}, chaptersCleared: {}, bestWaveByChapter: {} });
 
 beforeEach(() => {
-  useGameStore.setState({ screen: "title", selectedHeroes: ["knight", "fireMage", "ranger"], leaderId: "knight", selectedChapterId: "courtyard", selectedDungeonId: undefined, activeDungeonId: undefined, run: undefined, progress: freshProgress() });
+  useGameStore.setState({ screen: "title", selectedHeroes: ["knight", "fireMage", "ranger"], leaderId: "knight", activeDungeonId: undefined, run: undefined, progress: freshProgress() });
 });
 
 describe("persistent lobby progression", () => {
@@ -31,7 +31,6 @@ describe("persistent lobby progression", () => {
   it("starts an unlocked trial directly only when enough stamina is available", () => {
     const initialStamina = useGameStore.getState().progress.stamina;
     useGameStore.getState().selectDungeon("ruinCorridor");
-    expect(useGameStore.getState().selectedDungeonId).toBeUndefined();
     expect(useGameStore.getState().screen).toBe("game");
     expect(useGameStore.getState().activeDungeonId).toBe("ruinCorridor");
     expect(useGameStore.getState().progress.stamina).toBe(initialStamina - 5);
@@ -45,6 +44,7 @@ describe("persistent lobby progression", () => {
 
   it("records trial clear rewards and experience when the final wave is won", () => {
     const initialCrystals = useGameStore.getState().progress.crystals;
+    const initialMaterials = useGameStore.getState().progress.materials;
     useGameStore.getState().selectDungeon("ruinCorridor");
     const activeRun = useGameStore.getState().run!;
     // Fast-forward straight to "final Wave's Reward already resolved" -- exercises
@@ -56,6 +56,12 @@ describe("persistent lobby progression", () => {
     expect(state.run?.phase).toBe("RUN_WIN");
     expect(state.progress.crystals).toBe(initialCrystals + 45);
     expect(state.progress.dungeonClears.ruinCorridor).toBe(1);
+    // Every player already owns ruinCorridor's reward item (nimbleToolkit) from
+    // the start (persistence.ts's STARTER_EQUIPMENT_IDS) -- a Dungeon clear must
+    // still grant something real (materials, per its rarity) instead of silently
+    // no-op'ing because "add to inventory" is never true in practice.
+    expect(state.progress.inventory).toContain("nimbleToolkit");
+    expect(state.progress.materials).toBe(initialMaterials + 10);
     expect(state.progress.heroProgress.knight?.experience).toBe(HERO_XP_PER_VICTORY);
     expect(state.progress.heroProgress.fireMage?.experience).toBe(HERO_XP_PER_VICTORY);
     expect(state.progress.heroProgress.ranger?.experience).toBe(HERO_XP_PER_VICTORY);

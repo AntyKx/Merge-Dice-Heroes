@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { EMPTY_EQUIPMENT_BONUSES, EQUIPMENT, getEquipmentBonuses, mergeEquipmentBonuses } from "./config";
+import { DUNGEONS, EMPTY_EQUIPMENT_BONUSES, EQUIPMENT, getEquipmentBonuses, mergeEquipmentBonuses } from "./config";
+import { WAVES_BY_CHAPTER } from "./run-engine/waves";
 import type { EquipmentId, EquipmentSlot } from "./types";
 
 describe("mergeEquipmentBonuses", () => {
@@ -65,5 +66,35 @@ describe("EQUIPMENT roster", () => {
 
   it("id 與其在 Record 中的 key 一致", () => {
     (Object.keys(EQUIPMENT) as EquipmentId[]).forEach((id) => expect(EQUIPMENT[id].id).toBe(id));
+  });
+});
+
+describe("DUNGEONS roster (深域狩令 v1)", () => {
+  it("每道副本的 chapterId + startWave 都能在 WAVES_BY_CHAPTER 查到真實波次，不會讓 confirmFormation 靜默 no-op", () => {
+    DUNGEONS.forEach((dungeon) => {
+      const waves = WAVES_BY_CHAPTER[dungeon.chapterId];
+      expect(waves, dungeon.id).toBeDefined();
+      expect(dungeon.startWave, dungeon.id).toBeGreaterThanOrEqual(1);
+      expect(dungeon.startWave, dungeon.id).toBeLessThanOrEqual(waves.length);
+    });
+  });
+
+  it("每道副本的掉落只能是既有裝備裡的「遺物」（slot === relic），符合設計規則", () => {
+    DUNGEONS.forEach((dungeon) => {
+      const equipmentId = dungeon.reward.equipmentId;
+      expect(equipmentId, dungeon.id).toBeDefined();
+      expect(EQUIPMENT[equipmentId!], `${dungeon.id} -> ${equipmentId}`).toBeDefined();
+      expect(EQUIPMENT[equipmentId!].slot, `${dungeon.id} -> ${equipmentId}`).toBe("relic");
+    });
+  });
+
+  it("解鎖鏈是單一線性序列：只有第一道預設解鎖，其餘都要靠前一道通關", () => {
+    expect(DUNGEONS[0].unlocked).toBe(true);
+    DUNGEONS.slice(1).forEach((dungeon) => expect(dungeon.unlocked, dungeon.id).toBe(false));
+  });
+
+  it("id 與其在陣列中的內容一致，且沒有重複 id", () => {
+    const ids = DUNGEONS.map((dungeon) => dungeon.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
