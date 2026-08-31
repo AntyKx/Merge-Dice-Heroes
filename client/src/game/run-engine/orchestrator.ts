@@ -400,6 +400,16 @@ export function mergeSelection(run: RunState, cellKeys: ReturnType<typeof boardC
   };
 }
 
+/** Lets the player give up an unused Full House / 熔合催化劑 free 2-Merge instead
+ * of hunting for a matching pair -- without this, a player whose board has no
+ * 2-of-a-kind (or even 3-of-a-kind) match anywhere could never satisfy
+ * pendingFreeMerge, and confirmFormation's gate would leave "確認陣型，開戰"
+ * disabled with no way to recover for that Wave. */
+export function declineFreeMerge(run: RunState): RunState {
+  if (run.phase !== "PREPARATION" || !run.pendingFreeMerge) return run;
+  return { ...run, pendingFreeMerge: false, message: "已放棄本次免費合成。" };
+}
+
 export function placePendingHero(run: RunState, instanceId: string, cellKey: ReturnType<typeof boardCellKey>): RunState {
   if (run.phase !== "PREPARATION") return run;
   const { pending, board } = movePendingToBoard(run.pending, run.board, instanceId, cellKey);

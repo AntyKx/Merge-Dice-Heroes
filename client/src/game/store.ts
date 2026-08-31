@@ -19,6 +19,7 @@ import {
   confirmFate,
   confirmFormation,
   createRun,
+  declineFreeMerge,
   mergeSelection,
   placePendingHero,
   recycleBoardHero,
@@ -92,6 +93,7 @@ interface GameStore {
   spendEnergyForRandomSummon: () => void;
   spendEnergyForChosenSummon: (heroId: HeroId) => void;
   mergeSelection: (cellKeys: CellKey[], targetCellKey: CellKey) => void;
+  declineFreeMerge: () => void;
   placePendingHero: (instanceId: string, cellKey: CellKey) => void;
   recycleBoardHero: (cellKey: CellKey) => void;
   repositionHero: (fromCellKey: CellKey, toCellKey: CellKey) => void;
@@ -330,6 +332,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     emitAudio("merge", state.progress.settings);
     return { run, progress: persist({ ...state.progress, daily: { ...state.progress.daily, merges: state.progress.daily.merges + 1 } }) };
   }),
+  declineFreeMerge: () => set((state) => state.run ? { run: declineFreeMerge(state.run) } : state),
   placePendingHero: (instanceId, cellKey) => set((state) => state.run ? { run: placePendingHero(state.run, instanceId, cellKey) } : state),
   recycleBoardHero: (cellKey) => set((state) => state.run ? { run: recycleBoardHero(state.run, cellKey) } : state),
   repositionHero: (fromCellKey, toCellKey) => set((state) => state.run ? { run: repositionHero(state.run, fromCellKey, toCellKey) } : state),

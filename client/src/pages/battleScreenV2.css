@@ -1036,6 +1036,11 @@
 .battle-console__row { display: flex; align-items: stretch; gap: 8px; }
 .battle-console__row--action { align-items: stretch; gap: 8px; }
 
+.bsv2-free-merge-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 6px 8px; border: 1px solid rgba(227,179,76,.4); border-radius: 10px; background: rgba(227,179,76,.1); }
+.bsv2-free-merge-notice span { flex: 1 1 160px; min-width: 0; color: var(--bsv2-gold); font-size: 9.5px; line-height: 1.4; }
+.bsv2-free-merge-notice button { flex: 0 0 auto; padding: 6px 9px; border: 1px solid var(--bsv2-border); border-radius: 8px; background: var(--bsv2-panel-alt); color: var(--bsv2-ink); font-size: 9.5px; font-weight: 900; white-space: nowrap; }
+.bsv2-free-merge-notice button:active { transform: scale(.96); }
+
 .battle-console__chip {
   flex: 1 1 0;
   min-width: 0;

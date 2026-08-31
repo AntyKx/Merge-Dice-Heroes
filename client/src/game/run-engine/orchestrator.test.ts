@@ -17,6 +17,7 @@ import {
   confirmFate,
   confirmFormation,
   createRun,
+  declineFreeMerge,
   mergeSelection,
   repositionHero,
   resolveWaveEnd,
@@ -130,6 +131,43 @@ describe("orchestrator end-to-end Wave lifecycle", () => {
     expect(run.board.cells["1-front"]?.tier).toBe(2);
     expect(run.board.cells["2-front"]).toBeUndefined();
     expect(run.pendingFreeMerge).toBe(false);
+  });
+
+  it("葫蘆待用時若棋盤上找不到任何一對同英雄同階可合成，開戰按鈕會被卡住；declineFreeMerge 可放棄並解鎖開戰", () => {
+    let run = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter });
+    run = acknowledgeWavePreview(run, fixedRandom);
+    run = confirmFate(run);
+    // fixedRandom always rolls five-of-a-kind, so FULL_HOUSE is never actually
+    // among this hand's eligible choices -- set the flag directly, exactly as
+    // the "葫蘆的兩名免費..." test above does, to reach the same RunState a real
+    // Full House roll would produce without needing a different dice fixture.
+    run = chooseComboEffect(run, "NONE", fakeAdapter, fixedRandom);
+    run = { ...run, pendingFreeMerge: true };
+    expect(run.pendingFreeMerge).toBe(true);
+
+    // Board is still empty (FULL_HOUSE only sets the flag, it never summons) --
+    // there is no cell pair to merge, so nothing the player does on the board
+    // can ever clear pendingFreeMerge here.
+    const blocked = confirmFormation(run);
+    expect(blocked.phase).toBe("PREPARATION");
+
+    run = declineFreeMerge(run);
+    expect(run.pendingFreeMerge).toBe(false);
+    run = confirmFormation(run);
+    expect(run.phase).toBe("COMBAT_RUNNING");
+  });
+
+  it("declineFreeMerge 在沒有待用免費合成時，以及不在 PREPARATION 階段時都是 no-op", () => {
+    let run = createRun({ selectedHeroes: ["ranger"], leaderHeroId: "ranger", adapter: fakeAdapter });
+    run = acknowledgeWavePreview(run, fixedRandom);
+    run = confirmFate(run);
+    run = chooseComboEffect(run, "NONE", fakeAdapter, fixedRandom);
+    expect(run.pendingFreeMerge).toBe(false);
+    expect(declineFreeMerge(run)).toBe(run);
+
+    run = confirmFormation(run);
+    expect(run.phase).toBe("COMBAT_RUNNING");
+    expect(declineFreeMerge(run)).toBe(run);
   });
 
   it("Ranger 在棋盤上可獨自清光 Wave 1 並進入 Reward，城堡不受損", () => {

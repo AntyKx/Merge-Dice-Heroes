@@ -94,7 +94,7 @@ function previewComboEffect(effect: DiceComboEffect): { tag: string; value: stri
       const buffs = [effect.attackSpeedPct ? `攻速＋${Math.round(effect.attackSpeedPct * 100)}%` : "", effect.damagePct ? `傷害＋${Math.round(effect.damagePct * 100)}%` : ""].filter(Boolean).join("、");
       return { tag: "本波增益", value: buffs, followUp: "僅在本波自動戰鬥期間有效。" };
     }
-    case "freeMergeWithTwo": return { tag: "持續效果", value: "下次合成僅需 2 名", followUp: "選兩名相同職業、相同 T 階英雄即可升階。" };
+    case "freeMergeWithTwo": return { tag: "持續效果", value: "下次合成僅需 2 名", followUp: "選兩名相同英雄、相同 T 階即可升階；找不到搭配時可在棋盤上放棄，不影響開戰。" };
     case "leaderBurstReady": return { tag: "隊長爆發", value: "立即就緒", followUp: "開戰後可依隊長規則觸發爆發。" };
     case "jackpotTierUp": return { tag: "下一步", value: "指定 T1／T2 直接升階", followUp: "同時使隊長爆發立即就緒。" };
   }
@@ -308,7 +308,14 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false,
     }
   }
 
-  const cap = run?.pendingFreeMerge ? 2 : 3;
+  // Full House (葫蘆)/熔合催化劑 only *permit* stopping a Merge at 2 -- they never
+  // forbid the normal 3-count Merge. Hard-capping selection at 2 here used to trap
+  // players who had no matching *pair* on the board: they could not reach a 3rd
+  // matching hero either, so pendingFreeMerge could never clear and "確認陣型，
+  // 開戰" stayed disabled with no way out. Selection can now always grow to 3;
+  // confirming at 2 (while pendingFreeMerge) still spends the discount immediately.
+  const minMergeCount = run?.pendingFreeMerge ? 2 : 3;
+  const maxMergeCount = 3;
   const pendingRemaining = run ? run.reposition.baseAllowance - run.reposition.usedThisWave : 0;
   const finishReposition = (fromCellKey: CellKey, toCellKey: CellKey) => {
     if (fromCellKey === toCellKey || pendingRemaining <= 0) return;
@@ -364,7 +371,7 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false,
       setSelectedCells((current) => {
         if (current.includes(cellKey)) return current.filter((key) => key !== cellKey);
         const anchor = current[0] ? board.cells[current[0]] : undefined;
-        if (!anchor || (anchor.heroId === hero.heroId && anchor.tier === hero.tier && hero.tier < 3)) return current.length < cap ? [...current, cellKey] : current;
+        if (!anchor || (anchor.heroId === hero.heroId && anchor.tier === hero.tier && hero.tier < 3)) return current.length < maxMergeCount ? [...current, cellKey] : current;
         return [cellKey];
       });
       setMergeNotice(null);
@@ -372,7 +379,8 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false,
   };
 
   const mergeAnchor = selectedCells[0] ? board.cells[selectedCells[0]] : undefined;
-  const canConfirmMerge = selectedCells.length === cap
+  const canConfirmMerge = selectedCells.length >= minMergeCount
+    && selectedCells.length <= maxMergeCount
     && !!mergeAnchor
     && mergeAnchor.tier < 3
     && selectedCells.every((cellKey) => {
@@ -382,18 +390,19 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false,
   const mergeConfirmLabel = canConfirmMerge
     ? "合成升階"
     : selectedCells.length === 0
-      ? `需選 ${cap} 名`
-      : `還差 ${Math.max(0, cap - selectedCells.length)} 名`;
+      ? `需選 ${minMergeCount} 名`
+      : `還差 ${Math.max(0, minMergeCount - selectedCells.length)} 名`;
   const confirmMerge = () => {
     if (!canConfirmMerge) {
-      setMergeNotice(`請選擇 ${cap} 名相同職業、相同 T 階的英雄。`);
+      setMergeNotice(`請選擇至少 ${minMergeCount} 名相同英雄、相同 T 階。`);
       return;
     }
+    const usedFreeMerge = selectedCells.length === 2;
     mergeSelection(selectedCells, selectedCells[0]);
     setSelectedCells([]);
     setFocusedCell(null);
     setMode(null);
-    setMergeNotice(run.pendingFreeMerge ? "兩名免費合成完成！" : "三名合成完成！");
+    setMergeNotice(usedFreeMerge ? "兩名免費合成完成！" : "三名合成完成！");
   };
 
   // The mode toggles (合成/調度/回收) render into the Battle Console's toolbar
@@ -409,7 +418,7 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false,
       <button className={`bsv2-kingdom-badge ${mode === "recycle" ? "is-active" : ""}`} aria-pressed={mode === "recycle"} onClick={() => setMode(mode === "recycle" ? null : "recycle")}><img src="/battle-console/badge-recycle.png" alt="回收" /></button>
       {pendingRemaining <= 0 && run.reposition.extraPurchasesThisWave < RUN_ENGINE_CONFIG.fateEnergy.extraRepositionPurchaseLimitPerWave && <button className="bsv2-buy-reposition" disabled={!run || run.fateEnergy.current < RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost} onClick={buyExtraReposition}>+1 調度 ({RUN_ENGINE_CONFIG.fateEnergy.extraRepositionCost})</button>}
     </div>
-    {mode === "merge" && <div className="bsv2-mode-hint"><span>點選 {cap} 名相同職業、相同 T 階：{selectedCells.length}/{cap} 名{run.pendingFreeMerge ? "（葫蘆免費合成）" : ""}</span><button className="bsv2-confirm-btn" disabled={!canConfirmMerge} onClick={confirmMerge}>{mergeConfirmLabel}</button></div>}
+    {mode === "merge" && <div className="bsv2-mode-hint"><span>點選相同英雄、相同 T 階：{selectedCells.length}/{maxMergeCount} 名{run.pendingFreeMerge ? "（葫蘆免費合成，選滿 2 名即可合成，或繼續選第 3 名改為一般合成）" : ""}</span><button className="bsv2-confirm-btn" disabled={!canConfirmMerge} onClick={confirmMerge}>{mergeConfirmLabel}</button></div>}
     {mergeNotice && <p className="bsv2-merge-notice" role="status">{mergeNotice}</p>}
     {mode === "reposition" && <p className="bsv2-mode-hint">{repositionFrom ? "點選目標格或另一名英雄，立即換位並扣除 1 次。" : "點選一名英雄，再點選目標格即可換位。"}</p>}
     {mode === "recycle" && <p className="bsv2-mode-hint">點選棋盤英雄立即回收，換取命運能量。</p>}
@@ -541,6 +550,7 @@ function BattleConsole({ run, onToolbarSlotChange }: { run: RunState; onToolbarS
   const spendEnergyForRandomSummon = useGameStore((state) => state.spendEnergyForRandomSummon);
   const spendEnergyForChosenSummon = useGameStore((state) => state.spendEnergyForChosenSummon);
   const confirmFormation = useGameStore((state) => state.confirmFormation);
+  const declineFreeMerge = useGameStore((state) => state.declineFreeMerge);
   const [pickingHero, setPickingHero] = useState(false);
   const isPrep = run.phase === "PREPARATION";
   const ready = run.pending.heroes.length === 0 && !run.pendingHeroChoice && !run.pendingFreeMerge && !run.pendingJackpotTierUp;
@@ -566,6 +576,10 @@ function BattleConsole({ run, onToolbarSlotChange }: { run: RunState; onToolbarS
         </div>
         <div className="battle-console__energy"><Coins size={11} /><span>命運能量</span><strong>{run.fateEnergy.current}/{run.fateEnergy.max}</strong></div>
         {pickingHero && <div className="bsv2-hero-pick-row">{run.selectedHeroes.map((heroId) => <HeroPickCard key={heroId} heroId={heroId} onClick={() => { spendEnergyForChosenSummon(heroId); setPickingHero(false); }} />)}<button className="bsv2-cancel-pick" onClick={() => setPickingHero(false)}><X size={14} /></button></div>}
+        {run.pendingFreeMerge && <div className="bsv2-free-merge-notice" role="status">
+          <span>葫蘆／熔合催化劑待用：合成 2 名相同英雄即可免費升階，找不到就先放棄，不影響開戰。</span>
+          <button type="button" onClick={declineFreeMerge}>放棄免費合成</button>
+        </div>}
         <div className="battle-console__row battle-console__row--action">
           <div className="battle-console__toolbar-slot" ref={onToolbarSlotChange} />
           <button className="battle-console__cta" disabled={!ready} onClick={confirmFormation}><img src="/battle-console/battle-cta-red.png" alt="確認陣型，開戰！" /></button>
