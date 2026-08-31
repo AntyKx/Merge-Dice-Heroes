@@ -1207,7 +1207,12 @@
      stretches the frame art proportionally to whatever height results. */
   min-height: 0;
   padding: 11% 5% 4%;
-  gap: 4%;
+  /* Fixed px, not %: row-gap as a percentage resolves against the flex
+     container's own height, but this container's height is now auto/content-
+     driven (no more aspect-ratio) -- against an indefinite height a percentage
+     gap computes to 0 per spec, which collapsed the dice row, combo preview,
+     and action row flush on top of each other with no spacing at all. */
+  gap: 8px;
   justify-content: center;
 }
 .bsv2-screen--combined .bsv2-dice .bsv2-die { width: 40px; height: 40px; }

@@ -126,13 +126,14 @@ function HeroPickCard({ heroId, onClick }: { heroId: HeroId; onClick: () => void
 // ---------------------------------------------------------------------------
 
 function Bsv2Header({ run }: { run: RunState }) {
-  const openScreen = useGameStore((state) => state.openScreen);
   const togglePause = useGameStore((state) => state.togglePause);
   const isPaused = useGameStore((state) => state.isPaused);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   return <header className="bsv2-header">
-    <button className="bsv2-icon-btn" onClick={() => openScreen("title")} aria-label="離開本局"><ChevronLeft size={18} /></button>
+    {/* Leaving mid-battle now lives only in 戰鬥選單 (Bsv2SettingsDrawer's
+        confirm-gated 離開戰鬥) -- this used to be an instant, no-confirm exit
+        right here, which risked losing a Run to a stray tap. */}
     <div className="bsv2-wave"><small>WAVE</small><strong>{String(run.wave).padStart(2, "0")}</strong><span>/ {TOTAL_WAVES}</span></div>
     <button className={`bsv2-icon-btn bsv2-history-toggle ${historyOpen ? "is-open" : ""}`} onClick={() => { setHistoryOpen((open) => !open); setMenuOpen(false); }} aria-label="查看本局骰型歷程" aria-expanded={historyOpen}><Dices size={16} /></button>
     {run.phase === "COMBAT_RUNNING" && <button className="bsv2-icon-btn" onClick={togglePause} aria-label={isPaused ? "繼續" : "暫停"}>{isPaused ? <Play size={17} fill="currentColor" /> : <Pause size={17} fill="currentColor" />}</button>}
