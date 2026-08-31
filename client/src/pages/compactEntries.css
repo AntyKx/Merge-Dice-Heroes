@@ -171,8 +171,9 @@
 .dungeon-detail-modal { text-align: left; align-items: start; }
 .dungeon-detail-modal .item-detail-desc { margin-top: 6px; }
 .dungeon-detail-modal .item-detail-meta { justify-content: flex-start; margin-top: 2px; }
-.dungeon-detail-modal .dungeon-rule { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 10px; }
-.dungeon-detail-modal .dungeon-unlock-note { display: flex; align-items: center; gap: 4px; margin: 8px 0 0; color: #75578e; font-size: 10px; font-weight: 900; }
+.dungeon-detail-modal .item-detail-rule { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 10px; line-height: 1.4; }
+.dungeon-detail-modal .item-detail-rule .astervow-icon { width: 14px; height: 14px; }
+.dungeon-detail-modal .item-detail-unlock-note { display: flex; align-items: center; gap: 4px; margin: 8px 0 0; color: #75578e; font-size: 10px; font-weight: 900; line-height: 1.4; }
 .dungeon-detail-modal .trial-result-rewards { width: 100%; margin: 12px 0 4px; }
 .dungeon-detail-modal .wide-cta { width: 100%; margin-top: 10px; }
 

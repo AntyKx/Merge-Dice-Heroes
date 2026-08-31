@@ -1051,9 +1051,9 @@
   box-shadow: inset 0 1px rgba(255,255,255,.07), 0 2px 0 rgba(0,0,0,.25);
 }
 .battle-console__chip svg { flex: 0 0 auto; color: var(--bsv2-gold); }
-.battle-console__chip > div { display: grid; grid-template-columns: auto 1fr; column-gap: 5px; row-gap: 3px; min-width: 0; flex: 1; }
-.battle-console__chip--hp span { font-size: 9.5px; color: #b9c8dd; white-space: nowrap; }
-.battle-console__chip--hp strong { font-size: 13px; color: #fff4be; text-align: right; }
+.battle-console__chip > div { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); column-gap: 5px; row-gap: 3px; min-width: 0; flex: 1; overflow: hidden; }
+.battle-console__chip--hp span { min-width: 0; overflow: hidden; font-size: 9.5px; color: #b9c8dd; white-space: nowrap; text-overflow: ellipsis; }
+.battle-console__chip--hp strong { min-width: 0; overflow: hidden; font-size: 13px; color: #fff4be; text-align: right; white-space: nowrap; text-overflow: ellipsis; }
 .battle-console__chip--hp i { grid-column: 1 / -1; display: block; height: 5px; border-radius: 999px; overflow: hidden; background: rgba(0,0,0,.4); }
 .battle-console__chip--hp i b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#ffdb70,#f09a49); box-shadow: 0 0 4px rgba(255,218,104,.7); }
 .battle-console__chip--summon > div { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }

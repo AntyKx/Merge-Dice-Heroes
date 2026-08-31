@@ -193,7 +193,11 @@
    use the supplied nine-slice panels/buttons instead of reintroducing flat courtyard cards. */
 .lobby-module-screen.skin-equipment,
 .lobby-module-screen.skin-shop,
-.lobby-module-screen.skin-dungeon,
+.lobby-module-screen.skin-dungeon {
+  padding: 0 14px max(26px, env(safe-area-inset-bottom));
+  overflow-x: clip;
+}
+
 .selection-screen.skin-team {
   min-height: 100dvh;
   padding: 0 14px max(26px, env(safe-area-inset-bottom));

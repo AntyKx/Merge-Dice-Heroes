@@ -668,8 +668,8 @@ function DungeonScreen() {
         <b className="item-detail-name">{detailDungeon.title}</b>
         <p className="item-detail-desc">{detailDungeon.description}</p>
         <small className="item-detail-meta">推薦戰力 {detailDungeon.recommendedPower} · 體力 {detailDungeon.energyCost}</small>
-        <strong className="dungeon-rule"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonRule} alt="" />{detailDungeon.enemyRule.label}</strong>
-        {!detailUnlocked && <p className="dungeon-unlock-note"><Lock size={11} />{detailUnlockCondition}</p>}
+        <strong className="item-detail-rule"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonRule} alt="" />{detailDungeon.enemyRule.label}</strong>
+        {!detailUnlocked && <p className="item-detail-unlock-note"><Lock size={11} />{detailUnlockCondition}</p>}
         <div className="trial-result-rewards">
           <header><Gift size={13} />掉落清單<em>碎晶 ✦{detailDungeon.reward.crystals}</em></header>
           {detailReward && <div className="trial-result-reward-row"><img className="astervow-icon item-row-icon" src={EQUIPMENT_SLOT_ICON_URLS[detailReward.slot]} alt="" /><span><b>{detailReward.name}</b><small>{SLOT_LABELS[detailReward.slot]} · {detailReward.rarity}</small></span><small>{detailReward.description}</small></div>}
