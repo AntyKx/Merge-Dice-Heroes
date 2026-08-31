@@ -86,6 +86,27 @@
 .bsv2-dice-history footer { display: grid; gap: 2px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,.09); }
 .bsv2-dice-history footer small { color: var(--bsv2-muted); font-size: 8px; }
 .bsv2-dice-history footer span { color: #cdebcf; font-size: 10px; font-weight: 700; }
+.bsv2-menu-toggle { color: var(--bsv2-muted); }
+.bsv2-menu-toggle.is-open { border-color: var(--bsv2-gold); background: #29334a; color: var(--bsv2-gold); box-shadow: 0 0 0 2px rgba(227,179,76,.14); }
+.bsv2-settings-drawer { position: absolute; z-index: 36; top: calc(100% + 6px); right: 0; width: min(280px, calc(100vw - 30px)); max-height: min(70dvh, 480px); overflow-y: auto; display: grid; gap: 10px; padding: 10px; border: 1px solid rgba(227,179,76,.75); border-radius: 12px; background: rgba(20,28,42,.97); box-shadow: 0 12px 30px rgba(0,0,0,.4); color: var(--bsv2-ink); }
+.bsv2-settings-drawer > header { display: flex; align-items: center; justify-content: space-between; color: var(--bsv2-gold); font-size: 11px; font-weight: 900; }
+.bsv2-settings-drawer > header span { display: inline-flex; align-items: center; gap: 5px; }
+.bsv2-settings-drawer > header button { display: grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: 6px; background: rgba(255,255,255,.08); color: var(--bsv2-muted); }
+.bsv2-settings-drawer section { display: grid; gap: 5px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.09); }
+.bsv2-settings-drawer section:first-of-type { padding-top: 0; border-top: 0; }
+.bsv2-settings-drawer h3 { margin: 0; color: var(--bsv2-gold); font-size: 10px; font-weight: 900; }
+.bsv2-settings-drawer ul { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.bsv2-settings-drawer ul li { display: grid; grid-template-columns: auto auto; gap: 2px 6px; padding: 6px 8px; border-radius: 8px; background: #232f47; font-size: 10px; }
+.bsv2-settings-drawer ul li b { color: var(--bsv2-ink); }
+.bsv2-settings-drawer ul li small { justify-self: end; color: var(--bsv2-teal); font-size: 8px; }
+.bsv2-settings-drawer ul li span { grid-column: 1 / -1; color: var(--bsv2-muted); font-size: 9px; line-height: 1.4; }
+.bsv2-settings-drawer ul.bsv2-settings-flat li { display: block; color: var(--bsv2-ink); }
+.bsv2-settings-empty { margin: 0; color: var(--bsv2-muted); font-size: 10px; }
+.bsv2-settings-stub { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 8px; background: #232f47; color: var(--bsv2-muted); font-size: 10px; }
+.bsv2-settings-stub span { flex: 1; }
+.bsv2-settings-stub em { color: var(--bsv2-muted); font-size: 8px; font-style: normal; }
+.bsv2-settings-leave { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 8px; border: 1px solid rgba(226,100,90,.5); border-radius: 9px; background: rgba(226,100,90,.12); color: #ffb3a8; font-size: 11px; font-weight: 900; }
+.bsv2-settings-leave:active { transform: scale(.98); }
 .bsv2-wave { flex: 1; display: flex; align-items: baseline; justify-content: center; gap: 3px; padding: 6px 10px; border: 1px solid var(--bsv2-border); border-radius: 10px; background: var(--bsv2-panel); }
 .bsv2-wave small { font-size: 9px; color: var(--bsv2-muted); }
 .bsv2-wave strong { font-size: 15px; color: var(--bsv2-gold); }
@@ -1179,13 +1200,23 @@
   box-shadow: 0 10px 20px rgba(0,0,0,.4);
 }
 .bsv2-screen--combined .bsv2-dice {
-  aspect-ratio: 1200 / 408;
-  padding: 11% 9% 4%;
-  gap: 5%;
+  /* No fixed aspect-ratio (unlike before) -- the live combo preview row below
+     the dice varies in length with the current roll (0-4 eligible combos),
+     same reasoning .bsv2-wave-preview already uses auto height for its
+     variable-length enemy roster. background-size:100% 100% (above) just
+     stretches the frame art proportionally to whatever height results. */
+  min-height: 0;
+  padding: 11% 5% 4%;
+  gap: 4%;
   justify-content: center;
 }
 .bsv2-screen--combined .bsv2-dice .bsv2-die { width: 40px; height: 40px; }
 .bsv2-screen--combined .bsv2-dice .bsv2-action-row { justify-content: center; }
+.bsv2-dice-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.bsv2-dice-preview-label { flex: 0 0 auto; color: var(--bsv2-muted); font-size: 9px; font-weight: 900; }
+.bsv2-dice-preview-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border: 1px solid rgba(227,179,76,.4); border-radius: 999px; background: rgba(227,179,76,.1); color: var(--bsv2-ink); font-size: 9px; white-space: nowrap; }
+.bsv2-dice-preview-chip b { color: var(--bsv2-gold); font-size: 9px; }
+.bsv2-dice-preview-chip.is-none { border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: var(--bsv2-muted); }
 .bsv2-screen--combined .bsv2-wave-preview {
   padding: 44px 11% 26px;
   gap: 6px;

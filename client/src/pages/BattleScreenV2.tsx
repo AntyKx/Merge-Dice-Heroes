@@ -12,13 +12,14 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import "./battleScreenV2.css";
-import { ChevronDown, ChevronLeft, Coins, Dices, Gift, Pause, Play, RotateCcw, Shield, Sparkles, Swords, X, Zap } from "lucide-react";
-import { ENEMIES, HEROES } from "@/game/config";
+import { ChevronDown, ChevronLeft, Coins, Dices, Gift, Menu, Music, Pause, Play, RotateCcw, Shield, Sparkles, Swords, Volume2, X, Zap } from "lucide-react";
+import { ENEMIES, EQUIPMENT, HEROES } from "@/game/config";
 import { HERO_BOARD_LAYOUT } from "@/game/heroBoardLayout";
 import { HERO_FRAME_SHEETS, HeroFrameSprite } from "@/game/heroSprites";
 import { RUN_ENGINE_CONFIG } from "@/game/run-engine/config";
 import { ENEMY_DEFINITIONS } from "@/game/run-engine/enemies";
 import { HERO_DEFINITIONS } from "@/game/run-engine/heroes";
+import { getEligibleComboEffects } from "@/game/run-engine/rules/dice";
 import { ALL_DEFENSE_ZONES, BOARD_ROWS, boardCellKey } from "@/game/run-engine/types";
 import type {
   BlessingDefinition,
@@ -36,7 +37,7 @@ import type {
 } from "@/game/run-engine/types";
 import { WAVES_BY_CHAPTER } from "@/game/run-engine/waves";
 import { useGameStore } from "@/game/store";
-import type { ChapterId, DungeonId, HeroId } from "@/game/types";
+import type { ChapterId, DungeonId, EquipmentSlot, HeroId } from "@/game/types";
 
 // All three chapters are 10 Waves each (waves.ts's WAVES_BY_CHAPTER doc comment),
 // so a single module-level constant stays valid without branching per chapterId.
@@ -72,6 +73,8 @@ const COMBO_LABELS: Record<DiceComboKind, string> = {
   SMALL_STRAIGHT: "小順子", LARGE_STRAIGHT: "大順子", FULL_HOUSE: "葫蘆",
   FOUR_KIND: "四條", FIVE_KIND: "五條",
 };
+
+const EQUIPMENT_SLOT_LABELS: Record<EquipmentSlot, string> = { weapon: "武器", armor: "護甲", relic: "遺物" };
 
 function describeComboEffect(effect: DiceComboEffect): string {
   switch (effect.kind) {
@@ -127,12 +130,15 @@ function Bsv2Header({ run }: { run: RunState }) {
   const togglePause = useGameStore((state) => state.togglePause);
   const isPaused = useGameStore((state) => state.isPaused);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   return <header className="bsv2-header">
     <button className="bsv2-icon-btn" onClick={() => openScreen("title")} aria-label="離開本局"><ChevronLeft size={18} /></button>
     <div className="bsv2-wave"><small>WAVE</small><strong>{String(run.wave).padStart(2, "0")}</strong><span>/ {TOTAL_WAVES}</span></div>
-    <button className={`bsv2-icon-btn bsv2-history-toggle ${historyOpen ? "is-open" : ""}`} onClick={() => setHistoryOpen((open) => !open)} aria-label="查看本局骰型歷程" aria-expanded={historyOpen}><Dices size={16} /></button>
+    <button className={`bsv2-icon-btn bsv2-history-toggle ${historyOpen ? "is-open" : ""}`} onClick={() => { setHistoryOpen((open) => !open); setMenuOpen(false); }} aria-label="查看本局骰型歷程" aria-expanded={historyOpen}><Dices size={16} /></button>
     {run.phase === "COMBAT_RUNNING" && <button className="bsv2-icon-btn" onClick={togglePause} aria-label={isPaused ? "繼續" : "暫停"}>{isPaused ? <Play size={17} fill="currentColor" /> : <Pause size={17} fill="currentColor" />}</button>}
+    <button className={`bsv2-icon-btn bsv2-menu-toggle ${menuOpen ? "is-open" : ""}`} onClick={() => { setMenuOpen((open) => !open); setHistoryOpen(false); }} aria-label="戰鬥選單" aria-expanded={menuOpen}><Menu size={16} /></button>
     {historyOpen && <Bsv2DiceHistory run={run} onClose={() => setHistoryOpen(false)} />}
+    {menuOpen && <Bsv2SettingsDrawer run={run} onClose={() => setMenuOpen(false)} />}
   </header>;
 }
 
@@ -148,6 +154,53 @@ function Bsv2DiceHistory({ run, onClose }: { run: RunState; onClose: () => void 
     <header><span><Dices size={14} />本局骰型</span><button type="button" onClick={onClose} aria-label="收起骰型歷程"><X size={13} /></button></header>
     {run.comboHistory.length > 0 ? <ol>{run.comboHistory.slice().reverse().map((entry, index) => <li key={`${entry.wave}-${entry.kind}-${index}`}><small>W{entry.wave}</small><b>{COMBO_LABELS[entry.kind]}</b></li>)}</ol> : <p>尚未選擇骰型效果。</p>}
     <footer><small>目前加成</small>{activeEffects.length > 0 ? <span>{activeEffects.join(" · ")}</span> : <span>尚無持續加成</span>}</footer>
+  </aside>;
+}
+
+function Bsv2SettingsDrawer({ run, onClose }: { run: RunState; onClose: () => void }) {
+  const openScreen = useGameStore((state) => state.openScreen);
+  const equipped = useGameStore((state) => state.progress.equipped);
+  const equippedItems = (["weapon", "armor", "relic"] as EquipmentSlot[])
+    .map((slot) => { const equipmentId = equipped[slot]; return equipmentId ? { slot, item: EQUIPMENT[equipmentId] } : null; })
+    .filter((entry): entry is { slot: EquipmentSlot; item: typeof EQUIPMENT[keyof typeof EQUIPMENT] } => !!entry);
+  const debuffLines = [
+    run.enemyRule && run.enemyRule.hpMultiplier > 1 ? `敵軍生命 +${Math.round((run.enemyRule.hpMultiplier - 1) * 100)}%` : null,
+    run.enemyRule && run.enemyRule.speedMultiplier > 1 ? `敵軍移速 +${Math.round((run.enemyRule.speedMultiplier - 1) * 100)}%` : null,
+  ].filter((line): line is string => !!line);
+  const leaveBattle = () => {
+    if (!window.confirm("確定要離開本局戰鬥嗎？目前進度將會遺失。")) return;
+    onClose();
+    openScreen("title");
+  };
+  return <aside className="bsv2-settings-drawer" aria-label="戰鬥選單">
+    <header><span><Menu size={14} />戰鬥選單</span><button type="button" onClick={onClose} aria-label="收起選單"><X size={13} /></button></header>
+    <section>
+      <h3>目前增益</h3>
+      {run.talents.length === 0 && run.blessings.length === 0
+        ? <p className="bsv2-settings-empty">尚未選擇任何天賦或祝福。</p>
+        : <ul>
+            {run.talents.map((entry) => { const display = TALENT_DISPLAY[entry.talentId] ?? { label: entry.talentId, description: "" }; return <li key={entry.talentId}><b>{display.label}</b><small>Lv.{entry.level}</small><span>{display.description}</span></li>; })}
+            {run.blessings.map((id) => { const display = BLESSING_DISPLAY[id] ?? { label: id, description: "" }; return <li key={id}><b>{display.label}</b><span>{display.description}</span></li>; })}
+          </ul>}
+    </section>
+    <section>
+      <h3>裝備效果</h3>
+      {equippedItems.length === 0
+        ? <p className="bsv2-settings-empty">本局未裝備任何物品。</p>
+        : <ul>{equippedItems.map(({ slot, item }) => <li key={slot}><b>{item.name}</b><small>{EQUIPMENT_SLOT_LABELS[slot]}</small><span>{item.description}</span></li>)}</ul>}
+    </section>
+    <section>
+      <h3>本局減益</h3>
+      {debuffLines.length === 0
+        ? <p className="bsv2-settings-empty">本局為一般遠征，無特殊減益效果。</p>
+        : <ul className="bsv2-settings-flat">{debuffLines.map((line) => <li key={line}>{line}</li>)}</ul>}
+    </section>
+    <section>
+      <h3>音效與音樂</h3>
+      <div className="bsv2-settings-stub"><Volume2 size={14} /><span>音效</span><em>即將推出</em></div>
+      <div className="bsv2-settings-stub"><Music size={14} /><span>音樂</span><em>即將推出</em></div>
+    </section>
+    <button type="button" className="bsv2-settings-leave" onClick={leaveBattle}><ChevronLeft size={14} />離開戰鬥</button>
   </aside>;
 }
 
@@ -534,11 +587,23 @@ function Bsv2Dice({ run }: { run: RunState }) {
   // the player instead clicks to SELECT a die for the next reroll, i.e. the
   // ones shown highlighted are locked === false. See orchestrator.rerollDice.
   const hasSelection = run.dice.locked.some((locked) => !locked);
+  // Live preview of what THIS roll already qualifies for, updated on every
+  // lock/reroll -- getEligibleComboEffects is a pure function of the dice
+  // values, so this never touches run state, just previews it before the
+  // player commits via 確認命運. Same NONE-only-when-sole-option filter
+  // Bsv2ComboChoice uses, so the preview never contradicts the real choice
+  // screen the player sees right after confirming.
+  const eligibleChoices = getEligibleComboEffects(run.dice.values);
+  const previewChoices = eligibleChoices.filter((choice) => choice.kind !== "NONE" || eligibleChoices.length === 1);
   return <section className="bsv2-panel bsv2-dice">
     <div className="bsv2-dice-row" key={rollKey}>{run.dice.values.map((value, index) => {
       const selected = !run.dice.locked[index];
       return <button key={index} className={`bsv2-die ${selected ? "is-selected" : ""}`} style={{ "--toss-delay": `${index * 70}ms`, "--toss-x": `${(index - mid) * 18}px`, "--toss-rot": `${(index % 2 === 0 ? -1 : 1) * (28 + index * 6)}deg`, "--toss-spin": `${(index % 2 === 0 ? 1 : -1) * (50 + index * 10)}deg` } as React.CSSProperties} onClick={() => toggleDiceLock(index)} aria-pressed={selected} aria-label={`骰子 ${index + 1}：點數 ${value}${selected ? "，已選擇重骰" : ""}`}><DiceFace value={value} />{selected && <i className="bsv2-die-badge"><RotateCcw size={9} /></i>}</button>;
     })}</div>
+    <div className="bsv2-dice-preview" aria-live="polite">
+      <span className="bsv2-dice-preview-label">目前骰型：</span>
+      {previewChoices.map((choice) => <span key={choice.kind} className={`bsv2-dice-preview-chip ${choice.kind === "NONE" ? "is-none" : ""}`}><b>{COMBO_LABELS[choice.kind]}</b>{previewComboEffect(choice.effect).value}</span>)}
+    </div>
     <div className="bsv2-action-row">
       <button className="bsv2-secondary-btn" disabled={run.dice.rerollsLeft <= 0 || !hasSelection} onClick={rerollDice}><RotateCcw size={15} />重骰 ({run.dice.rerollsLeft})</button>
       <button className="bsv2-primary-btn" onClick={confirmFate}><Sparkles size={15} />確認命運</button>
