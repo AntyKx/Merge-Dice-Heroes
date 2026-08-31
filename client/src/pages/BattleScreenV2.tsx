@@ -596,20 +596,31 @@ function Bsv2Dice({ run }: { run: RunState }) {
   // screen the player sees right after confirming.
   const eligibleChoices = getEligibleComboEffects(run.dice.values);
   const previewChoices = eligibleChoices.filter((choice) => choice.kind !== "NONE" || eligibleChoices.length === 1);
-  return <section className="bsv2-panel bsv2-dice">
-    <div className="bsv2-dice-row" key={rollKey}>{run.dice.values.map((value, index) => {
-      const selected = !run.dice.locked[index];
-      return <button key={index} className={`bsv2-die ${selected ? "is-selected" : ""}`} style={{ "--toss-delay": `${index * 70}ms`, "--toss-x": `${(index - mid) * 18}px`, "--toss-rot": `${(index % 2 === 0 ? -1 : 1) * (28 + index * 6)}deg`, "--toss-spin": `${(index % 2 === 0 ? 1 : -1) * (50 + index * 10)}deg` } as React.CSSProperties} onClick={() => toggleDiceLock(index)} aria-pressed={selected} aria-label={`骰子 ${index + 1}：點數 ${value}${selected ? "，已選擇重骰" : ""}`}><DiceFace value={value} />{selected && <i className="bsv2-die-badge"><RotateCcw size={9} /></i>}</button>;
-    })}</div>
-    <div className="bsv2-dice-preview" aria-live="polite">
+  // The preview card and the ornate dice-frame panel used to be one element,
+  // which forced the frame's fixed-ratio background art to stretch to fit
+  // the preview's variable length (0-4 combo chips) -- fragile (a % gap
+  // against that now-auto height silently zeroed itself out, see prior fix)
+  // and it could visibly grow tall enough to crowd the board above it. Now
+  // they're two siblings in a plain flex column: the preview is a flat card
+  // like Bsv2DiceHistory (no background art to fight), and the dice frame
+  // goes back to a fixed aspect-ratio since it only ever holds a constant 5
+  // dice + 2 buttons again.
+  return <div className="bsv2-dice-stack">
+    {previewChoices.length > 0 && <div className="bsv2-dice-preview" aria-live="polite">
       <span className="bsv2-dice-preview-label">目前骰型：</span>
       {previewChoices.map((choice) => <span key={choice.kind} className={`bsv2-dice-preview-chip ${choice.kind === "NONE" ? "is-none" : ""}`}><b>{COMBO_LABELS[choice.kind]}</b>{previewComboEffect(choice.effect).value}</span>)}
-    </div>
-    <div className="bsv2-action-row">
-      <button className="bsv2-secondary-btn" disabled={run.dice.rerollsLeft <= 0 || !hasSelection} onClick={rerollDice}><RotateCcw size={15} />重骰 ({run.dice.rerollsLeft})</button>
-      <button className="bsv2-primary-btn" onClick={confirmFate}><Sparkles size={15} />確認命運</button>
-    </div>
-  </section>;
+    </div>}
+    <section className="bsv2-panel bsv2-dice">
+      <div className="bsv2-dice-row" key={rollKey}>{run.dice.values.map((value, index) => {
+        const selected = !run.dice.locked[index];
+        return <button key={index} className={`bsv2-die ${selected ? "is-selected" : ""}`} style={{ "--toss-delay": `${index * 70}ms`, "--toss-x": `${(index - mid) * 18}px`, "--toss-rot": `${(index % 2 === 0 ? -1 : 1) * (28 + index * 6)}deg`, "--toss-spin": `${(index % 2 === 0 ? 1 : -1) * (50 + index * 10)}deg` } as React.CSSProperties} onClick={() => toggleDiceLock(index)} aria-pressed={selected} aria-label={`骰子 ${index + 1}：點數 ${value}${selected ? "，已選擇重骰" : ""}`}><DiceFace value={value} />{selected && <i className="bsv2-die-badge"><RotateCcw size={9} /></i>}</button>;
+      })}</div>
+      <div className="bsv2-action-row">
+        <button className="bsv2-secondary-btn" disabled={run.dice.rerollsLeft <= 0 || !hasSelection} onClick={rerollDice}><RotateCcw size={15} />重骰 ({run.dice.rerollsLeft})</button>
+        <button className="bsv2-primary-btn" onClick={confirmFate}><Sparkles size={15} />確認命運</button>
+      </div>
+    </section>
+  </div>;
 }
 
 function Bsv2ComboChoice({ run }: { run: RunState }) {

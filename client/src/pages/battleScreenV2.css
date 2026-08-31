@@ -1166,19 +1166,27 @@
    full-screen panel -- the Battle Console stays collapsed underneath since
    summon/merge actions aren't relevant until PREPARATION. */
 .bsv2-screen--combined .bsv2-wave-preview,
-.bsv2-screen--combined .bsv2-dice,
+.bsv2-screen--combined .bsv2-dice-stack,
 .bsv2-screen--combined .bsv2-combo-choice {
   position: absolute;
   left: 0;
   right: 0;
   bottom: calc(92px + env(safe-area-inset-bottom));
   z-index: 8;
+  animation: bsv2CardRise 260ms ease-out both;
+}
+.bsv2-screen--combined .bsv2-wave-preview,
+.bsv2-screen--combined .bsv2-combo-choice {
   background: linear-gradient(180deg, rgba(31,40,58,.96), rgba(14,20,31,.97));
   border: 1px solid rgba(227,179,76,.55);
   box-shadow: 0 12px 26px rgba(0,0,0,.5);
-  animation: bsv2CardRise 260ms ease-out both;
 }
 .bsv2-screen--combined .bsv2-combo-choice { max-height: min(52dvh, 380px); overflow-y: auto; }
+/* Preview card + dice frame are two plain siblings stacked in normal flow
+   (not two independently-absolute-positioned boxes fighting over the same
+   spot) -- see Bsv2Dice's comment for why this replaced the earlier
+   single-box version. */
+.bsv2-dice-stack { display: flex; flex-direction: column; gap: 8px; }
 @keyframes bsv2CardRise {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
@@ -1200,24 +1208,27 @@
   box-shadow: 0 10px 20px rgba(0,0,0,.4);
 }
 .bsv2-screen--combined .bsv2-dice {
-  /* No fixed aspect-ratio (unlike before) -- the live combo preview row below
-     the dice varies in length with the current roll (0-4 eligible combos),
-     same reasoning .bsv2-wave-preview already uses auto height for its
-     variable-length enemy roster. background-size:100% 100% (above) just
-     stretches the frame art proportionally to whatever height results. */
-  min-height: 0;
+  /* Fixed again now that the preview lives outside this box (see Bsv2Dice) --
+     always exactly 5 dice + 2 buttons, so there's no variable content height
+     to accommodate and the frame art is never stretched non-uniformly. */
+  aspect-ratio: 1200 / 408;
   padding: 11% 5% 4%;
-  /* Fixed px, not %: row-gap as a percentage resolves against the flex
-     container's own height, but this container's height is now auto/content-
-     driven (no more aspect-ratio) -- against an indefinite height a percentage
-     gap computes to 0 per spec, which collapsed the dice row, combo preview,
-     and action row flush on top of each other with no spacing at all. */
   gap: 8px;
   justify-content: center;
 }
 .bsv2-screen--combined .bsv2-dice .bsv2-die { width: 40px; height: 40px; }
 .bsv2-screen--combined .bsv2-dice .bsv2-action-row { justify-content: center; }
-.bsv2-dice-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.bsv2-dice-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 6px;
+  padding: 8px 10px;
+  border: 1px solid rgba(227,179,76,.45);
+  border-radius: 11px;
+  background: rgba(20,28,42,.94);
+  box-shadow: 0 8px 18px rgba(0,0,0,.35);
+}
 .bsv2-dice-preview-label { flex: 0 0 auto; color: var(--bsv2-muted); font-size: 9px; font-weight: 900; }
 .bsv2-dice-preview-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border: 1px solid rgba(227,179,76,.4); border-radius: 999px; background: rgba(227,179,76,.1); color: var(--bsv2-ink); font-size: 9px; white-space: nowrap; }
 .bsv2-dice-preview-chip b { color: var(--bsv2-gold); font-size: 9px; }
@@ -1233,6 +1244,14 @@
 .bsv2-screen--combined .bsv2-wave-preview .bsv2-primary-btn { flex: 0 0 auto; min-width: 160px; }
 .bsv2-screen--combined .bsv2-dice .bsv2-secondary-btn,
 .bsv2-screen--combined .bsv2-dice .bsv2-primary-btn { min-width: 0; min-height: 26px; padding: 5px 10px; font-size: 10px; }
+/* A bright cool-teal pill read as jarring sitting directly on the warm wood/
+   gold console art -- both buttons now pull from the same gold family as
+   the frame itself instead, just at different weights (confirm solid,
+   reroll a quiet outline) so 確認命運 still reads as the primary action
+   without shouting over the artwork. */
+.bsv2-screen--combined .bsv2-dice .bsv2-primary-btn { background: linear-gradient(180deg, #e3c37a, #b8863b); box-shadow: 0 2px 0 rgba(90,58,16,.4); color: #4a2f0f; }
+.bsv2-screen--combined .bsv2-dice .bsv2-secondary-btn { background: rgba(20,14,8,.4); border-color: rgba(227,179,76,.4); color: #e8d9b8; }
+.bsv2-screen--combined .bsv2-dice .bsv2-secondary-btn:disabled { opacity: .5; }
 
 /* Toss-in: each die tumbles in from above with a 3D flip, overshoots into a
    bounce with an impact flash, then settles back to rest. The per-die
@@ -1270,5 +1289,5 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .bsv2-die { animation: none; }
-  .bsv2-screen--combined .bsv2-wave-preview, .bsv2-screen--combined .bsv2-dice, .bsv2-screen--combined .bsv2-combo-choice { animation: none; }
+  .bsv2-screen--combined .bsv2-wave-preview, .bsv2-screen--combined .bsv2-dice-stack, .bsv2-screen--combined .bsv2-combo-choice { animation: none; }
 }
