@@ -173,7 +173,10 @@ export interface HeroInstance {
   buffs: ActiveStatusEffect[];
   skill: AutoSkillRuntimeState;
   /** Basic Attack timer -- separate from `skill` (Auto Skill has its own trigger/
-   * cooldown per 十四). Support heroes (auraOnly coverage) never consume this. */
+   * cooldown per 十四), so a hero with `auraOnly` coverage (never targets enemies)
+   * simply never consumes this; Support heroes are NOT required to be auraOnly,
+   * though (Priest/Bard now carry a real, slow Basic Attack alongside their
+   * heal/buff Auto Skill -- see heroes.ts). */
   attackCooldownRemainingSeconds: number;
 }
 

@@ -391,8 +391,14 @@ export const HERO_DEFINITIONS: Partial<Record<HeroId, HeroDefinition>> = {
     trait: { id: "overload", effectId: "engineer.overload" },
   },
   priest: {
-    id: "priest", role: "support", baseAttack: 5, baseHp: 72, attackInterval: 1.25, rangeAlongRoute: 0,
-    coverage: { kind: "auraOnly", maxZoneSpan: 0 },
+    // Support classes now land a slow, low-damage Basic Attack alongside their
+    // heal/buff Auto Skill -- the two run on fully independent timers (Auto
+    // Skill uses an "interval" trigger, decoupled from attackCooldownRemainingSeconds/
+    // justAttacked, see rules/skill.ts), so this never touches heal cadence or
+    // amount. attackInterval deliberately sits well above every other hero's
+    // (fastest tank: knight 1.05s) so attacking stays a trickle, not their job.
+    id: "priest", role: "support", baseAttack: 5, baseHp: 72, attackInterval: 2.2, rangeAlongRoute: 0.55,
+    coverage: { kind: "rangedSelective", maxZoneSpan: 1 },
     supportRange: { kind: "radiusCells", radius: 2 },
     blockRule: { baseCapacity: 0, rowCapacityMultiplier: {}, zoneSpan: 0 },
     tiers: { 1: { behavior: {} }, 2: { behavior: {} }, 3: { behavior: {} } },
@@ -400,8 +406,9 @@ export const HERO_DEFINITIONS: Partial<Record<HeroId, HeroDefinition>> = {
     trait: { id: "overheal", effectId: "priest.overheal" },
   },
   bard: {
-    id: "bard", role: "support", baseAttack: 6, baseHp: 68, attackInterval: 1.02, rangeAlongRoute: 0,
-    coverage: { kind: "auraOnly", maxZoneSpan: 0 },
+    // See priest's comment above -- same independent-timer guarantee applies here.
+    id: "bard", role: "support", baseAttack: 6, baseHp: 68, attackInterval: 2, rangeAlongRoute: 0.5,
+    coverage: { kind: "rangedSelective", maxZoneSpan: 1 },
     supportRange: { kind: "sameRow" },
     blockRule: { baseCapacity: 0, rowCapacityMultiplier: {}, zoneSpan: 0 },
     tiers: {

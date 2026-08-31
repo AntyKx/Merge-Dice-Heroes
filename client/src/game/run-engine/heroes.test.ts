@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { EnemyInstance, HeroInstance } from "./types";
-import { resolveEffect } from "./rules/combat";
+import type { EnemyInstance, HeroInstance, RouteState } from "./types";
+import { getBasicAttackDamage, getEffectiveAttackInterval, resolveEffect } from "./rules/combat";
+import { getEnemyTargetPool } from "./rules/targeting";
 import { HERO_DEFINITIONS, HERO_EFFECT_REGISTRY } from "./heroes";
 
 function makeHero(heroId: keyof typeof HERO_DEFINITIONS, tier: 1 | 2 | 3): HeroInstance {
@@ -83,5 +84,34 @@ describe("role archetypes smoke test (one per role from 九)", () => {
     const result = resolveEffect(HERO_EFFECT_REGISTRY, definition.autoSkill.effectId, context);
     expect(result.damageToEnemies?.[0].instanceId).toBe("wounded");
     expect(HERO_DEFINITIONS.assassin!.blockRule.baseCapacity).toBe(0);
+  });
+});
+
+describe("Support classes (Priest/Bard) can also land a slow Basic Attack", () => {
+  const routes: RouteState[] = [{ routeId: 1, active: true, enemies: [makeEnemy("e1", 0.9)] }];
+
+  it("再也不是 auraOnly：兩者都能在自己的 rangeAlongRoute 內鎖定敵人", () => {
+    (["priest", "bard"] as const).forEach((heroId) => {
+      const definition = HERO_DEFINITIONS[heroId]!;
+      expect(definition.coverage.kind).not.toBe("auraOnly");
+      expect(definition.rangeAlongRoute).toBeGreaterThan(0);
+      const pool = getEnemyTargetPool({ zone: 1, row: "front" }, definition.coverage, definition.rangeAlongRoute, routes);
+      expect(pool.map((enemy) => enemy.instanceId)).toContain("e1");
+    });
+  });
+
+  it("Basic Attack 頻率明顯比全部戰鬥職業慢，攻擊力沿用原本偏低的 baseAttack", () => {
+    const combatRoleIds = ["knight", "deathKnight", "fighter", "assassin", "fireMage", "frostQueen", "ranger", "engineer"] as const;
+    const fastestCombatInterval = Math.min(...combatRoleIds.map((id) => HERO_DEFINITIONS[id]!.attackInterval));
+    (["priest", "bard"] as const).forEach((heroId) => {
+      const definition = HERO_DEFINITIONS[heroId]!;
+      expect(getEffectiveAttackInterval(definition)).toBeGreaterThan(fastestCombatInterval);
+      expect(getBasicAttackDamage(definition, 1)).toBeGreaterThan(0);
+    });
+  });
+
+  it("Heal/Buff 的 interval 觸發跟新的 Basic Attack 完全獨立，不受影響", () => {
+    expect(HERO_DEFINITIONS.priest!.autoSkill.trigger).toEqual({ kind: "interval", seconds: 2.5 });
+    expect(HERO_DEFINITIONS.bard!.autoSkill.trigger).toEqual({ kind: "interval", seconds: 3 });
   });
 });

@@ -66,7 +66,7 @@ function makeHero(instanceId: string, heroId: HeroId): HeroInstance {
 /** Drives Dice -> Preparation and places a single hero at board zone 2 (Wave 1's
  * only activeRoute, per waves.ts) so its coverage actually reaches the spawned
  * enemies -- the default first-empty-cell auto-placement lands at zone 1. */
-function setupRunWithHeroAtZone2(heroId: "ranger" = "ranger") {
+function setupRunWithHeroAtZone2(heroId: HeroId = "ranger") {
   let run = createRun({ selectedHeroes: [heroId], leaderHeroId: heroId, adapter: fakeAdapter });
   run = acknowledgeWavePreview(run, fixedRandom);
   run = confirmFate(run);
@@ -168,6 +168,21 @@ describe("orchestrator end-to-end Wave lifecycle", () => {
     run = confirmFormation(run);
     expect(run.phase).toBe("COMBAT_RUNNING");
     expect(declineFreeMerge(run)).toBe(run);
+  });
+
+  it("Priest 現在也會用 Basic Attack 打怪（原本 auraOnly 完全不會鎖定敵人）", () => {
+    const totalEnemyHp = (r: ReturnType<typeof setupRunWithHeroAtZone2>) => r.waveRuntime?.routes.flatMap((route) => route.enemies).reduce((sum, enemy) => sum + enemy.hp, 0) ?? 0;
+    let run = setupRunWithHeroAtZone2("priest");
+    expect(run.phase).toBe("COMBAT_RUNNING");
+
+    // Wait for the first enemy to actually spawn before reading a baseline HP.
+    run = runCombatUntil(run, (r) => totalEnemyHp(r) > 0, 300, 0.1);
+    const initialEnemyHp = totalEnemyHp(run);
+    expect(initialEnemyHp).toBeGreaterThan(0);
+
+    run = runCombatUntil(run, (r) => totalEnemyHp(r) < initialEnemyHp, 300, 0.1);
+
+    expect(totalEnemyHp(run)).toBeLessThan(initialEnemyHp);
   });
 
   it("Ranger 在棋盤上可獨自清光 Wave 1 並進入 Reward，城堡不受損", () => {
