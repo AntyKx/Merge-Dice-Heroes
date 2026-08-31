@@ -1,0 +1,148 @@
+/* Equipment Workshop -- full parchment/gold redesign (素材/裝備's mockup +
+   hand-drawn icon/UI kit). Replaces the old dark "astervow" nine-slice skin
+   for this screen only (.skin-equipment), reusing real per-item icon art
+   (client/public/equipment-icons/*.png) instead of one generic icon per
+   slot, plus the new rarity-border/badge/tab/button art
+   (client/public/equipment-ui/*.png). Panel backgrounds are CSS-drawn
+   parchment gradients rather than sliced from the ornate hollow-frame
+   mockup art, which stays faithful to the same warm cream/gold palette
+   without the fragility of nine-slicing complex illustrated borders. */
+
+:root {
+  --ew-parchment: #f6ecd2;
+  --ew-parchment-deep: #ecdcb2;
+  --ew-ink: #4a3419;
+  --ew-muted: #8a7350;
+  --ew-gold: #b8863b;
+  --ew-gold-deep: #8a611f;
+}
+
+/* The page itself is deliberately locked (no drag/scroll, per earlier
+   session work) -- .equipment-workshop must therefore fill the module
+   screen's own already-capped height and let just the item list/grid
+   scroll internally, or a full Signature Weapon roster (10 rows) or a
+   large inventory would silently overflow past the frame with no way to
+   reach the rest (confirmed live: engineer's row was clipped off). */
+.lobby-module-screen.skin-equipment { display: flex; flex-direction: column; }
+.skin-equipment .equipment-workshop { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+.skin-equipment .equipment-workshop__panel { flex: 1; min-height: 0; overflow-y: auto; }
+
+.equipment-workshop__title { display: block; width: min(260px, 62%); height: auto; margin: 0 auto 2px; }
+
+.equipment-workshop__summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.equipment-workshop__slot {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 8px 4px 6px;
+  border: 1.5px solid var(--ew-gold);
+  border-radius: 12px;
+  background: linear-gradient(160deg, #fffbef, var(--ew-parchment));
+  box-shadow: 0 2px 0 rgba(138,97,31,.25), inset 0 0 0 1px rgba(255,255,255,.5);
+  color: var(--ew-ink);
+}
+.equipment-workshop__slot:active { transform: translateY(1px); }
+.equipment-workshop__slot-icon { display: grid; place-items: center; width: 38px; height: 38px; font-size: 22px; line-height: 1; }
+.equipment-workshop__slot-icon img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(74,52,25,.35)); }
+.equipment-workshop__slot-icon.is-empty { opacity: .35; }
+.equipment-workshop__slot small { color: var(--ew-muted); font-size: 8px; font-weight: 900; }
+.equipment-workshop__slot b { max-width: 100%; overflow: hidden; color: var(--ew-ink); font-size: 9px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.equipment-workshop__slot em { color: var(--ew-gold-deep); font-size: 8px; font-style: normal; font-weight: 900; }
+
+/* Each tab-*.png already has its icon + label baked into the artwork (see
+   client/public/equipment-ui) -- normal/selected art is swapped by src, no
+   text/icon overlay needed. */
+.equipment-workshop__tabs { display: flex; gap: 3px; }
+.equipment-workshop__tab { flex: 1; display: grid; place-items: center; padding: 0; border: 0; background: none; }
+.equipment-workshop__tab img { display: block; width: 100%; height: auto; }
+.equipment-workshop__tab:active { transform: translateY(1px); }
+
+.equipment-workshop__panel {
+  padding: 10px 8px;
+  border: 1.5px solid rgba(184,134,59,.55);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,251,239,.92), rgba(246,236,210,.92));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.4);
+}
+
+.equipment-workshop__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.equipment-workshop__item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 6px;
+  border: 0;
+  background: none;
+}
+.equipment-workshop__item-frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.equipment-workshop__item-icon { position: relative; z-index: 1; display: grid; place-items: center; width: 64%; height: 64%; object-fit: contain; font-size: 26px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(74,52,25,.35)); }
+.equipment-workshop__item-check { position: absolute; z-index: 2; top: -4px; right: -4px; width: 18px; height: 18px; }
+.equipment-workshop__item-level { position: absolute; z-index: 2; bottom: -3px; left: 50%; transform: translateX(-50%); padding: 1px 5px; border-radius: 999px; background: #4a3419; color: #fff3d6; font-size: 7px; font-weight: 900; white-space: nowrap; }
+.equipment-workshop__item-name { position: relative; z-index: 1; align-self: end; margin-bottom: 2px; max-width: 92%; overflow: hidden; color: var(--ew-ink); font-size: 7.5px; font-weight: 900; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.equipment-workshop__empty { padding: 18px 10px; color: var(--ew-muted); font-size: 11px; text-align: center; }
+
+.equipment-workshop__sig-list { display: grid; gap: 6px; }
+.equipment-workshop__sig-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(184,134,59,.4);
+  border-radius: 10px;
+  background: rgba(255,251,239,.7);
+  color: var(--ew-ink);
+  text-align: left;
+}
+.equipment-workshop__sig-row img.sig-icon { width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(74,52,25,.35)); }
+.equipment-workshop__sig-row div { min-width: 0; display: grid; gap: 1px; }
+.equipment-workshop__sig-row b { font-size: 11px; }
+.equipment-workshop__sig-row small { overflow: hidden; color: var(--ew-muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.equipment-workshop__sig-row .sig-hero { color: var(--ew-gold-deep); font-size: 8px; font-weight: 900; }
+.equipment-workshop__sig-badge { display: flex; align-items: center; gap: 3px; color: #3b7a4e; font-size: 8px; font-weight: 900; white-space: nowrap; }
+.equipment-workshop__sig-badge img { width: 13px; height: 13px; }
+
+/* Detail modal (equipment item) */
+.equipment-workshop-backdrop { position: fixed; z-index: 40; inset: 0; display: grid; padding: 24px; place-items: center; background: rgba(42,29,15,.4); backdrop-filter: blur(2px); }
+.equipment-workshop-modal {
+  position: relative;
+  width: min(320px, calc(100vw - 48px));
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
+  display: grid;
+  justify-items: center;
+  padding: 22px 20px 18px;
+  border: 2px solid var(--ew-gold);
+  border-radius: 18px;
+  background: linear-gradient(160deg, #fffbef, var(--ew-parchment));
+  box-shadow: 0 18px 40px rgba(0,0,0,.4);
+  text-align: center;
+  color: var(--ew-ink);
+}
+.equipment-workshop-modal__close { position: absolute; top: 8px; right: 8px; display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: 50%; background: rgba(74,52,25,.12); color: var(--ew-ink); }
+.equipment-workshop-modal__frame { position: relative; display: grid; place-items: center; width: 92px; height: 92px; margin-bottom: 6px; }
+.equipment-workshop-modal__frame img.frame-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.equipment-workshop-modal__frame .item-icon { position: relative; z-index: 1; display: grid; place-items: center; width: 62%; height: 62%; object-fit: contain; font-size: 42px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(74,52,25,.35)); }
+.equipment-workshop-modal__name { font-size: 16px; font-weight: 900; }
+.equipment-workshop-modal__meta { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px; color: var(--ew-gold-deep); font-size: 10px; font-weight: 900; }
+.equipment-workshop-modal__desc { margin: 10px 0 4px; color: #6d5a3a; font-size: 11px; line-height: 1.5; }
+.equipment-workshop-modal__status { margin-top: 6px; color: #3b7a4e; font-size: 10px; font-weight: 900; }
+/* btn-*.png already has its label baked in (裝備/升級/分解) -- dynamic state
+   (already-equipped, upgrade cost, max level) is shown via a small badge/
+   caption alongside the art rather than swapping the label text. */
+.equipment-workshop-modal__actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; width: 100%; margin-top: 14px; }
+.equipment-workshop-modal__action { display: grid; justify-items: center; gap: 2px; }
+.equipment-workshop-modal__action button { position: relative; display: block; width: 100%; padding: 0; border: 0; background: none; }
+.equipment-workshop-modal__action img.btn-art { display: block; width: 100%; height: auto; }
+.equipment-workshop-modal__action button:disabled { opacity: .5; }
+.equipment-workshop-modal__action button:active:not(:disabled) img.btn-art { transform: translateY(1px) scale(.98); }
+.equipment-workshop-modal__action-badge { position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
+.equipment-workshop-modal__action-caption { color: var(--ew-muted); font-size: 8px; font-weight: 900; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .equipment-workshop-backdrop { animation: ew-fade 160ms ease-out both; }
+  .equipment-workshop-modal { animation: ew-rise 180ms ease-out both; }
+  @keyframes ew-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes ew-rise { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+}

@@ -16,9 +16,10 @@ import "./chapterMap.css";
 import "./asterVowUiSkin.css";
 import "./compactEntries.css";
 import "./profileScreen.css";
-import { AlertTriangle, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Info, Lock, Menu, Music2, PackageOpen, Pencil, Play, ScrollText, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, UserRound, Volume2, X, Zap } from "lucide-react";
+import "./equipmentWorkshop.css";
+import { AlertTriangle, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Info, Lock, Menu, Music2, PackageOpen, Pencil, Play, ScrollText, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, UserRound, Volume2, X, Zap } from "lucide-react";
 import BattleScreenV2 from "./BattleScreenV2";
-import { DAILY_QUESTS, DUNGEONS, EQUIPMENT, getEquipmentBonuses, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS } from "@/game/config";
+import { DAILY_QUESTS, DUNGEONS, EQUIPMENT, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS } from "@/game/config";
 import { HERO_BOARD_LAYOUT } from "@/game/heroBoardLayout";
 import { HERO_FRAME_SHEETS, HeroFrameSprite, type HeroAnimationAction } from "@/game/heroSprites";
 import { getHeroProgress, heroXpRequirement } from "@/game/heroProgress";
@@ -560,63 +561,165 @@ const SLOT_LABELS: Record<EquipmentSlot, string> = { weapon: "武器", armor: "�
 
 const EQUIPMENT_SLOT_ICON_URLS: Record<EquipmentSlot, string> = { weapon: ASTERVOW_UI_ICON_URLS.equipmentWeapon, armor: ASTERVOW_UI_ICON_URLS.equipmentArmor, relic: ASTERVOW_UI_ICON_URLS.equipmentRelic };
 
-// Design reminder: equipment effects belong with their matching slot, keeping the parchment
-// plaque clear for the workshop title and the backpack list focused on item management.
-// The backpack itself is a compact icon grid (P&D-style entry points) -- one full item card
-// per 30-strong roster no longer fits a single screen, so detail (description/actions) moved
-// into a tap-to-open modal instead of always being rendered inline.
+/** Signature Weapon (英雄專武) display copy -- SIGNATURE_WEAPONS itself
+ * (run-engine/signatureWeapons.ts) is pure gameplay data (opaque effectIds),
+ * same split as TALENT_DISPLAY/BLESSING_DISPLAY in BattleScreenV2.tsx. Every
+ * hero's Signature Weapon is already unconditionally active in combat
+ * (defaultMetaAdapter.ts's signatureWeaponUnlocked is hardcoded true -- no
+ * acquisition system exists yet per that file's own comment), so this tab
+ * is a read-only reference, not an equip/upgrade surface. */
+const SIGNATURE_WEAPON_DISPLAY: Partial<Record<HeroId, { name: string; description: string }>> = {
+  knight: { name: "王國之盾", description: "阻擋觸發的護盾量提升 50%（T3 雙倍）。" },
+  deathKnight: { name: "噬魂連斬", description: "T3 專屬：擊殺阻擋目標時，額外斬擊 2 名敵人。" },
+  fighter: { name: "破陣之拳", description: "攻擊距離大幅提升，能更早接戰敵人。" },
+  assassin: { name: "千影步", description: "攻擊覆蓋範圍 +1 防區。" },
+  fireMage: { name: "熾焰核心", description: "烈焰爆發技能傷害 +20%。" },
+  frostQueen: { name: "永冬權杖", description: "凍結減速效果額外 +15%。" },
+  ranger: { name: "疾風之弓", description: "攻擊距離提升，能更早接戰敵人。" },
+  engineer: { name: "超載核心", description: "多重齊射多打 1 個目標。" },
+  priest: { name: "聖光權杖", description: "T3 專屬：過量治療轉換的護盾量 +50%。" },
+  bard: { name: "不朽詩篇", description: "T3 專屬：共鳴治療量 +10%，並額外附加護盾。" },
+};
+
+function equipmentRarityFrame(rarity: "普通" | "稀有" | "史詩"): string {
+  return rarity === "史詩" ? "rarity-epic" : rarity === "稀有" ? "rarity-rare" : "rarity-common";
+}
+
+/** EquipmentDefinition.icon is a real /equipment-icons/*.png path for every
+ * item with new art, but the 3 original starter items (morningBlade/
+ * watcherCloak/fateDiceBox) predate this art pass and still carry a single
+ * emoji character -- rendering that straight into an <img src> just shows a
+ * broken-image glyph, so branch on whether it looks like a path. */
+function EquipmentIcon({ icon, className }: { icon: string; className?: string }) {
+  if (icon.startsWith("/")) return <img className={className} src={icon} alt="" />;
+  return <span className={className} aria-hidden="true">{icon}</span>;
+}
+
+type EquipmentTab = EquipmentSlot | "signature";
+
+// Design reminder: full parchment/gold redesign (素材/裝備's icon set + UI kit
+// mockup) -- category tabs (武器/護甲/遺物/專武) replace the old single
+// all-slots backpack grid, each item renders its own real icon art instead
+// of one generic icon per slot, and 專武 surfaces the Signature Weapon
+// system (previously fully invisible in the UI despite being live in every
+// battle) as a read-only per-hero reference list.
 function EquipmentScreen() {
-  const { progress, equipItem, unequipItem, upgradeEquipment, dismantleEquipment } = useGameStore();
-  const bonuses = getEquipmentBonuses(progress.equipped, progress.equipmentLevels);
-  const [showEquipmentHelp, setShowEquipmentHelp] = useState(() => new URLSearchParams(window.location.search).get("equipmentHelp") === "1");
+  const { progress, leaderId, equipItem, upgradeEquipment, dismantleEquipment, openScreen } = useGameStore();
+  const [activeTab, setActiveTab] = useState<EquipmentTab>("weapon");
   const [detailEquipmentId, setDetailEquipmentId] = useState<EquipmentId | null>(null);
-  const slotBonuses: Record<EquipmentSlot, { label: string; value: string }> = {
-    weapon: { label: "攻擊", value: `+${Math.round(bonuses.attackMultiplier * 100)}%` },
-    armor: { label: "城堡", value: `+${bonuses.castleBonus}` },
-    relic: { label: "重骰", value: `+${bonuses.extraRerolls}` },
-  };
+  const [detailHeroId, setDetailHeroId] = useState<HeroId | null>(null);
+
   const detailItem = detailEquipmentId ? EQUIPMENT[detailEquipmentId] : undefined;
   const detailEquipped = detailItem ? progress.equipped[detailItem.slot] === detailEquipmentId : false;
   const detailLevel = detailEquipmentId ? progress.equipmentLevels[detailEquipmentId] ?? 1 : 1;
   const detailUpgradeCost = detailLevel * 8;
+  const detailSig = detailHeroId ? SIGNATURE_WEAPON_DISPLAY[detailHeroId] : undefined;
+  const leaderSig = SIGNATURE_WEAPON_DISPLAY[leaderId];
+  const tabItems = activeTab === "signature" ? [] : progress.inventory.filter((equipmentId) => EQUIPMENT[equipmentId].slot === activeTab);
 
   return <section className="lobby-module-screen accent-gold skin-equipment">
-    <ModuleHeader moduleId="equipment" />
-    <section className="equipment-loadout" aria-label="裝備配置">
-      <header className="equipment-section-heading"><span>裝備配置</span><button className={`equipment-help ${showEquipmentHelp ? "is-open" : ""}`} type="button" onClick={() => setShowEquipmentHelp((open) => !open)} aria-expanded={showEquipmentHelp} aria-controls="equipment-help-panel" aria-label="查看裝備工坊用途">?</button></header>
-      {showEquipmentHelp && <aside id="equipment-help-panel" className="equipment-help-panel" role="note"><button type="button" onClick={() => setShowEquipmentHelp(false)} aria-label="關閉說明"><X size={13} /></button><b>裝備工坊用途</b><p>在這裡裝備、升級或分解物件。每個欄位顯示它已帶來的本局加成；裝備效果會在下一局開始時套用。</p></aside>}
-      <div className="equipment-slots">{(["weapon", "armor", "relic"] as EquipmentSlot[]).map((slot) => <button key={slot} className="equipment-slot astervow-slot" onClick={() => progress.equipped[slot] && unequipItem(slot)}><img className="astervow-icon equipment-slot-icon" src={EQUIPMENT_SLOT_ICON_URLS[slot]} alt="" /><small>{SLOT_LABELS[slot]}</small><b>{progress.equipped[slot] ? EQUIPMENT[progress.equipped[slot]!].name : "尚未裝備"}</b><em className="equipment-slot-bonus">{slotBonuses[slot].label}<strong>{slotBonuses[slot].value}</strong></em><span>{progress.equipped[slot] ? "點擊卸下" : "背包內選擇"}</span></button>)}</div>
-    </section>
-    <div className="module-status"><span>背包 {progress.inventory.length} 件 · 鍛造銅礦 {progress.materials}</span><b>本局養成</b></div>
-    <div className="astervow-divider" aria-hidden="true" />
-    <section className="equipment-inventory" aria-label="背包收藏">
-      <header className="equipment-section-heading"><span>背包收藏</span><small>{progress.inventory.length} 件可管理</small></header>
-      <div className="inventory-grid">{progress.inventory.map((equipmentId) => {
-        const item = EQUIPMENT[equipmentId];
-        const equipped = progress.equipped[item.slot] === equipmentId;
-        const level = progress.equipmentLevels[equipmentId] ?? 1;
-        return <button key={equipmentId} className={`inventory-entry rarity-${item.rarity} ${equipped ? "is-equipped" : ""}`} onClick={() => setDetailEquipmentId(equipmentId)} aria-label={`${item.name}，${SLOT_LABELS[item.slot]}，${item.rarity}，${equipped ? "已裝備" : "點擊查看詳情"}`}>
-          <span className="inventory-entry-icon"><img className="astervow-icon item-row-icon" src={EQUIPMENT_SLOT_ICON_URLS[item.slot]} alt="" /></span>
-          {equipped && <i className="inventory-entry-check"><Check size={10} /></i>}
-          {level > 1 && <em className="inventory-entry-level">Lv.{level}</em>}
-          <b className="inventory-entry-name">{item.name}</b>
-        </button>;
-      })}</div>
-    </section>
-    {detailItem && detailEquipmentId && <div className="dialog-backdrop item-detail-backdrop" role="presentation" onClick={() => setDetailEquipmentId(null)}>
-      <div className="item-detail-modal astervow-card" role="dialog" aria-modal="true" aria-label={detailItem.name} onClick={(event) => event.stopPropagation()}>
-        <button className="item-detail-close" onClick={() => setDetailEquipmentId(null)} aria-label="關閉">
-          <X size={16} />
+    {/* The old ModuleHeader/BakedBannerCopy banner baked "裝備工坊" into its own
+        background artwork -- title-plate.png below already carries that same
+        title, so this screen uses a plain back button instead of stacking
+        both (was showing as a visibly duplicated title). */}
+    <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />返回大廳</button>
+    <div className="equipment-workshop">
+      <img className="equipment-workshop__title" src="/equipment-ui/title-plate.png" alt="裝備工坊" />
+      <div className="equipment-workshop__summary">
+        {(["weapon", "armor", "relic"] as EquipmentSlot[]).map((slot) => {
+          const equippedId = progress.equipped[slot];
+          const item = equippedId ? EQUIPMENT[equippedId] : undefined;
+          const level = equippedId ? progress.equipmentLevels[equippedId] ?? 1 : 1;
+          return <button key={slot} className="equipment-workshop__slot" onClick={() => setActiveTab(slot)} aria-label={`${SLOT_LABELS[slot]}，${item ? item.name : "尚未裝備"}，查看${SLOT_LABELS[slot]}分類`}>
+            <span className={`equipment-workshop__slot-icon ${item ? "" : "is-empty"}`}>{item ? <EquipmentIcon icon={item.icon} /> : <img src="/equipment-ui/rarity-common.png" alt="" />}</span>
+            <small>{SLOT_LABELS[slot]}</small>
+            <b>{item ? item.name : "尚未裝備"}</b>
+            {item && <em>Lv.{level}</em>}
+          </button>;
+        })}
+        <button className="equipment-workshop__slot" onClick={() => setActiveTab("signature")} aria-label="專武，查看英雄專屬武器一覽">
+          <span className="equipment-workshop__slot-icon">{leaderSig ? <img src={`/equipment-icons/sigweapon-${leaderId}.png`} alt="" /> : null}</span>
+          <small>專武</small>
+          <b>{leaderSig ? leaderSig.name : "—"}</b>
+          <em>隊長已啟用</em>
         </button>
-        <i className="item-detail-icon"><img className="astervow-icon item-row-icon" src={EQUIPMENT_SLOT_ICON_URLS[detailItem.slot]} alt="" /></i>
-        <b className="item-detail-name">{detailItem.name}</b>
-        <small className="item-detail-meta">{SLOT_LABELS[detailItem.slot]} · Lv.{detailLevel}/5<em className="astervow-badge">{detailItem.rarity}</em></small>
-        <p className="item-detail-desc">{detailItem.description}</p>
-        <div className="equipment-actions">
-          <button className="astervow-btn is-cream" onClick={() => equipItem(detailEquipmentId)}>{detailEquipped ? <><Check size={14} />已裝備</> : "裝備"}</button>
-          <button className="astervow-btn is-green" disabled={detailLevel >= 5 || progress.materials < detailUpgradeCost} onClick={() => upgradeEquipment(detailEquipmentId)}><Hammer size={12} />升級 {detailLevel >= 5 ? "MAX" : detailUpgradeCost}</button>
-          <button className="dismantle-button astervow-btn is-red" onClick={() => { dismantleEquipment(detailEquipmentId); setDetailEquipmentId(null); }}><Trash2 size={12} />分解</button>
+      </div>
+
+      <div className="equipment-workshop__tabs">
+        {(["weapon", "armor", "relic", "signature"] as EquipmentTab[]).map((tab) => <button key={tab} className={`equipment-workshop__tab ${activeTab === tab ? "is-active" : ""}`} onClick={() => setActiveTab(tab)} aria-pressed={activeTab === tab} aria-label={tab === "signature" ? "專武分類" : `${SLOT_LABELS[tab]}分類`}>
+          <img src={`/equipment-ui/tab-${tab === "signature" ? "signature" : tab}${activeTab === tab ? "-selected" : ""}.png`} alt="" />
+        </button>)}
+      </div>
+
+      <div className="equipment-workshop__panel">
+        {activeTab === "signature"
+          ? <div className="equipment-workshop__sig-list">{SELECTABLE_HERO_IDS.filter((heroId) => SIGNATURE_WEAPON_DISPLAY[heroId]).map((heroId) => {
+              const sig = SIGNATURE_WEAPON_DISPLAY[heroId]!;
+              return <button key={heroId} className="equipment-workshop__sig-row" onClick={() => setDetailHeroId(heroId)} aria-label={`${HEROES[heroId].name}的專武：${sig.name}`}>
+                <img className="sig-icon" src={`/equipment-icons/sigweapon-${heroId}.png`} alt="" />
+                <div><span className="sig-hero">{HEROES[heroId].name}</span><b>{sig.name}</b><small>{sig.description}</small></div>
+                <span className="equipment-workshop__sig-badge"><img src="/equipment-ui/badge-equipped.png" alt="" />已啟用</span>
+              </button>;
+            })}</div>
+          : tabItems.length === 0
+            ? <p className="equipment-workshop__empty">背包裡還沒有{SLOT_LABELS[activeTab]}類裝備。</p>
+            : <div className="equipment-workshop__grid">{tabItems.map((equipmentId) => {
+                const item = EQUIPMENT[equipmentId];
+                const equipped = progress.equipped[item.slot] === equipmentId;
+                const level = progress.equipmentLevels[equipmentId] ?? 1;
+                return <button key={equipmentId} className="equipment-workshop__item" onClick={() => setDetailEquipmentId(equipmentId)} aria-label={`${item.name}，${SLOT_LABELS[item.slot]}，${item.rarity}，${equipped ? "已裝備" : "點擊查看詳情"}`}>
+                  <img className="equipment-workshop__item-frame" src={`/equipment-ui/${equipped ? "rarity-selected" : equipmentRarityFrame(item.rarity)}.png`} alt="" />
+                  <EquipmentIcon className="equipment-workshop__item-icon" icon={item.icon} />
+                  {equipped && <img className="equipment-workshop__item-check" src="/equipment-ui/badge-equipped.png" alt="" />}
+                  {level > 1 && <em className="equipment-workshop__item-level">Lv.{level}</em>}
+                </button>;
+              })}</div>}
+      </div>
+    </div>
+
+    {detailItem && detailEquipmentId && <div className="equipment-workshop-backdrop" role="presentation" onClick={() => setDetailEquipmentId(null)}>
+      <div className="equipment-workshop-modal" role="dialog" aria-modal="true" aria-label={detailItem.name} onClick={(event) => event.stopPropagation()}>
+        <button className="equipment-workshop-modal__close" onClick={() => setDetailEquipmentId(null)} aria-label="關閉"><X size={16} /></button>
+        <div className="equipment-workshop-modal__frame">
+          <img className="frame-bg" src={`/equipment-ui/${equipmentRarityFrame(detailItem.rarity)}.png`} alt="" />
+          <EquipmentIcon className="item-icon" icon={detailItem.icon} />
         </div>
+        <b className="equipment-workshop-modal__name">{detailItem.name}</b>
+        <small className="equipment-workshop-modal__meta">{SLOT_LABELS[detailItem.slot]} · Lv.{detailLevel}/5 · {detailItem.rarity}</small>
+        <p className="equipment-workshop-modal__desc">{detailItem.description}</p>
+        <div className="equipment-workshop-modal__actions">
+          <div className="equipment-workshop-modal__action">
+            <button disabled={detailEquipped} onClick={() => equipItem(detailEquipmentId)} aria-label={detailEquipped ? "已裝備" : "裝備"}>
+              <img className="btn-art" src="/equipment-ui/btn-equip.png" alt="" />
+              {detailEquipped && <img className="equipment-workshop-modal__action-badge" src="/equipment-ui/badge-equipped.png" alt="" />}
+            </button>
+          </div>
+          <div className="equipment-workshop-modal__action">
+            <button disabled={detailLevel >= 5 || progress.materials < detailUpgradeCost} onClick={() => upgradeEquipment(detailEquipmentId)} aria-label={`升級，需要鍛造銅礦 ${detailUpgradeCost}`}>
+              <img className="btn-art" src="/equipment-ui/btn-upgrade.png" alt="" />
+            </button>
+            <small className="equipment-workshop-modal__action-caption">{detailLevel >= 5 ? "已滿級" : `銅礦 ${detailUpgradeCost}`}</small>
+          </div>
+          <div className="equipment-workshop-modal__action">
+            <button onClick={() => { dismantleEquipment(detailEquipmentId); setDetailEquipmentId(null); }} aria-label="分解">
+              <img className="btn-art" src="/equipment-ui/btn-dismantle.png" alt="" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>}
+
+    {detailSig && detailHeroId && <div className="equipment-workshop-backdrop" role="presentation" onClick={() => setDetailHeroId(null)}>
+      <div className="equipment-workshop-modal" role="dialog" aria-modal="true" aria-label={detailSig.name} onClick={(event) => event.stopPropagation()}>
+        <button className="equipment-workshop-modal__close" onClick={() => setDetailHeroId(null)} aria-label="關閉"><X size={16} /></button>
+        <div className="equipment-workshop-modal__frame">
+          <img className="frame-bg" src="/equipment-ui/rarity-epic.png" alt="" />
+          <img className="item-icon" src={`/equipment-icons/sigweapon-${detailHeroId}.png`} alt="" />
+        </div>
+        <b className="equipment-workshop-modal__name">{detailSig.name}</b>
+        <small className="equipment-workshop-modal__meta">{HEROES[detailHeroId].name} 專屬武器</small>
+        <p className="equipment-workshop-modal__desc">{detailSig.description}</p>
+        <p className="equipment-workshop-modal__status"><Check size={12} />已為此英雄啟用</p>
       </div>
     </div>}
   </section>;
