@@ -151,8 +151,33 @@
 .bsv2-enemy-marker i { display: block; width: 15px; height: 15px; margin: 0 auto; border-radius: 50%; background: var(--enemy-color, #8098c0); border: 1.5px solid rgba(0,0,0,.5); }
 .bsv2-enemy-marker.is-blocked i { box-shadow: 0 0 0 2px var(--bsv2-gold), 0 0 6px rgba(227,179,76,.7); }
 .bsv2-enemy-marker.is-boss i { width: 21px; height: 21px; box-shadow: 0 0 0 2px var(--bsv2-danger), 0 0 8px rgba(226,100,90,.7); }
-.bsv2-enemy-marker b { display: block; width: 18px; height: 3px; border-radius: 2px; background: rgba(0,0,0,.55); overflow: hidden; }
-.bsv2-enemy-marker b span { display: block; height: 100%; background: var(--bsv2-danger); }
+.bsv2-enemy-marker b { display: block; width: 24px; height: 5px; border: 1px solid rgba(0,0,0,.6); border-radius: 3px; background: rgba(20,10,8,.75); box-shadow: 0 0 0 1px rgba(255,255,255,.22); overflow: hidden; }
+.bsv2-enemy-marker.is-boss b { width: 30px; height: 6px; }
+.bsv2-enemy-marker b span { display: block; height: 100%; background: linear-gradient(180deg, #ff8a72, var(--bsv2-danger)); transition: width 160ms linear; }
+.bsv2-enemy-marker.is-hit i { animation: bsv2EnemyHitFlash 380ms var(--ease-out, cubic-bezier(.23, 1, .32, 1)) both; }
+.bsv2-enemy-damage-float {
+  position: absolute;
+  z-index: 5;
+  top: -4px;
+  left: 50%;
+  color: #fffdf5;
+  font-size: clamp(7px, 1.8vw, 10px);
+  font-style: normal;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -.04em;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #6c1410, 0 0 3px rgba(76, 12, 8, .9);
+  animation: bsv2DamageFloat 620ms var(--ease-out, cubic-bezier(.23, 1, .32, 1)) both;
+}
+@keyframes bsv2EnemyHitFlash {
+  0% { filter: brightness(1) saturate(1); }
+  28% { filter: brightness(2.4) saturate(.3); }
+  100% { filter: brightness(1) saturate(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bsv2-enemy-marker.is-hit i, .bsv2-enemy-damage-float { animation: none; }
+}
 
 /* Board */
 .bsv2-board-section { display: flex; flex-direction: column; gap: 8px; }

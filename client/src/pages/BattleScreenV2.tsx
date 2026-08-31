@@ -171,6 +171,36 @@ function RouteStrip({ waveDefinition, waveRuntime, wave, chapterId, boardOverlay
   const plannedCount = waveDefinition?.batches.reduce((sum, batch) => sum + batch.entries.length, 0) ?? 0;
   const enemyCount = waveRuntime ? liveEnemies.length : plannedCount;
   const isBossWave = !!waveDefinition?.bossEncounter;
+
+  // Same presentation-only "diff consecutive authoritative snapshots" pulse the
+  // Hero board cells already use (see Bsv2Board) -- gives an enemy a floating
+  // "-N" the instant a Hero's attack lands, mirroring the damage number Heroes
+  // already show when THEY take a hit.
+  const [enemyHitCues, setEnemyHitCues] = useState<Record<string, number>>({});
+  const previousEnemyHpRef = useRef<Record<string, number>>({});
+  const enemyHitTimerRef = useRef<number[]>([]);
+  useEffect(() => {
+    const nextHp: Record<string, number> = {};
+    const incoming: Array<{ instanceId: string; amount: number }> = [];
+    liveEnemies.forEach((enemy) => {
+      const previousHp = previousEnemyHpRef.current[enemy.instanceId];
+      const damage = previousHp !== undefined ? previousHp - enemy.hp : 0;
+      if (damage > 0.01) incoming.push({ instanceId: enemy.instanceId, amount: damage });
+      nextHp[enemy.instanceId] = enemy.hp;
+    });
+    previousEnemyHpRef.current = nextHp;
+    incoming.forEach(({ instanceId, amount }) => {
+      setEnemyHitCues((current) => ({ ...current, [instanceId]: amount }));
+      const timer = window.setTimeout(() => setEnemyHitCues((current) => {
+        const next = { ...current };
+        delete next[instanceId];
+        return next;
+      }), 620);
+      enemyHitTimerRef.current.push(timer);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waveRuntime]);
+  useEffect(() => () => enemyHitTimerRef.current.forEach((timer) => window.clearTimeout(timer)), []);
   const nextWaveDefinition = WAVES_BY_CHAPTER[chapterId][wave];
   const summarizeEnemies = (definition: WaveDefinition | undefined) => {
     const counts = new Map<string, number>();
@@ -203,8 +233,11 @@ function RouteStrip({ waveDefinition, waveRuntime, wave, chapterId, boardOverlay
           const minZone = Math.min(...enemy.occupiedRoutes);
           const span = enemy.occupiedRoutes.length;
           const hpRatio = Math.max(0, enemy.hp / enemy.maxHp);
-          return <div key={enemy.instanceId} className={`bsv2-enemy-marker ${enemy.blockedBy ? "is-blocked" : ""} ${definition?.tags.includes("boss") ? "is-boss" : ""}`} style={{ left: `${((minZone - 1) / 4) * 100}%`, width: `${(span / 4) * 100}%`, top: `${Math.min(94, enemy.pathProgress * 100)}%`, "--enemy-color": meta?.color ?? "#8098c0" } as React.CSSProperties}>
-            <i /><b><span style={{ width: `${hpRatio * 100}%` }} /></b>
+          const hitAmount = enemyHitCues[enemy.instanceId];
+          return <div key={enemy.instanceId} className={`bsv2-enemy-marker ${enemy.blockedBy ? "is-blocked" : ""} ${definition?.tags.includes("boss") ? "is-boss" : ""} ${hitAmount ? "is-hit" : ""}`} style={{ left: `${((minZone - 1) / 4) * 100}%`, width: `${(span / 4) * 100}%`, top: `${Math.min(94, enemy.pathProgress * 100)}%`, "--enemy-color": meta?.color ?? "#8098c0" } as React.CSSProperties} aria-label={`${meta?.name ?? enemy.defId}，生命 ${Math.ceil(enemy.hp)}/${enemy.maxHp}`}>
+            <i />
+            <b><span style={{ width: `${hpRatio * 100}%` }} /></b>
+            {hitAmount ? <strong className="bsv2-enemy-damage-float" aria-hidden="true">-{Math.max(1, Math.round(hitAmount))}</strong> : null}
           </div>;
         })}
       </div>
@@ -420,7 +453,7 @@ function Bsv2Board({ board, interactive, pendingJackpotTierUp, embedded = false,
     </div>
     {mode === "merge" && <div className="bsv2-mode-hint"><span>點選相同英雄、相同 T 階：{selectedCells.length}/{maxMergeCount} 名{run.pendingFreeMerge ? "（葫蘆免費合成，選滿 2 名即可合成，或繼續選第 3 名改為一般合成）" : ""}</span><button className="bsv2-confirm-btn" disabled={!canConfirmMerge} onClick={confirmMerge}>{mergeConfirmLabel}</button></div>}
     {mergeNotice && <p className="bsv2-merge-notice" role="status">{mergeNotice}</p>}
-    {mode === "reposition" && <p className="bsv2-mode-hint">{repositionFrom ? "點選目標格或另一名英雄，立即換位並扣除 1 次。" : "點選一名英雄，再點選目標格即可換位。"}</p>}
+    {mode === "reposition" && <p className="bsv2-mode-hint">{repositionFrom ? "點選空格移動，或點選另一名英雄互換位置，立即扣除 1 次。" : "點選一名英雄，再點選空格或另一名英雄即可移動／互換。"}</p>}
     {mode === "recycle" && <p className="bsv2-mode-hint">點選棋盤英雄立即回收，換取命運能量。</p>}
   </div> : null;
 
