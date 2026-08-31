@@ -14,6 +14,7 @@ import "./teamEditFormation.css";
 import "./lobbyTeamManager.css";
 import "./chapterMap.css";
 import "./asterVowUiSkin.css";
+import "./compactEntries.css";
 import "./profileScreen.css";
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Info, Lock, Menu, Music2, PackageOpen, Pencil, Play, ScrollText, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, Trash2, UserRound, Volume2, X, Zap } from "lucide-react";
 import BattleScreenV2 from "./BattleScreenV2";
@@ -23,7 +24,7 @@ import { HERO_FRAME_SHEETS, HeroFrameSprite, type HeroAnimationAction } from "@/
 import { getHeroProgress, heroXpRequirement } from "@/game/heroProgress";
 import { LEADER_CARD_PROFILES } from "@/game/leaderCardProfiles";
 import { activeChapterId, CHAPTER_CLEAR_REWARDS, useGameStore } from "@/game/store";
-import type { ChapterId, DailyQuestId, EquipmentId, EquipmentSlot, HeroId, ShopOfferId } from "@/game/types";
+import type { ChapterId, DailyQuestId, DungeonId, EquipmentId, EquipmentSlot, HeroId, ShopOfferId } from "@/game/types";
 
 const LOGO_URL = "/manus-storage/merge-dice-heroes-logo_260faa76.png";
 const BACKDROP_URL = "/manus-storage/merge-dice-heroes-battlefield_1a6df969.png";
@@ -561,15 +562,23 @@ const EQUIPMENT_SLOT_ICON_URLS: Record<EquipmentSlot, string> = { weapon: ASTERV
 
 // Design reminder: equipment effects belong with their matching slot, keeping the parchment
 // plaque clear for the workshop title and the backpack list focused on item management.
+// The backpack itself is a compact icon grid (P&D-style entry points) -- one full item card
+// per 30-strong roster no longer fits a single screen, so detail (description/actions) moved
+// into a tap-to-open modal instead of always being rendered inline.
 function EquipmentScreen() {
   const { progress, equipItem, unequipItem, upgradeEquipment, dismantleEquipment } = useGameStore();
   const bonuses = getEquipmentBonuses(progress.equipped, progress.equipmentLevels);
   const [showEquipmentHelp, setShowEquipmentHelp] = useState(() => new URLSearchParams(window.location.search).get("equipmentHelp") === "1");
+  const [detailEquipmentId, setDetailEquipmentId] = useState<EquipmentId | null>(null);
   const slotBonuses: Record<EquipmentSlot, { label: string; value: string }> = {
     weapon: { label: "攻擊", value: `+${Math.round(bonuses.attackMultiplier * 100)}%` },
     armor: { label: "城堡", value: `+${bonuses.castleBonus}` },
     relic: { label: "重骰", value: `+${bonuses.extraRerolls}` },
   };
+  const detailItem = detailEquipmentId ? EQUIPMENT[detailEquipmentId] : undefined;
+  const detailEquipped = detailItem ? progress.equipped[detailItem.slot] === detailEquipmentId : false;
+  const detailLevel = detailEquipmentId ? progress.equipmentLevels[detailEquipmentId] ?? 1 : 1;
+  const detailUpgradeCost = detailLevel * 8;
 
   return <section className="lobby-module-screen accent-gold skin-equipment">
     <ModuleHeader moduleId="equipment" />
@@ -580,7 +589,36 @@ function EquipmentScreen() {
     </section>
     <div className="module-status"><span>背包 {progress.inventory.length} 件 · 鍛造銅礦 {progress.materials}</span><b>本局養成</b></div>
     <div className="astervow-divider" aria-hidden="true" />
-    <section className="equipment-inventory" aria-label="背包收藏"><header className="equipment-section-heading"><span>背包收藏</span><small>{progress.inventory.length} 件可管理</small></header><div className="inventory-list">{progress.inventory.map((equipmentId) => { const item = EQUIPMENT[equipmentId]; const equipped = progress.equipped[item.slot] === equipmentId; const level = progress.equipmentLevels[equipmentId] ?? 1; const upgradeCost = level * 8; return <article key={equipmentId} className={`astervow-card ${equipped ? "is-equipped" : ""}`}><i><img className="astervow-icon item-row-icon" src={EQUIPMENT_SLOT_ICON_URLS[item.slot]} alt="" /></i><div><b>{item.name}</b><p>{item.description}</p><small>{SLOT_LABELS[item.slot]} · Lv.{level}/5<em className="astervow-badge">{item.rarity}</em></small></div><div className="equipment-actions"><button className="astervow-btn is-cream" onClick={() => equipItem(equipmentId)}>{equipped ? <><Check size={14} />已裝備</> : "裝備"}</button><button className="astervow-btn is-green" disabled={level >= 5 || progress.materials < upgradeCost} onClick={() => upgradeEquipment(equipmentId)}><Hammer size={12} />升級 {level >= 5 ? "MAX" : upgradeCost}</button><button className="dismantle-button astervow-btn is-red" onClick={() => dismantleEquipment(equipmentId)}><Trash2 size={12} />分解</button></div></article>; })}</div></section>
+    <section className="equipment-inventory" aria-label="背包收藏">
+      <header className="equipment-section-heading"><span>背包收藏</span><small>{progress.inventory.length} 件可管理</small></header>
+      <div className="inventory-grid">{progress.inventory.map((equipmentId) => {
+        const item = EQUIPMENT[equipmentId];
+        const equipped = progress.equipped[item.slot] === equipmentId;
+        const level = progress.equipmentLevels[equipmentId] ?? 1;
+        return <button key={equipmentId} className={`inventory-entry rarity-${item.rarity} ${equipped ? "is-equipped" : ""}`} onClick={() => setDetailEquipmentId(equipmentId)} aria-label={`${item.name}，${SLOT_LABELS[item.slot]}，${item.rarity}，${equipped ? "已裝備" : "點擊查看詳情"}`}>
+          <span className="inventory-entry-icon"><img className="astervow-icon item-row-icon" src={EQUIPMENT_SLOT_ICON_URLS[item.slot]} alt="" /></span>
+          {equipped && <i className="inventory-entry-check"><Check size={10} /></i>}
+          {level > 1 && <em className="inventory-entry-level">Lv.{level}</em>}
+          <b className="inventory-entry-name">{item.name}</b>
+        </button>;
+      })}</div>
+    </section>
+    {detailItem && detailEquipmentId && <div className="dialog-backdrop item-detail-backdrop" role="presentation" onClick={() => setDetailEquipmentId(null)}>
+      <div className="item-detail-modal astervow-card" role="dialog" aria-modal="true" aria-label={detailItem.name} onClick={(event) => event.stopPropagation()}>
+        <button className="item-detail-close" onClick={() => setDetailEquipmentId(null)} aria-label="關閉">
+          <X size={16} />
+        </button>
+        <i className="item-detail-icon"><img className="astervow-icon item-row-icon" src={EQUIPMENT_SLOT_ICON_URLS[detailItem.slot]} alt="" /></i>
+        <b className="item-detail-name">{detailItem.name}</b>
+        <small className="item-detail-meta">{SLOT_LABELS[detailItem.slot]} · Lv.{detailLevel}/5<em className="astervow-badge">{detailItem.rarity}</em></small>
+        <p className="item-detail-desc">{detailItem.description}</p>
+        <div className="equipment-actions">
+          <button className="astervow-btn is-cream" onClick={() => equipItem(detailEquipmentId)}>{detailEquipped ? <><Check size={14} />已裝備</> : "裝備"}</button>
+          <button className="astervow-btn is-green" disabled={detailLevel >= 5 || progress.materials < detailUpgradeCost} onClick={() => upgradeEquipment(detailEquipmentId)}><Hammer size={12} />升級 {detailLevel >= 5 ? "MAX" : detailUpgradeCost}</button>
+          <button className="dismantle-button astervow-btn is-red" onClick={() => { dismantleEquipment(detailEquipmentId); setDetailEquipmentId(null); }}><Trash2 size={12} />分解</button>
+        </div>
+      </div>
+    </div>}
   </section>;
 }
 
@@ -590,17 +628,57 @@ function DailyScreen() {
   return <section className={`lobby-module-screen accent-coral ${celebrating ? "is-reward-celebrating" : ""}`}><div className="daily-celebration-flare" aria-hidden="true" /><ModuleHeader moduleId="daily" /><div className="module-status"><span>今日任務 {progress.daily.claimed.length} / {DAILY_QUESTS.length} 已領取</span><b>刷新於 00:00</b></div><div className="quest-list">{DAILY_QUESTS.map((quest) => { const value = values[quest.id]; const ready = value >= quest.target && !progress.daily.claimed.includes(quest.id); const claimed = progress.daily.claimed.includes(quest.id); return <article key={quest.id} className={claimed ? "is-claimed" : ready ? "is-ready" : ""}><div className="quest-top"><div><b>{quest.title}</b><p>{quest.description}</p></div><em>{value} / {quest.target}</em></div><div className="quest-progress"><i style={{ width: `${Math.min(100, value / quest.target * 100)}%` }} /></div><footer><span><Gift size={13} />命運碎晶 ×{quest.rewardCrystals}</span><button disabled={!ready} onClick={() => claim(quest.id)}>{claimed ? <><Check size={13} />已領取</> : ready ? "領取獎勵" : "進行中"}</button></footer></article>; })}</div><button className="secondary-cta wide-cta" onClick={() => openScreen("title")}><Sparkles size={17} />返回冒險大廳</button></section>;
 }
 
-// Design reminder: keep the built-in gate plaque isolated for its title; present stamina
-// preparation first, then trial cards, so players can scan cost, unlock path, and rewards in order.
+// Design reminder: keep the built-in gate plaque isolated for its title; the trial catalogue
+// is a compact one-line-per-gate list (P&D-style entry points) -- description, stats, and the
+// drop list moved into a tap-to-open detail modal so all 5 gates fit one screen without scroll.
 function DungeonScreen() {
   const { progress, selectDungeon } = useGameStore();
   const [showDungeonHelp, setShowDungeonHelp] = useState(() => new URLSearchParams(window.location.search).get("dungeonHelp") === "1");
-  const rewardPreviewIcon = (equipmentId?: EquipmentId) => equipmentId === "watcherCloak" ? ASTERVOW_UI_ICON_URLS.equipmentArmor : equipmentId === "fateDiceBox" ? ASTERVOW_UI_ICON_URLS.equipmentRelic : ASTERVOW_UI_ICON_URLS.dungeonReward;
+  const [detailDungeonId, setDetailDungeonId] = useState<DungeonId | null>(null);
+  const detailIndex = DUNGEONS.findIndex((candidate) => candidate.id === detailDungeonId);
+  const detailDungeon = detailIndex >= 0 ? DUNGEONS[detailIndex] : undefined;
+  const detailPrevious = detailIndex > 0 ? DUNGEONS[detailIndex - 1] : undefined;
+  const detailUnlocked = detailDungeon ? detailDungeon.unlocked || (Boolean(detailPrevious) && (progress.dungeonClears[detailPrevious!.id] ?? 0) > 0) : false;
+  const detailEnoughEnergy = detailDungeon ? progress.stamina >= detailDungeon.energyCost : false;
+  const detailUnlockCondition = detailIndex === 0 ? "首道門扉已開放" : detailPrevious ? `完成「${detailPrevious.title}」1 次後解鎖` : "";
+  const detailReward = detailDungeon?.reward.equipmentId ? EQUIPMENT[detailDungeon.reward.equipmentId] : undefined;
   return <section className="lobby-module-screen accent-violet skin-dungeon">
     <ModuleHeader moduleId="dungeon" />
     <section className="dungeon-prep" aria-label="挑戰準備"><header className="dungeon-section-heading"><span>挑戰準備</span><button className={`dungeon-help ${showDungeonHelp ? "is-open" : ""}`} type="button" onClick={() => setShowDungeonHelp((open) => !open)} aria-expanded={showDungeonHelp} aria-controls="dungeon-help-panel" aria-label="查看試煉之門用途">?</button></header><div className="dungeon-energy"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonStamina} alt="" /><b>體力 {progress.stamina} / 20</b><span>每次挑戰消耗對應體力</span></div></section>
     <div className="astervow-divider" aria-hidden="true" />
-    <section className="dungeon-trials" aria-label="試煉關卡"><header className="dungeon-section-heading"><span>試煉關卡</span><small>{DUNGEONS.length} 道門扉</small></header><div className="dungeon-list">{DUNGEONS.map((dungeon, index) => { const previousDungeon = DUNGEONS[index - 1]; const unlocked = dungeon.unlocked || (Boolean(previousDungeon) && (progress.dungeonClears[previousDungeon.id] ?? 0) > 0); const enoughEnergy = progress.stamina >= dungeon.energyCost; const clears = progress.dungeonClears[dungeon.id] ?? 0; const unlockCondition = index === 0 ? "首道門扉已開放" : `完成「${previousDungeon.title}」1 次後解鎖`; return <article key={dungeon.id} className={`astervow-card ${!unlocked ? "is-locked" : ""}`}><div className="dungeon-stage-number"><img className="astervow-icon dungeon-stage-badge" src={ASTERVOW_UI_ICON_URLS.dungeonStageBadge} alt="" /><span>{String(index + 1).padStart(2, "0")}</span></div><div><b>{dungeon.title}</b><p>{dungeon.description}</p><small>推薦戰力 {dungeon.recommendedPower} · 體力 {dungeon.energyCost}</small><strong className="dungeon-rule"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonRule} alt="" />{dungeon.enemyRule.label}</strong>{!unlocked && <p className="dungeon-unlock-note"><Lock size={11} />{unlockCondition}</p>}<div className="dungeon-drop-preview"><img className="astervow-icon" src={rewardPreviewIcon(dungeon.reward.equipmentId)} alt="" /><span><small>可能掉落</small><b>{dungeon.reward.label}</b></span><em>{clears ? `已通關 ${clears} 次` : "首通獎勵"}</em></div></div><footer><span><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonReward} alt="" />碎晶 ✦{dungeon.reward.crystals}</span><button className="astervow-btn is-purple" disabled={!unlocked || !enoughEnergy} onClick={() => selectDungeon(dungeon.id)}>{!unlocked ? <><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonLocked} alt="" />未解鎖</> : !enoughEnergy ? "體力不足" : <><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonChallenge} alt="" />挑戰</>}</button></footer></article>; })}</div></section>
+    <section className="dungeon-trials" aria-label="試煉關卡">
+      <header className="dungeon-section-heading"><span>試煉關卡</span><small>{DUNGEONS.length} 道門扉</small></header>
+      <div className="dungeon-entry-list">{DUNGEONS.map((dungeon, index) => {
+        const previousDungeon = DUNGEONS[index - 1];
+        const unlocked = dungeon.unlocked || (Boolean(previousDungeon) && (progress.dungeonClears[previousDungeon.id] ?? 0) > 0);
+        const clears = progress.dungeonClears[dungeon.id] ?? 0;
+        return <button key={dungeon.id} className={`dungeon-entry ${!unlocked ? "is-locked" : ""}`} onClick={() => setDetailDungeonId(dungeon.id)} aria-label={`${dungeon.title}，${unlocked ? "查看詳情" : "尚未解鎖"}`}>
+          <span className="dungeon-entry-badge"><img className="astervow-icon dungeon-stage-badge" src={ASTERVOW_UI_ICON_URLS.dungeonStageBadge} alt="" /><em>{String(index + 1).padStart(2, "0")}</em></span>
+          <span className="dungeon-entry-info"><b>{dungeon.title}</b><small>推薦戰力 {dungeon.recommendedPower} · 體力 {dungeon.energyCost}</small></span>
+          {!unlocked ? <Lock size={14} /> : clears > 0 ? <em className="dungeon-entry-clears">×{clears}</em> : null}
+          <ChevronRight size={16} />
+        </button>;
+      })}</div>
+    </section>
+    {detailDungeon && <div className="dialog-backdrop item-detail-backdrop" role="presentation" onClick={() => setDetailDungeonId(null)}>
+      <div className="item-detail-modal dungeon-detail-modal astervow-card" role="dialog" aria-modal="true" aria-label={detailDungeon.title} onClick={(event) => event.stopPropagation()}>
+        <button className="item-detail-close" onClick={() => setDetailDungeonId(null)} aria-label="關閉">
+          <X size={16} />
+        </button>
+        <b className="item-detail-name">{detailDungeon.title}</b>
+        <p className="item-detail-desc">{detailDungeon.description}</p>
+        <small className="item-detail-meta">推薦戰力 {detailDungeon.recommendedPower} · 體力 {detailDungeon.energyCost}</small>
+        <strong className="dungeon-rule"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonRule} alt="" />{detailDungeon.enemyRule.label}</strong>
+        {!detailUnlocked && <p className="dungeon-unlock-note"><Lock size={11} />{detailUnlockCondition}</p>}
+        <div className="trial-result-rewards">
+          <header><Gift size={13} />掉落清單<em>碎晶 ✦{detailDungeon.reward.crystals}</em></header>
+          {detailReward && <div className="trial-result-reward-row"><img className="astervow-icon item-row-icon" src={EQUIPMENT_SLOT_ICON_URLS[detailReward.slot]} alt="" /><span><b>{detailReward.name}</b><small>{SLOT_LABELS[detailReward.slot]} · {detailReward.rarity}</small></span><small>{detailReward.description}</small></div>}
+        </div>
+        <button className="astervow-btn is-purple wide-cta" disabled={!detailUnlocked || !detailEnoughEnergy} onClick={() => { selectDungeon(detailDungeon.id); setDetailDungeonId(null); }}>
+          {!detailUnlocked ? <><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonLocked} alt="" />未解鎖</> : !detailEnoughEnergy ? "體力不足" : <><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.dungeonChallenge} alt="" />挑戰</>}
+        </button>
+      </div>
+    </div>}
     {showDungeonHelp && <div className="dungeon-help-overlay" role="presentation" onClick={() => setShowDungeonHelp(false)}><aside id="dungeon-help-panel" className="dungeon-help-panel" role="dialog" aria-modal="true" aria-label="試煉之門用途" onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => setShowDungeonHelp(false)} aria-label="關閉說明"><X size={13} /></button><b>試煉之門用途</b><p>在這裡挑戰帶有特殊規則的關卡，消耗對應體力並取得英雄與裝備養成素材。完成前一道試煉即可解鎖下一道門扉。</p></aside></div>}
   </section>;
 }
