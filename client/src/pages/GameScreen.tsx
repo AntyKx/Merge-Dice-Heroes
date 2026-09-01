@@ -17,7 +17,7 @@ import "./asterVowUiSkin.css";
 import "./compactEntries.css";
 import "./profileScreen.css";
 import "./equipmentWorkshop.css";
-import { AlertTriangle, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Info, Lock, Menu, Music2, PackageOpen, Pencil, Play, ScrollText, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Swords, Target, UserRound, Volume2, X, Zap } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, ChevronRight, Coins, Cross, Flame, Gift, Hand, Hammer, Info, Lock, Menu, Music2, PackageOpen, Pencil, Play, ScrollText, Search, Settings2, Shield, ShieldCheck, Skull, Snowflake, Sparkles, Star, Swords, Target, UserRound, Volume2, X, Zap } from "lucide-react";
 import BattleScreenV2 from "./BattleScreenV2";
 import { DAILY_QUESTS, DUNGEONS, EQUIPMENT, HEROES, SELECTABLE_HERO_IDS, SHOP_OFFERS } from "@/game/config";
 import { HERO_BOARD_LAYOUT } from "@/game/heroBoardLayout";
@@ -585,6 +585,22 @@ function equipmentRarityFrame(rarity: "普通" | "稀有" | "史詩"): string {
   return rarity === "史詩" ? "rarity-epic" : rarity === "稀有" ? "rarity-rare" : "rarity-common";
 }
 
+function equipmentRarityStars(rarity: "普通" | "稀有" | "史詩"): number {
+  return rarity === "史詩" ? 5 : rarity === "稀有" ? 4 : 3;
+}
+
+function EquipmentStars({ rarity, size = 8 }: { rarity: "普通" | "稀有" | "史詩"; size?: number }) {
+  const filled = equipmentRarityStars(rarity);
+  return <span className="equipment-workshop__stars" aria-hidden="true">
+    {Array.from({ length: 5 }, (_, index) => <Star key={index} size={size} fill={index < filled ? "currentColor" : "none"} className={index < filled ? "is-filled" : "is-empty"} />)}
+  </span>;
+}
+
+type EquipmentSortMode = "default" | "level" | "rarity";
+const EQUIPMENT_SORT_LABELS: Record<EquipmentSortMode, string> = { default: "預設順序", level: "等級高→低", rarity: "品質高→低" };
+const EQUIPMENT_QUALITY_FILTERS: Array<"全部" | "普通" | "稀有" | "史詩"> = ["全部", "普通", "稀有", "史詩"];
+const EQUIPMENT_RARITY_RANK: Record<"普通" | "稀有" | "史詩", number> = { "普通": 0, "稀有": 1, "史詩": 2 };
+
 function EquipmentIcon({ icon, className }: { icon: string; className?: string }) {
   return <img className={className} src={icon} alt="" />;
 }
@@ -602,6 +618,14 @@ function EquipmentScreen() {
   const [activeTab, setActiveTab] = useState<EquipmentTab>("weapon");
   const [detailEquipmentId, setDetailEquipmentId] = useState<EquipmentId | null>(null);
   const [detailHeroId, setDetailHeroId] = useState<HeroId | null>(null);
+  const [sortMode, setSortMode] = useState<EquipmentSortMode>("default");
+  const [qualityFilter, setQualityFilter] = useState<"全部" | "普通" | "稀有" | "史詩">("全部");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showEquipmentHelp, setShowEquipmentHelp] = useState(false);
+
+  const selectTab = (tab: EquipmentTab) => { setActiveTab(tab); setQualityFilter("全部"); setSearchQuery(""); };
+  const cycleSortMode = () => setSortMode((mode) => mode === "default" ? "level" : mode === "level" ? "rarity" : "default");
+  const cycleQualityFilter = () => setQualityFilter((filter) => EQUIPMENT_QUALITY_FILTERS[(EQUIPMENT_QUALITY_FILTERS.indexOf(filter) + 1) % EQUIPMENT_QUALITY_FILTERS.length]);
 
   const detailItem = detailEquipmentId ? EQUIPMENT[detailEquipmentId] : undefined;
   const detailEquipped = detailItem ? progress.equipped[detailItem.slot] === detailEquipmentId : false;
@@ -610,28 +634,34 @@ function EquipmentScreen() {
   const detailSig = detailHeroId ? SIGNATURE_WEAPON_DISPLAY[detailHeroId] : undefined;
   const leaderSig = SIGNATURE_WEAPON_DISPLAY[leaderId];
   const tabItems = activeTab === "signature" ? [] : progress.inventory.filter((equipmentId) => EQUIPMENT[equipmentId].slot === activeTab);
+  const trimmedQuery = searchQuery.trim();
+  const visibleItems = tabItems
+    .filter((id) => qualityFilter === "全部" || EQUIPMENT[id].rarity === qualityFilter)
+    .filter((id) => !trimmedQuery || EQUIPMENT[id].name.includes(trimmedQuery))
+    .slice()
+    .sort((a, b) => sortMode === "level" ? (progress.equipmentLevels[b] ?? 1) - (progress.equipmentLevels[a] ?? 1) : sortMode === "rarity" ? EQUIPMENT_RARITY_RANK[EQUIPMENT[b].rarity] - EQUIPMENT_RARITY_RANK[EQUIPMENT[a].rarity] : 0);
 
   return <section className="lobby-module-screen accent-gold skin-equipment">
-    {/* The old ModuleHeader/BakedBannerCopy banner baked "裝備工坊" into its own
-        background artwork -- title-plate.png below already carries that same
-        title, so this screen uses a plain back button instead of stacking
-        both (was showing as a visibly duplicated title). */}
-    <button className="back-link" onClick={() => openScreen("title")}><ChevronLeft size={19} />返回大廳</button>
     <div className="equipment-workshop">
-      <img className="equipment-workshop__title" src="/equipment-ui/title-plate.png" alt="裝備工坊" />
+      <div className="equipment-workshop__header">
+        <button className="equipment-workshop__back" onClick={() => openScreen("title")} aria-label="返回大廳"><img src="/equipment-ui/back-button.png" alt="" /></button>
+        <img className="equipment-workshop__title" src="/equipment-ui/title-plate.png" alt="裝備工坊" />
+        <button className={`equipment-workshop__help ${showEquipmentHelp ? "is-open" : ""}`} type="button" onClick={() => setShowEquipmentHelp((open) => !open)} aria-expanded={showEquipmentHelp} aria-controls="equipment-help-panel" aria-label="查看裝備工坊用途"><img src="/equipment-ui/help-button.png" alt="" /></button>
+      </div>
+      {showEquipmentHelp && <aside id="equipment-help-panel" className="equipment-workshop__help-panel" role="note"><button type="button" onClick={() => setShowEquipmentHelp(false)} aria-label="關閉說明"><X size={13} /></button><b>裝備工坊用途</b><p>裝備武器、護甲、遺物提升全隊戰力；消耗鍛造銅礦可以升級裝備，分解不需要的裝備能換回銅礦。專武分頁展示每位英雄的專屬武器效果，目前全數已啟用。</p></aside>}
       <div className="equipment-workshop__summary">
         {(["weapon", "armor", "relic"] as EquipmentSlot[]).map((slot) => {
           const equippedId = progress.equipped[slot];
           const item = equippedId ? EQUIPMENT[equippedId] : undefined;
           const level = equippedId ? progress.equipmentLevels[equippedId] ?? 1 : 1;
-          return <button key={slot} className="equipment-workshop__slot" onClick={() => setActiveTab(slot)} aria-label={`${SLOT_LABELS[slot]}，${item ? item.name : "尚未裝備"}，查看${SLOT_LABELS[slot]}分類`}>
+          return <button key={slot} className="equipment-workshop__slot" onClick={() => selectTab(slot)} aria-label={`${SLOT_LABELS[slot]}，${item ? item.name : "尚未裝備"}，查看${SLOT_LABELS[slot]}分類`}>
             <span className={`equipment-workshop__slot-icon ${item ? "" : "is-empty"}`}>{item ? <EquipmentIcon icon={item.icon} /> : <img src="/equipment-ui/rarity-common.png" alt="" />}</span>
             <small>{SLOT_LABELS[slot]}</small>
             <b>{item ? item.name : "尚未裝備"}</b>
             {item && <em>Lv.{level}</em>}
           </button>;
         })}
-        <button className="equipment-workshop__slot" onClick={() => setActiveTab("signature")} aria-label="專武，查看英雄專屬武器一覽">
+        <button className="equipment-workshop__slot" onClick={() => selectTab("signature")} aria-label="專武，查看英雄專屬武器一覽">
           <span className="equipment-workshop__slot-icon">{leaderSig ? <img src={`/equipment-icons/sigweapon-${leaderId}.png`} alt="" /> : null}</span>
           <small>專武</small>
           <b>{leaderSig ? leaderSig.name : "—"}</b>
@@ -639,11 +669,33 @@ function EquipmentScreen() {
         </button>
       </div>
 
+      <div className="equipment-workshop__resources">
+        <span className="equipment-workshop__resource"><PackageOpen size={13} />背包 {progress.inventory.length} 件裝備</span>
+        <i className="equipment-workshop__resources-divider" aria-hidden="true" />
+        <button className="equipment-workshop__resource is-action" onClick={() => openScreen("shop")} aria-label={`鍛造銅礦 ${progress.materials}，前往命運商店購買`}>
+          <Hammer size={13} />鍛造銅礦 {progress.materials}<span className="equipment-workshop__resource-plus">＋</span>
+        </button>
+      </div>
+      <div className="equipment-workshop__divider" aria-hidden="true" />
+
       <div className="equipment-workshop__tabs">
-        {(["weapon", "armor", "relic", "signature"] as EquipmentTab[]).map((tab) => <button key={tab} className={`equipment-workshop__tab ${activeTab === tab ? "is-active" : ""}`} onClick={() => setActiveTab(tab)} aria-pressed={activeTab === tab} aria-label={tab === "signature" ? "專武分類" : `${SLOT_LABELS[tab]}分類`}>
+        {(["weapon", "armor", "relic", "signature"] as EquipmentTab[]).map((tab) => <button key={tab} className={`equipment-workshop__tab ${activeTab === tab ? "is-active" : ""}`} onClick={() => selectTab(tab)} aria-pressed={activeTab === tab} aria-label={tab === "signature" ? "專武分類" : `${SLOT_LABELS[tab]}分類`}>
           <img src={`/equipment-ui/tab-${tab === "signature" ? "signature" : tab}${activeTab === tab ? "-selected" : ""}.png`} alt="" />
         </button>)}
       </div>
+
+      {activeTab !== "signature" && <div className="equipment-workshop__toolbar">
+        <button className="equipment-workshop__toolbar-btn" onClick={cycleSortMode} aria-label={`排序：${EQUIPMENT_SORT_LABELS[sortMode]}，點擊切換`}>
+          <img src="/equipment-ui/toolbar-sort.png" alt="" /><small>{EQUIPMENT_SORT_LABELS[sortMode]}</small>
+        </button>
+        <button className="equipment-workshop__toolbar-btn" onClick={cycleQualityFilter} aria-label={`品質篩選：${qualityFilter}，點擊切換`}>
+          <img src="/equipment-ui/toolbar-filter.png" alt="" /><small>{qualityFilter}</small>
+        </button>
+        <label className="equipment-workshop__search">
+          <Search size={13} />
+          <input type="text" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="搜尋裝備名稱" aria-label="搜尋裝備名稱" />
+        </label>
+      </div>}
 
       <div className="equipment-workshop__panel">
         {activeTab === "signature"
@@ -655,9 +707,12 @@ function EquipmentScreen() {
                 <span className="equipment-workshop__sig-badge"><img src="/equipment-ui/badge-equipped.png" alt="" />已啟用</span>
               </button>;
             })}</div>
-          : tabItems.length === 0
-            ? <p className="equipment-workshop__empty">背包裡還沒有{SLOT_LABELS[activeTab]}類裝備。</p>
-            : <div className="equipment-workshop__grid">{tabItems.map((equipmentId) => {
+          : visibleItems.length === 0
+            ? <div className="equipment-workshop__empty">
+                <img src="/equipment-ui/empty-state.png" alt="" />
+                {tabItems.length > 0 && <small>沒有符合篩選條件的{SLOT_LABELS[activeTab]}。</small>}
+              </div>
+            : <div className="equipment-workshop__grid">{visibleItems.map((equipmentId) => {
                 const item = EQUIPMENT[equipmentId];
                 const equipped = progress.equipped[item.slot] === equipmentId;
                 const level = progress.equipmentLevels[equipmentId] ?? 1;
@@ -679,6 +734,7 @@ function EquipmentScreen() {
           <EquipmentIcon className="item-icon" icon={detailItem.icon} />
         </div>
         <b className="equipment-workshop-modal__name">{detailItem.name}</b>
+        <EquipmentStars rarity={detailItem.rarity} size={12} />
         <small className="equipment-workshop-modal__meta">{SLOT_LABELS[detailItem.slot]} · Lv.{detailLevel}/5 · {detailItem.rarity}</small>
         <p className="equipment-workshop-modal__desc">{detailItem.description}</p>
         <div className="equipment-workshop-modal__actions">

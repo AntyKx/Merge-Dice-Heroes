@@ -27,7 +27,41 @@
 .skin-equipment .equipment-workshop { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
 .skin-equipment .equipment-workshop__panel { flex: 1; min-height: 0; overflow-y: auto; }
 
-.equipment-workshop__title { display: block; width: min(260px, 62%); height: auto; margin: 0 auto 2px; }
+.equipment-workshop__header { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+.equipment-workshop__title { display: block; flex: 1; min-width: 0; height: auto; }
+.equipment-workshop__back, .equipment-workshop__help { flex: none; display: block; padding: 0; border: 0; background: none; }
+.equipment-workshop__back { width: 62px; }
+.equipment-workshop__help { width: 30px; }
+.equipment-workshop__back img, .equipment-workshop__help img { display: block; width: 100%; height: auto; }
+.equipment-workshop__back:active, .equipment-workshop__help:active { transform: translateY(1px); }
+
+.equipment-workshop__help-panel { position: relative; display: grid; gap: 3px; margin: -2px 0 2px; padding: 8px 26px 8px 10px; border: 1px solid rgba(184,134,59,.4); border-radius: 10px; background: rgba(255,251,239,.92); color: var(--ew-ink); text-align: left; }
+.equipment-workshop__help-panel b { font-size: 10.5px; }
+.equipment-workshop__help-panel p { margin: 0; color: var(--ew-muted); font-size: 9.5px; line-height: 1.5; }
+.equipment-workshop__help-panel button { position: absolute; top: 6px; right: 6px; display: grid; width: 18px; height: 18px; place-items: center; border: 0; border-radius: 50%; background: rgba(74,52,25,.12); color: var(--ew-ink); }
+
+.equipment-workshop__resources { display: flex; align-items: center; gap: 8px; padding: 0 2px; color: var(--ew-ink); font-size: 10px; font-weight: 900; }
+.equipment-workshop__resource { display: flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; color: inherit; font: inherit; }
+.equipment-workshop__resource.is-action { color: var(--ew-gold-deep); }
+.equipment-workshop__resource-plus { display: grid; width: 13px; height: 13px; margin-left: 1px; place-items: center; border-radius: 50%; background: var(--ew-gold-deep); color: #fff3d6; font-size: 9px; line-height: 1; }
+.equipment-workshop__resources-divider { width: 1px; height: 12px; background: rgba(138,97,31,.35); }
+
+.equipment-workshop__divider { position: relative; height: 10px; margin: 1px 0; }
+.equipment-workshop__divider::before { content: ""; position: absolute; inset: 4px 0; background: linear-gradient(90deg, transparent, var(--ew-gold) 18%, var(--ew-gold) 82%, transparent); }
+.equipment-workshop__divider::after { content: "◆"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--ew-gold-deep); font-size: 8px; background: var(--ew-parchment); padding: 0 6px; }
+
+.equipment-workshop__toolbar { display: flex; align-items: center; gap: 5px; }
+.equipment-workshop__toolbar-btn { position: relative; flex: none; display: block; padding: 0; border: 0; background: none; }
+.equipment-workshop__toolbar-btn img { display: block; height: 26px; width: auto; }
+.equipment-workshop__toolbar-btn small { position: absolute; left: 50%; bottom: -11px; transform: translateX(-50%); color: var(--ew-gold-deep); font-size: 7px; font-weight: 900; white-space: nowrap; }
+.equipment-workshop__toolbar-btn:active { transform: translateY(1px); }
+.equipment-workshop__search { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; height: 26px; padding: 0 8px; border: 1.5px solid var(--ew-gold); border-radius: 999px; background: linear-gradient(160deg, #fffbef, var(--ew-parchment)); color: var(--ew-gold-deep); }
+.equipment-workshop__search input { flex: 1; min-width: 0; border: 0; background: none; color: var(--ew-ink); font-size: 10px; }
+.equipment-workshop__search input::placeholder { color: var(--ew-muted); }
+.equipment-workshop__search input:focus { outline: none; }
+
+.equipment-workshop__stars { display: inline-flex; gap: 1px; color: var(--ew-gold); }
+.equipment-workshop__stars svg.is-empty { color: rgba(138,97,31,.3); }
 
 .equipment-workshop__summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .equipment-workshop__slot {
@@ -80,7 +114,9 @@
 .equipment-workshop__item-check { position: absolute; z-index: 2; top: -4px; right: -4px; width: 18px; height: 18px; }
 .equipment-workshop__item-level { position: absolute; z-index: 2; bottom: -3px; left: 50%; transform: translateX(-50%); padding: 1px 5px; border-radius: 999px; background: #4a3419; color: #fff3d6; font-size: 7px; font-weight: 900; white-space: nowrap; }
 .equipment-workshop__item-name { position: relative; z-index: 1; align-self: end; margin-bottom: 2px; max-width: 92%; overflow: hidden; color: var(--ew-ink); font-size: 7.5px; font-weight: 900; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
-.equipment-workshop__empty { padding: 18px 10px; color: var(--ew-muted); font-size: 11px; text-align: center; }
+.equipment-workshop__empty { display: grid; justify-items: center; gap: 6px; padding: 6px 4px; }
+.equipment-workshop__empty img { display: block; width: min(280px, 100%); height: auto; }
+.equipment-workshop__empty small { color: var(--ew-muted); font-size: 10px; }
 
 .equipment-workshop__sig-list { display: grid; gap: 6px; }
 .equipment-workshop__sig-row {
