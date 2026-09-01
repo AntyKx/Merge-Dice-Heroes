@@ -31,9 +31,11 @@
    since .lobby-module-screen already locks this screen to a fixed height. */
 .lobby-module-screen.skin-equipment { display: flex; flex-direction: column; background-size: 100% 100%; background-repeat: no-repeat; }
 /* .baked-banner-copy's title text is nudged down 24px (asterVowUiSkin.css)
-   to center it in the background art's painted plaque; without this extra
-   clearance that shift visually collides with the summary cards below. */
-.skin-equipment .equipment-workshop { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; margin-top: 16px; }
+   to center it in the background art's painted plaque; without extra
+   clearance here that shift visually collides with the summary cards
+   below -- confirmed on a real phone (16px wasn't enough there even
+   though it looked fine in the wider desktop-emulated test frame). */
+.skin-equipment .equipment-workshop { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; margin-top: 34px; }
 .skin-equipment .equipment-workshop__panel { flex: 1; min-height: 0; overflow-y: auto; }
 
 .equipment-workshop__resources { display: flex; align-items: center; gap: 8px; padding: 0 2px; color: var(--ew-ink); font-size: 10px; font-weight: 900; }
