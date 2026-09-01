@@ -23,8 +23,17 @@
    scroll internally, or a full Signature Weapon roster (10 rows) or a
    large inventory would silently overflow past the frame with no way to
    reach the rest (confirmed live: engineer's row was clipped off). */
-.lobby-module-screen.skin-equipment { display: flex; flex-direction: column; }
-.skin-equipment .equipment-workshop { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+/* The shared background rule (asterVowUiSkin.css) width-locks the art at
+   background-size:100% auto, which leaves a big flat-color gap below the
+   image once real content (the redesigned grid/toolbar) makes this screen
+   taller than the art's own aspect ratio. Stretch to fill instead -- same
+   fix already used by the Hero Codex screen (hero-codex-screen class) --
+   since .lobby-module-screen already locks this screen to a fixed height. */
+.lobby-module-screen.skin-equipment { display: flex; flex-direction: column; background-size: 100% 100%; background-repeat: no-repeat; }
+/* .baked-banner-copy's title text is nudged down 24px (asterVowUiSkin.css)
+   to center it in the background art's painted plaque; without this extra
+   clearance that shift visually collides with the summary cards below. */
+.skin-equipment .equipment-workshop { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; margin-top: 16px; }
 .skin-equipment .equipment-workshop__panel { flex: 1; min-height: 0; overflow-y: auto; }
 
 .equipment-workshop__resources { display: flex; align-items: center; gap: 8px; padding: 0 2px; color: var(--ew-ink); font-size: 10px; font-weight: 900; }
