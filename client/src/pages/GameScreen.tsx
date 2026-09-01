@@ -643,13 +643,8 @@ function EquipmentScreen() {
     .sort((a, b) => sortMode === "level" ? (progress.equipmentLevels[b] ?? 1) - (progress.equipmentLevels[a] ?? 1) : sortMode === "rarity" ? EQUIPMENT_RARITY_RANK[EQUIPMENT[b].rarity] - EQUIPMENT_RARITY_RANK[EQUIPMENT[a].rarity] : 0);
 
   return <section className="lobby-module-screen accent-gold skin-equipment">
+    <ModuleHeader moduleId="equipment" />
     <div className="equipment-workshop">
-      <div className="equipment-workshop__header">
-        <button className="equipment-workshop__back" onClick={() => openScreen("title")} aria-label="返回大廳"><img src="/equipment-ui/back-button.png" alt="" /></button>
-        <img className="equipment-workshop__title" src="/equipment-ui/title-plate.png" alt="裝備工坊" />
-        <button className={`equipment-workshop__help ${showEquipmentHelp ? "is-open" : ""}`} type="button" onClick={() => setShowEquipmentHelp((open) => !open)} aria-expanded={showEquipmentHelp} aria-controls="equipment-help-panel" aria-label="查看裝備工坊用途"><img src="/equipment-ui/help-button.png" alt="" /></button>
-      </div>
-      {showEquipmentHelp && <aside id="equipment-help-panel" className="equipment-workshop__help-panel" role="note"><button type="button" onClick={() => setShowEquipmentHelp(false)} aria-label="關閉說明"><X size={13} /></button><b>裝備工坊用途</b><p>裝備武器、護甲、遺物提升全隊戰力；消耗鍛造銅礦可以升級裝備，分解不需要的裝備能換回銅礦。專武分頁展示每位英雄的專屬武器效果，目前全數已啟用。</p></aside>}
       <div className="equipment-workshop__summary">
         {(["weapon", "armor", "relic"] as EquipmentSlot[]).map((slot) => {
           const equippedId = progress.equipped[slot];
@@ -676,7 +671,9 @@ function EquipmentScreen() {
         <button className="equipment-workshop__resource is-action" onClick={() => openScreen("shop")} aria-label={`鍛造銅礦 ${progress.materials}，前往命運商店購買`}>
           <Hammer size={13} />鍛造銅礦 {progress.materials}<span className="equipment-workshop__resource-plus">＋</span>
         </button>
+        <button className={`equipment-help ${showEquipmentHelp ? "is-open" : ""}`} type="button" onClick={() => setShowEquipmentHelp((open) => !open)} aria-expanded={showEquipmentHelp} aria-controls="equipment-help-panel" aria-label="查看裝備工坊用途">?</button>
       </div>
+      {showEquipmentHelp && <aside id="equipment-help-panel" className="equipment-help-panel" role="note"><button type="button" onClick={() => setShowEquipmentHelp(false)} aria-label="關閉說明"><X size={13} /></button><b>裝備工坊用途</b><p>裝備武器、護甲、遺物提升全隊戰力；消耗鍛造銅礦可以升級裝備，分解不需要的裝備能換回銅礦。專武分頁展示每位英雄的專屬武器效果，目前全數已啟用。</p></aside>}
       <div className="equipment-workshop__divider" aria-hidden="true" />
 
       <div className="equipment-workshop__tabs">
