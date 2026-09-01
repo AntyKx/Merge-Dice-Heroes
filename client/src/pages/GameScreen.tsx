@@ -631,6 +631,7 @@ function EquipmentScreen() {
   const detailEquipped = detailItem ? progress.equipped[detailItem.slot] === detailEquipmentId : false;
   const detailLevel = detailEquipmentId ? progress.equipmentLevels[detailEquipmentId] ?? 1 : 1;
   const detailUpgradeCost = detailLevel * 8;
+  const detailCanUpgrade = detailLevel < 5 && progress.materials >= detailUpgradeCost;
   const detailSig = detailHeroId ? SIGNATURE_WEAPON_DISPLAY[detailHeroId] : undefined;
   const leaderSig = SIGNATURE_WEAPON_DISPLAY[leaderId];
   const tabItems = activeTab === "signature" ? [] : progress.inventory.filter((equipmentId) => EQUIPMENT[equipmentId].slot === activeTab);
@@ -716,10 +717,12 @@ function EquipmentScreen() {
                 const item = EQUIPMENT[equipmentId];
                 const equipped = progress.equipped[item.slot] === equipmentId;
                 const level = progress.equipmentLevels[equipmentId] ?? 1;
-                return <button key={equipmentId} className="equipment-workshop__item" onClick={() => setDetailEquipmentId(equipmentId)} aria-label={`${item.name}，${SLOT_LABELS[item.slot]}，${item.rarity}，${equipped ? "已裝備" : "點擊查看詳情"}`}>
+                const canUpgrade = level < 5 && progress.materials >= level * 8;
+                return <button key={equipmentId} className="equipment-workshop__item" onClick={() => setDetailEquipmentId(equipmentId)} aria-label={`${item.name}，${SLOT_LABELS[item.slot]}，${item.rarity}，${equipped ? "已裝備" : "點擊查看詳情"}${canUpgrade ? "，可升級" : ""}`}>
                   <img className="equipment-workshop__item-frame" src={`/equipment-ui/${equipped ? "rarity-selected" : equipmentRarityFrame(item.rarity)}.png`} alt="" />
                   <EquipmentIcon className="equipment-workshop__item-icon" icon={item.icon} />
                   {equipped && <img className="equipment-workshop__item-check" src="/equipment-ui/badge-equipped.png" alt="" />}
+                  {canUpgrade && <img className="equipment-workshop__item-upgrade" src="/equipment-ui/badge-upgrade.png" alt="" />}
                   {level > 1 && <em className="equipment-workshop__item-level">Lv.{level}</em>}
                 </button>;
               })}</div>}
@@ -745,8 +748,9 @@ function EquipmentScreen() {
             </button>
           </div>
           <div className="equipment-workshop-modal__action">
-            <button disabled={detailLevel >= 5 || progress.materials < detailUpgradeCost} onClick={() => upgradeEquipment(detailEquipmentId)} aria-label={`升級，需要鍛造銅礦 ${detailUpgradeCost}`}>
+            <button disabled={!detailCanUpgrade} onClick={() => upgradeEquipment(detailEquipmentId)} aria-label={`升級，需要鍛造銅礦 ${detailUpgradeCost}`}>
               <img className="btn-art" src="/equipment-ui/btn-upgrade.png" alt="" />
+              {detailCanUpgrade && <img className="equipment-workshop-modal__action-badge" src="/equipment-ui/badge-upgrade.png" alt="" />}
             </button>
             <small className="equipment-workshop-modal__action-caption">{detailLevel >= 5 ? "已滿級" : `銅礦 ${detailUpgradeCost}`}</small>
           </div>
