@@ -30,19 +30,19 @@ describe("mergeEquipmentBonuses", () => {
 
 describe("getEquipmentBonuses", () => {
   it("加總已裝備物品的 bonuses，並依等級疊加 upgradeBonus * (level-1)", () => {
-    const equipped: Partial<Record<EquipmentSlot, EquipmentId>> = { weapon: "morningBlade" };
-    const level1 = getEquipmentBonuses(equipped, { morningBlade: 1 });
-    expect(level1.attackMultiplier).toBeCloseTo(0.08);
-    const level3 = getEquipmentBonuses(equipped, { morningBlade: 3 });
-    expect(level3.attackMultiplier).toBeCloseTo(0.08 + 0.025 * 2);
+    const equipped: Partial<Record<EquipmentSlot, EquipmentId>> = { weapon: "ironedgeBlade" };
+    const level1 = getEquipmentBonuses(equipped, { ironedgeBlade: 1 });
+    expect(level1.attackMultiplier).toBeCloseTo(0.05);
+    const level3 = getEquipmentBonuses(equipped, { ironedgeBlade: 3 });
+    expect(level3.attackMultiplier).toBeCloseTo(0.05 + 0.015 * 2);
   });
 
   it("多個欄位的裝備各自的加成會加總", () => {
-    const equipped: Partial<Record<EquipmentSlot, EquipmentId>> = { weapon: "morningBlade", armor: "watcherCloak", relic: "fateDiceBox" };
-    const total = getEquipmentBonuses(equipped, { morningBlade: 1, watcherCloak: 1, fateDiceBox: 1 });
-    expect(total.attackMultiplier).toBeCloseTo(0.08);
-    expect(total.castleBonus).toBe(3);
-    expect(total.extraRerolls).toBe(1);
+    const equipped: Partial<Record<EquipmentSlot, EquipmentId>> = { weapon: "ironedgeBlade", armor: "bastionHeart", relic: "gluttonousCoinpurse" };
+    const total = getEquipmentBonuses(equipped, { ironedgeBlade: 1, bastionHeart: 1, gluttonousCoinpurse: 1 });
+    expect(total.attackMultiplier).toBeCloseTo(0.05);
+    expect(total.castleBonus).toBe(8);
+    expect(total.fateEnergyMaxBonus).toBe(2);
   });
 
   it("職業傾向裝備（roleBonus）不計入這裡（改由 defaultMetaAdapter.ts 依隊伍組成解析）", () => {

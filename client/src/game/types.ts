@@ -36,7 +36,6 @@ export type HeroTier = 1 | 2 | 3;
 export type TalentRarity = "common" | "rare" | "epic";
 export type EquipmentSlot = "weapon" | "armor" | "relic";
 export type EquipmentId =
-  | "morningBlade" | "watcherCloak" | "fateDiceBox"
   // 共用武器 Shared Weapons
   | "ironedgeBlade" | "windrushEdge" | "killerInstinctSigil" | "dragonslayersMark" | "chainlightRod"
   // 共用護甲 Shared Armor
@@ -51,7 +50,7 @@ export type EquipmentId =
   | "choristersStaff" | "vowScripture";
 export type DailyQuestId = "battle" | "merge" | "victory";
 export type DungeonId = "ruinCorridor" | "frostAltar" | "shadowTrial" | "riftEcho" | "endlessNight";
-export type ShopOfferId = "forgeBundle" | "morningBladeOffer" | "watcherCloakOffer" | "fateDiceBoxOffer";
+export type ShopOfferId = "forgeBundleSmall" | "forgeBundle" | "forgeBundleLarge";
 export type GamePhase =
   | "PREPARING"
   | "ROLLING"

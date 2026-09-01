@@ -103,10 +103,6 @@ export const HEROES: Record<HeroId, HeroDefinition> = {
 export const SELECTABLE_HERO_IDS: HeroId[] = ["knight", "fireMage", "priest", "assassin", "frostQueen", "ranger", "bard", "deathKnight", "engineer", "fighter"];
 
 export const EQUIPMENT: Record<EquipmentId, EquipmentDefinition> = {
-  morningBlade: { id: "morningBlade", name: "晨星長劍", slot: "weapon", rarity: "稀有", description: "全隊起始攻擊 +8%。", icon: "⚔", bonuses: { attackMultiplier: 0.08 }, upgradeBonus: { attackMultiplier: 0.025 } },
-  watcherCloak: { id: "watcherCloak", name: "守望者披風", slot: "armor", rarity: "普通", description: "城堡最大生命 +3。", icon: "◒", bonuses: { castleBonus: 3 }, upgradeBonus: { castleBonus: 1 } },
-  fateDiceBox: { id: "fateDiceBox", name: "命運骰匣", slot: "relic", rarity: "史詩", description: "每局額外獲得 1 次重骰。", icon: "⚄", bonuses: { extraRerolls: 1 }, upgradeBonus: { attackMultiplier: 0.02 } },
-
   // ---- 共用武器 Shared Weapons -----------------------------------------
   ironedgeBlade: { id: "ironedgeBlade", name: "精鋼利刃", slot: "weapon", rarity: "普通", description: "全隊起始攻擊 +5%。", icon: "/equipment-icons/ironedgeBlade.png", bonuses: { attackMultiplier: 0.05 }, upgradeBonus: { attackMultiplier: 0.015 } },
   windrushEdge: { id: "windrushEdge", name: "疾風之刃", slot: "weapon", rarity: "稀有", description: "全隊攻擊速度 +8%。", icon: "/equipment-icons/windrushEdge.png", bonuses: { attackSpeedMultiplier: 0.08 }, upgradeBonus: { attackSpeedMultiplier: 0.02 } },
@@ -169,10 +165,9 @@ export function mergeEquipmentBonuses(total: EquipmentBonuses, partial: Partial<
 }
 
 export const SHOP_OFFERS: Record<ShopOfferId, ShopOfferDefinition> = {
+  forgeBundleSmall: { id: "forgeBundleSmall", title: "鍛造銅礦 ×10", description: "可用於升級裝備。", price: 5, icon: "⛏", reward: { materials: 10 } },
   forgeBundle: { id: "forgeBundle", title: "鍛造銅礦 ×20", description: "可用於升級裝備。", price: 8, icon: "⛏", reward: { materials: 20 } },
-  morningBladeOffer: { id: "morningBladeOffer", title: "晨星長劍", description: "稀有武器，初始攻擊加成。", price: 12, icon: "⚔", reward: { equipmentId: "morningBlade" } },
-  watcherCloakOffer: { id: "watcherCloakOffer", title: "守望者披風", description: "普通護甲，提升城堡生命。", price: 9, icon: "◒", reward: { equipmentId: "watcherCloak" } },
-  fateDiceBoxOffer: { id: "fateDiceBoxOffer", title: "命運骰匣", description: "史詩遺物，增加每局重骰。", price: 18, icon: "⚄", reward: { equipmentId: "fateDiceBox" } },
+  forgeBundleLarge: { id: "forgeBundleLarge", title: "鍛造銅礦 ×50", description: "可用於升級裝備。", price: 18, icon: "⛏", reward: { materials: 50 } },
 };
 
 export const DAILY_QUESTS: DailyQuestDefinition[] = [

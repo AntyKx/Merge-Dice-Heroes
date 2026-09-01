@@ -28,11 +28,11 @@ describe("createDefaultMetaAdapter -- role-leaning equipment resolution", () => 
   });
 
   it("一般共用裝備完全不受隊伍組成影響", () => {
-    const adapter = createDefaultMetaAdapter(progressWithEquipped({ weapon: "morningBlade" }));
+    const adapter = createDefaultMetaAdapter(progressWithEquipped({ weapon: "ironedgeBlade" }));
     const withTank = adapter.getEquipmentLoadout(["knight"]);
     const withoutTank = adapter.getEquipmentLoadout(["ranger"]);
     expect(withTank.attackMultiplier).toBeCloseTo(withoutTank.attackMultiplier);
-    expect(withTank.attackMultiplier).toBeCloseTo(0.08);
+    expect(withTank.attackMultiplier).toBeCloseTo(0.05);
   });
 
   it("getHeroSnapshot 目前回傳 signatureWeaponUnlocked: true（尚無取得經濟，先全數開放）", () => {

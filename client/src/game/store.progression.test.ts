@@ -11,8 +11,8 @@ beforeEach(() => {
 
 describe("persistent lobby progression", () => {
   it("equips and unequips a real backpack item in its slot", () => {
-    useGameStore.getState().equipItem("morningBlade");
-    expect(useGameStore.getState().progress.equipped.weapon).toBe("morningBlade");
+    useGameStore.getState().equipItem("ironedgeBlade");
+    expect(useGameStore.getState().progress.equipped.weapon).toBe("ironedgeBlade");
     useGameStore.getState().unequipItem("weapon");
     expect(useGameStore.getState().progress.equipped.weapon).toBeUndefined();
   });
@@ -79,11 +79,11 @@ describe("persistent lobby progression", () => {
 
   it("upgrades and then dismantles an owned item for materials", () => {
     const initialMaterials = useGameStore.getState().progress.materials;
-    useGameStore.getState().upgradeEquipment("morningBlade");
-    expect(useGameStore.getState().progress.equipmentLevels.morningBlade).toBe(2);
+    useGameStore.getState().upgradeEquipment("ironedgeBlade");
+    expect(useGameStore.getState().progress.equipmentLevels.ironedgeBlade).toBe(2);
     expect(useGameStore.getState().progress.materials).toBe(initialMaterials - 8);
-    useGameStore.getState().dismantleEquipment("morningBlade");
-    expect(useGameStore.getState().progress.inventory).not.toContain("morningBlade");
+    useGameStore.getState().dismantleEquipment("ironedgeBlade");
+    expect(useGameStore.getState().progress.inventory).not.toContain("ironedgeBlade");
     expect(useGameStore.getState().progress.materials).toBeGreaterThan(initialMaterials - 8);
   });
 

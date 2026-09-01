@@ -181,7 +181,7 @@ function maybeRecordRunResult(previous: RunState | undefined, next: RunState, pr
 }
 
 const dailyValue = (progress: PlayerProgress, questId: DailyQuestId) => questId === "battle" ? progress.daily.battles : questId === "merge" ? progress.daily.merges : progress.daily.victories;
-const SHOP_ROTATIONS: ShopOfferId[][] = [["forgeBundle", "morningBladeOffer", "fateDiceBoxOffer"], ["forgeBundle", "watcherCloakOffer", "morningBladeOffer"], ["fateDiceBoxOffer", "watcherCloakOffer", "forgeBundle"]];
+const SHOP_ROTATIONS: ShopOfferId[][] = [["forgeBundleSmall", "forgeBundle", "forgeBundleLarge"], ["forgeBundle", "forgeBundleLarge", "forgeBundleSmall"], ["forgeBundleLarge", "forgeBundleSmall", "forgeBundle"]];
 
 export const useGameStore = create<GameStore>((set, get) => ({
   screen: "title",

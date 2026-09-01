@@ -585,14 +585,8 @@ function equipmentRarityFrame(rarity: "普通" | "稀有" | "史詩"): string {
   return rarity === "史詩" ? "rarity-epic" : rarity === "稀有" ? "rarity-rare" : "rarity-common";
 }
 
-/** EquipmentDefinition.icon is a real /equipment-icons/*.png path for every
- * item with new art, but the 3 original starter items (morningBlade/
- * watcherCloak/fateDiceBox) predate this art pass and still carry a single
- * emoji character -- rendering that straight into an <img src> just shows a
- * broken-image glyph, so branch on whether it looks like a path. */
 function EquipmentIcon({ icon, className }: { icon: string; className?: string }) {
-  if (icon.startsWith("/")) return <img className={className} src={icon} alt="" />;
-  return <span className={className} aria-hidden="true">{icon}</span>;
+  return <img className={className} src={icon} alt="" />;
 }
 
 type EquipmentTab = EquipmentSlot | "signature";
@@ -801,12 +795,14 @@ function ShopScreen() {
   const countdown = `${String(Math.floor(remainingSeconds / 3600)).padStart(2, "0")}:${String(Math.floor(remainingSeconds % 3600 / 60)).padStart(2, "0")}:${String(remainingSeconds % 60).padStart(2, "0")}`;
   const purchase = (offerId: ShopOfferId) => { const offer = SHOP_OFFERS[offerId]; if (offer.price >= HIGH_VALUE_PRICE) setPendingOfferId(offerId); else buyShopOffer(offerId); };
   const pendingOffer = pendingOfferId ? SHOP_OFFERS[pendingOfferId] : undefined;
-  const offerIcon = (offerId: ShopOfferId): string => offerId === "forgeBundle" ? ASTERVOW_UI_ICON_URLS.shopMaterials : offerId === "morningBladeOffer" ? ASTERVOW_UI_ICON_URLS.shopWeaponOffer : ASTERVOW_UI_ICON_URLS.shopRelicOffer;
+  // Every offer is a materials pack now (the 3 old one-off equipment offers
+  // were removed alongside their items -- see EquipmentIcon's comment).
+  const offerIcon = (): string => ASTERVOW_UI_ICON_URLS.shopMaterials;
   return <section className="lobby-module-screen accent-teal skin-shop">
     <ModuleHeader moduleId="shop" />
     <section className="shop-supply" aria-label="今日補給"><header className="shop-section-heading"><span>今日補給</span><button className={`shop-help ${showShopHelp ? "is-open" : ""}`} type="button" onClick={() => setShowShopHelp((open) => !open)} aria-expanded={showShopHelp} aria-controls="shop-help-panel" aria-label="查看命運商店用途">?</button></header>{showShopHelp && <aside id="shop-help-panel" className="shop-help-panel" role="note"><button type="button" onClick={() => setShowShopHelp(false)} aria-label="關閉說明"><X size={13} /></button><b>命運商店用途</b><p>使用命運符印交換今日商品。每日可免費刷新一次；高價商品會在購買前再次確認。</p></aside>}<div className="shop-toolbar"><span className="astervow-chip"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.shopSigils} alt="" />{progress.sigils}</span><div className="shop-refresh-clock"><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.shopResetTime} alt="" /><small>下次日更</small><b>{countdown}</b></div><button className="astervow-btn is-teal" disabled={!progress.shop.freeRefreshAvailable} onClick={refreshShop}><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.shopRefresh} alt="" />{progress.shop.freeRefreshAvailable ? "今日免費刷新" : "今日已刷新"}</button></div></section>
     <div className="astervow-divider" aria-hidden="true" />
-    <section className="shop-offers" aria-label="本日商店"><header className="shop-section-heading"><span>本日商店</span><small>{progress.shop.offers.length} 件商品</small></header><div className="shop-list">{progress.shop.offers.map((offerId) => { const offer = SHOP_OFFERS[offerId]; const bought = progress.shop.purchased.includes(offerId); const canBuy = progress.sigils >= offer.price && !bought; return <article key={offerId} className={`astervow-card ${bought ? "is-bought" : ""}`}><i><img className="astervow-icon item-row-icon" src={offerIcon(offerId)} alt="" /></i><div><b>{offer.title}</b><p>{offer.description}</p><small>{offer.reward.equipmentId ? "裝備獲得後可至工坊裝卸" : "立即獲得鍛造素材"}</small></div><button className="astervow-btn is-teal" disabled={!canBuy} onClick={() => purchase(offerId)}>{bought ? <><Check size={13} />已購買</> : <><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.shopSigils} alt="" />{offer.price}</>}</button></article>; })}</div></section>
+    <section className="shop-offers" aria-label="本日商店"><header className="shop-section-heading"><span>本日商店</span><small>{progress.shop.offers.length} 件商品</small></header><div className="shop-list">{progress.shop.offers.map((offerId) => { const offer = SHOP_OFFERS[offerId]; const bought = progress.shop.purchased.includes(offerId); const canBuy = progress.sigils >= offer.price && !bought; return <article key={offerId} className={`astervow-card ${bought ? "is-bought" : ""}`}><i><img className="astervow-icon item-row-icon" src={offerIcon()} alt="" /></i><div><b>{offer.title}</b><p>{offer.description}</p><small>立即獲得鍛造素材</small></div><button className="astervow-btn is-teal" disabled={!canBuy} onClick={() => purchase(offerId)}>{bought ? <><Check size={13} />已購買</> : <><img className="astervow-icon" src={ASTERVOW_UI_ICON_URLS.shopSigils} alt="" />{offer.price}</>}</button></article>; })}</div></section>
     {pendingOffer && <div className="dialog-backdrop shop-confirm-backdrop"><div className="shop-confirm-modal"><i>{pendingOffer.icon}</i><p className="screen-kicker">確認購買</p><h3>{pendingOffer.title}</h3><span>{pendingOffer.description}</span><div className="shop-confirm-cost"><span>需要支付</span><b>◈ {pendingOffer.price}</b><small>目前持有 ◈ {progress.sigils}</small></div><div className="shop-confirm-actions"><button className="secondary-cta astervow-btn is-cream" onClick={() => setPendingOfferId(null)}>取消</button><button className="primary-cta astervow-btn is-teal" onClick={() => { buyShopOffer(pendingOffer.id); setPendingOfferId(null); }}>確認購買</button></div></div></div>}
   </section>;
 }
