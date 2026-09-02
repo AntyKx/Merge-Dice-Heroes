@@ -656,7 +656,11 @@
 }
 
 /* Equipment refinement: the painted workshop plaque owns a large centred title; each
-   equipment slot carries its own effect so the page reads from equipped state to backpack. */
+   equipment slot carries its own effect so the page reads from equipped state to backpack.
+   The extra X-shift this used to carry (translate(-8.6cqw, 24px)) kept pulling the title
+   off-center from the plaque's true middle across sessions -- shop/dungeon never had that
+   X component and their titles sit centered fine, so drop it here too and only keep the
+   same Y nudge they use. */
 .skin-equipment .baked-banner-copy h2 {
   display: block;
   width: 100%;
@@ -665,7 +669,7 @@
   font-size: clamp(16px, 4.1cqw, 19px) !important;
   letter-spacing: .025em;
   text-align: center;
-  transform: translate(-8.6cqw, 24px);
+  transform: translate(-11.2cqw, 12px);
 }
 .skin-equipment .equipment-loadout { margin-top: 8px; }
 .skin-equipment .equipment-section-heading { align-items: center; min-height: 24px; padding-right: 9px; }
