@@ -26,10 +26,22 @@
 /* The shared background rule (asterVowUiSkin.css) width-locks the art at
    background-size:100% auto, which leaves a big flat-color gap below the
    image once real content (the redesigned grid/toolbar) makes this screen
-   taller than the art's own aspect ratio. Stretch to fill instead -- same
-   fix already used by the Hero Codex screen (hero-codex-screen class) --
-   since .lobby-module-screen already locks this screen to a fixed height. */
-.lobby-module-screen.skin-equipment { display: flex; flex-direction: column; background-size: 100% 100%; background-repeat: no-repeat; }
+   taller than the art's own aspect ratio. A prior fix stretched it to
+   100% 100% to close that gap, but that scales width/height independently
+   and visibly warps every straight edge and circle in the art (reported as
+   "都歪了" -- everything looks crooked). Use background-size:cover instead:
+   it scales uniformly (no distortion) and still fills the screen with no
+   gap, at the cost of cropping a bit off the left/right edges -- safe here
+   since the baked title/plaque sits within the horizontal 35%-88.5% band
+   (per the measurement note above) and a cover-crop only trims outside that. */
+.lobby-module-screen.skin-equipment { display: flex; flex-direction: column; background-size: cover; background-repeat: no-repeat; }
+/* background-size:cover (above) uniformly scales the art until it fills the
+   taller container, cropping roughly 8.5% off each side -- the shared
+   .baked-banner-copy padding (0 11.5cqw 0 35cqw, asterVowUiSkin.css) was
+   measured against the un-cropped 0%-100% source, so it no longer lines up
+   with the plaque's text-safe band once that crop remaps 0%-100% of the
+   container to source x~8.5%-91.5%. Re-expressed for the cropped window. */
+.skin-equipment .baked-banner-copy { padding: 0 3.65cqw 0 31.95cqw; }
 /* .baked-banner-copy's title text is nudged down 24px (asterVowUiSkin.css)
    to center it in the background art's painted plaque; without extra
    clearance here that shift visually collides with the summary cards
@@ -85,9 +97,15 @@
 /* Each tab-*.png already has its icon + label baked into the artwork (see
    client/public/equipment-ui) -- normal/selected art is swapped by src, no
    text/icon overlay needed. */
-.equipment-workshop__tabs { display: flex; gap: 3px; }
+/* The "-selected" art (bigger, thicker gold border) has a noticeably
+   different aspect ratio than its own normal-state art (e.g. tab-weapon-
+   selected.png is 172x106 vs tab-weapon.png's 158x92) -- sizing every tab
+   by width:100% (height:auto) let whichever tab was active render taller
+   than its three siblings, reading as an uneven/crooked row. Fix height
+   instead so every tab lines up regardless of which state's art it shows. */
+.equipment-workshop__tabs { display: flex; align-items: center; gap: 3px; }
 .equipment-workshop__tab { flex: 1; display: grid; place-items: center; padding: 0; border: 0; background: none; }
-.equipment-workshop__tab img { display: block; width: 100%; height: auto; }
+.equipment-workshop__tab img { display: block; width: auto; max-width: 100%; height: 58px; }
 .equipment-workshop__tab:active { transform: translateY(1px); }
 
 .equipment-workshop__panel {

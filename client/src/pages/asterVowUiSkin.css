@@ -669,7 +669,7 @@
   font-size: clamp(16px, 4.1cqw, 19px) !important;
   letter-spacing: .025em;
   text-align: center;
-  transform: translate(-11.2cqw, 12px);
+  transform: translate(-14cqw, 12px);
 }
 .skin-equipment .equipment-loadout { margin-top: 8px; }
 .skin-equipment .equipment-section-heading { align-items: center; min-height: 24px; padding-right: 9px; }
